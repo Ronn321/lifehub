@@ -159,6 +159,15 @@ export function BlockHandle({
           </div>
         )}
       </div>
+
+      {/* Drag Handle */}
+      <button
+        {...dragHandleProps}
+        className="p-1 rounded text-fg-subtle hover:text-fg hover:bg-bg-surface transition-colors cursor-grab active:cursor-grabbing"
+        title="Block verschieben"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
     </div>
   );
 }

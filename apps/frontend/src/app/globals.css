@@ -67,4 +67,11 @@
     to { opacity: 1; transform: scale(1); }
   }
   .widget-enter { animation: widget-enter 200ms ease-out; }
+
+  /* ContentEditable placeholder */
+  [contenteditable]:empty:before {
+    content: attr(data-placeholder);
+    color: rgb(var(--fg-subtle));
+    pointer-events: none;
+  }
 }

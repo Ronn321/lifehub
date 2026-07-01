@@ -60,7 +60,7 @@ export function BookmarkBlock({ url, title, description, image, onChange }: Book
 
   if (isEditingUrl || (!url && !editUrl)) {
     return (
-      <div className="p-3 rounded-lg bg-bg-surface border border-dashed border-zinc-300 dark:border-zinc-700">
+      <div className="py-1">
         <div className="flex gap-2">
           <input
             type="url"
@@ -92,15 +92,15 @@ export function BookmarkBlock({ url, title, description, image, onChange }: Book
   const domain = (() => { try { return preview?.domain || new URL(url).hostname; } catch { return url; } })();
 
   return (
-    <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-bg-surface hover:shadow-md transition-shadow group">
+    <div className="rounded-lg overflow-hidden hover:shadow-md transition-shadow group">
       {loading ? (
-        <div className="p-4 flex items-center justify-center">
+        <div className="py-4 flex items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-fg-muted" />
         </div>
       ) : (
         <>
           {(image || preview?.image) && (
-            <div className="h-32 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+            <div className="h-32 bg-zinc-100 dark:bg-zinc-800 overflow-hidden rounded-t-lg">
               <img
                 src={image || preview?.image}
                 alt=""
@@ -111,18 +111,18 @@ export function BookmarkBlock({ url, title, description, image, onChange }: Book
               />
             </div>
           )}
-          <div className="p-3">
+          <div className="p-2">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-sm line-clamp-1">
                   {title || preview?.title || 'Laden...'}
                 </h4>
                 {(description || preview?.description) && (
-                  <p className="text-xs text-fg-muted mt-1 line-clamp-2">
+                  <p className="text-xs text-fg-muted mt-0.5 line-clamp-2">
                     {description || preview?.description}
                   </p>
                 )}
-                <p className="text-xs text-fg-muted mt-2 opacity-60">
+                <p className="text-xs text-fg-muted mt-1 opacity-60">
                   {domain}
                 </p>
               </div>

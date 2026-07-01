@@ -508,7 +508,7 @@ export function MediaWidget({ config }: { config: MediaConfig }) {
 
   const { data: files, isLoading } = useQuery({
     queryKey: ['dashboard-media', config.albumIds],
-    queryFn: () => api.get<{ id: string; filename: string; thumbnailPath?: string; url?: string }[]>(
+    queryFn: () => api.get<{ id: string; filename: string; thumbnailPath?: string; mimeType?: string; url?: string }[]>(
       `/media/files${albumQuery ? '?' + albumQuery : '?limit=50'}`,
     ),
     staleTime: 30_000,
@@ -530,20 +530,22 @@ export function MediaWidget({ config }: { config: MediaConfig }) {
   if (!files || total === 0) return <div className="text-sm text-fg-muted">Keine Medien</div>;
 
   const current = files[currentIndex];
-  const streamUrl = current?.id
-    ? `http://${window.location.hostname}:3007/api/v1/media/files/${current.id}/stream?token=${typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('lifehub-auth') || '{}')?.state?.accessToken ?? '') : ''}`
-    : null;
-
   if (!current) return <div className="text-sm text-fg-muted">Keine Medien</div>;
+
+  const isVideo = current.mimeType?.startsWith('video/');
+  const imgSrc = current.thumbnailPath || (current.id
+    ? `http://${window.location.hostname}:3007/api/v1/media/files/${current.id}/stream?token=${typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('lifehub-auth') || '{}')?.state?.accessToken ?? '') : ''}`
+    : null);
 
   return (
     <div className="flex flex-col gap-2 h-full">
       <div className="relative flex-1 rounded-md overflow-hidden bg-bg-raised" style={{ aspectRatio: '16/9' }}>
-        {streamUrl ? (
+        {imgSrc ? (
           <img
-            src={streamUrl}
+            src={imgSrc}
             alt={current.filename}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-fg-muted text-xs">

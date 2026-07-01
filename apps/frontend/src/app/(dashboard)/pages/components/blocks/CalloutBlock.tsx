@@ -12,10 +12,10 @@ interface CalloutBlockProps {
 }
 
 const VARIANT_STYLES: Record<CalloutVariant, string> = {
-  info: 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800',
-  warning: 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800',
-  error: 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800',
-  success: 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800',
+  info: 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700',
+  warning: 'bg-yellow-50/50 dark:bg-yellow-950/30 border-yellow-300 dark:border-yellow-700',
+  error: 'bg-red-50/50 dark:bg-red-950/30 border-red-300 dark:border-red-700',
+  success: 'bg-green-50/50 dark:bg-green-950/30 border-green-300 dark:border-green-700',
 };
 
 const ICONS = ['💡', '⚠️', '❌', '✅', '🔔', '📝', '🚀', '❓'];
@@ -36,12 +36,12 @@ export function CalloutBlock({ icon, variant, text, onChange }: CalloutBlockProp
   }, [showIconPicker]);
 
   return (
-    <div className={`relative rounded-lg border p-4 ${VARIANT_STYLES[variant]}`}>
-      <div className="flex items-start gap-3">
+    <div className={`relative rounded-md border-l-4 border px-3 py-2 ${VARIANT_STYLES[variant]}`}>
+      <div className="flex items-start gap-2">
         <div ref={pickerRef} className="relative">
           <button
             onClick={() => setShowIconPicker(!showIconPicker)}
-            className="text-xl hover:scale-110 transition-transform"
+            className="text-lg hover:scale-110 transition-transform leading-none"
           >
             {icon}
           </button>
@@ -54,7 +54,7 @@ export function CalloutBlock({ icon, variant, text, onChange }: CalloutBlockProp
                     onChange({ icon: ic, variant, text });
                     setShowIconPicker(false);
                   }}
-                  className="text-xl hover:scale-110 p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="text-lg hover:scale-110 p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
                   {ic}
                 </button>
@@ -65,13 +65,13 @@ export function CalloutBlock({ icon, variant, text, onChange }: CalloutBlockProp
         <textarea
           value={text}
           onChange={(e) => onChange({ icon, variant, text: e.target.value })}
-          placeholder="Callout-Text eingeben..."
-          className="flex-1 bg-transparent border-none outline-none resize-none text-sm min-h-[40px]"
+          placeholder="Hinweis eingeben..."
+          className="flex-1 bg-transparent border-none outline-none resize-none text-sm min-h-[1.5em]"
         />
         <select
           value={variant}
           onChange={(e) => onChange({ icon, variant: e.target.value as CalloutVariant, text })}
-          className="text-xs border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 bg-transparent"
+          className="text-xs border border-zinc-300 dark:border-zinc-700 rounded px-1 py-0.5 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <option value="info">Info</option>
           <option value="warning">Warnung</option>

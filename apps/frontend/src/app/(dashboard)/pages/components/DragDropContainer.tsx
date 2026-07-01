@@ -34,7 +34,7 @@ interface DragDropBlock {
 interface DragDropContainerProps {
   blocks: DragDropBlock[];
   onReorder: (oldIndex: number, newIndex: number) => void;
-  children: (block: DragDropBlock, dragHandleProps: Record<string, unknown>) => React.ReactNode;
+  children: (block: DragDropBlock, dragHandleProps: Record<string, unknown>, isDragging: boolean) => React.ReactNode;
 }
 
 export function DragDropContainer({ blocks, onReorder, children }: DragDropContainerProps) {
@@ -84,7 +84,7 @@ export function DragDropContainer({ blocks, onReorder, children }: DragDropConta
         <div className="space-y-1">
           {sortedBlocks.map((block) => (
             <SortableBlock key={block.id} block={block}>
-              {(dragHandleProps) => children(block, dragHandleProps)}
+              {(dragHandleProps, isDragging) => children(block, dragHandleProps, isDragging)}
             </SortableBlock>
           ))}
         </div>
@@ -92,8 +92,8 @@ export function DragDropContainer({ blocks, onReorder, children }: DragDropConta
 
       <DragOverlay>
         {activeBlock ? (
-          <div className="opacity-80 bg-bg-surface rounded-lg p-3 shadow-lg border border-brand-500/30">
-            <div className="text-sm text-fg-muted">Block wird verschoben...</div>
+          <div className="opacity-90 bg-bg rounded-lg shadow-xl border border-brand-500/40 px-3 py-2">
+            <div className="text-sm text-fg font-medium truncate">{activeBlock.type === 'heading' ? (activeBlock.content?.text as string) || 'Überschrift' : activeBlock.type === 'text' ? 'Text-Block' : activeBlock.type === 'todo' ? (activeBlock.content?.text as string) || 'Aufgabe' : activeBlock.type === 'code' ? 'Code-Block' : activeBlock.type === 'quote' ? 'Zitat' : activeBlock.type === 'callout' ? 'Hinweis' : activeBlock.type === 'bookmark' ? (activeBlock.content?.url as string) || 'Link' : activeBlock.type === 'table' ? 'Tabelle' : activeBlock.type === 'toggle' ? (activeBlock.content?.label as string) || 'Toggle' : activeBlock.type === 'divider' ? '—' : 'Block'}</div>
           </div>
         ) : null}
       </DragOverlay>
@@ -106,7 +106,7 @@ function SortableBlock({
   children,
 }: {
   block: DragDropBlock;
-  children: (dragHandleProps: Record<string, unknown>) => React.ReactNode;
+  children: (dragHandleProps: Record<string, unknown>, isDragging: boolean) => React.ReactNode;
 }) {
   const {
     attributes,
@@ -120,8 +120,8 @@ function SortableBlock({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 10 : 'auto' as const,
+    touchAction: 'manipulation' as const,
   };
 
   const dragHandleProps = {
@@ -130,8 +130,12 @@ function SortableBlock({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group">
-      {children(dragHandleProps)}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group ${isDragging ? 'opacity-40' : ''}`}
+    >
+      {children(dragHandleProps, isDragging)}
     </div>
   );
 }

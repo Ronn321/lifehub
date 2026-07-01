@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import {
-  GripVertical, Trash2, Copy, ChevronUp, ChevronDown,
+  GripVertical, Trash2, Copy, ChevronUp, ChevronDown, Plus,
   Type, Heading, List, ListOrdered, CheckSquare,
   Image, Grid3X3, File, Minus, Quote, Code,
   Bookmark, Table2, ToggleLeft, MessageSquare, Link2,
@@ -66,32 +66,29 @@ export function BlockHandle({
   const categories = [...new Set(BLOCK_TYPE_OPTIONS.map((o) => o.category))];
 
   return (
-    <div className="absolute -left-10 top-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-      {/* Drag Handle */}
-      <button
-        {...dragHandleProps}
-        className="p-1 rounded text-fg-subtle hover:text-fg hover:bg-bg-surface transition-colors cursor-grab active:cursor-grabbing"
-        title="Block verschieben"
-      >
-        <GripVertical className="h-4 w-4" />
-      </button>
-
-      {/* Add Block Menu */}
+    <div className="absolute -left-12 top-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+      {/* Add Block Menu (+ button) */}
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setShowMenu(!showMenu)}
           className="p-1 rounded text-fg-subtle hover:text-fg hover:bg-bg-surface transition-colors"
-          title="Block-Aktionen"
+          title="Block hinzufügen"
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-fg-muted">
-            <circle cx="3" cy="7" r="1" fill="currentColor" />
-            <circle cx="7" cy="7" r="1" fill="currentColor" />
-            <circle cx="11" cy="7" r="1" fill="currentColor" />
-          </svg>
+          <Plus className="h-4 w-4" />
         </button>
 
         {showMenu && (
-          <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-border py-1 z-50">
+          <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-border py-1 z-50 max-h-[400px] overflow-hidden">
+            {/* Search */}
+            <div className="px-2 py-1 border-b border-border">
+              <input
+                type="text"
+                placeholder="Block suchen..."
+                className="w-full px-2 py-1.5 rounded-md border border-border bg-bg text-sm outline-none focus:border-brand-500"
+                autoFocus
+              />
+            </div>
+            
             {/* Move options */}
             {(onMoveUp || onMoveDown) && (
               <div className="px-2 py-1 border-b border-border">

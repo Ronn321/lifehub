@@ -12,23 +12,23 @@ interface ToggleBlockProps {
 
 export function ToggleBlock({ label, content, isOpen, onChange }: ToggleBlockProps) {
   return (
-    <div className="rounded-lg bg-bg-surface overflow-hidden">
+    <div>
       <button
         onClick={() => onChange({ label, content, isOpen: !isOpen })}
-        className="w-full flex items-center gap-2 p-3 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+        className="w-full flex items-center gap-1.5 py-0.5 text-left hover:bg-bg-surface rounded transition-colors"
       >
         <ChevronRight
           className={`h-4 w-4 text-fg-muted transition-transform ${isOpen ? 'rotate-90' : ''}`}
         />
-        <span className="font-medium text-sm">{label || 'Toggle-Überschrift'}</span>
+        <span className="text-sm">{label || 'Toggle-Überschrift'}</span>
       </button>
       {isOpen && (
-        <div className="px-3 pb-3 pt-0 text-sm text-fg-muted border-t border-zinc-200 dark:border-zinc-800">
+        <div className="pl-6 py-1 text-sm text-fg-muted">
           <textarea
             value={content}
             onChange={(e) => onChange({ label, content: e.target.value, isOpen })}
             placeholder="Inhalt eingeben..."
-            className="w-full bg-transparent border-none outline-none resize-none min-h-[60px] text-sm"
+            className="w-full bg-transparent border-none outline-none resize-none min-h-[1.5em] text-sm"
           />
         </div>
       )}

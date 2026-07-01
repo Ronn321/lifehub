@@ -21,8 +21,7 @@ import { TableBlock } from './components/blocks/TableBlock';
 import { PageReferenceBlock } from './components/blocks/PageReferenceBlock';
 import {
   Plus, Notebook, Loader2, Trash2,
-  Heading, Type, Image, Grid3X3, File, Minus, Bold, Italic,
-  List, ListOrdered, Check,
+  Heading, Type, Image, Grid3X3, File, Minus, Check,
   ChevronRight, MessageSquare, Quote, Code, Bookmark, Table2, Link2,
 } from 'lucide-react';
 
@@ -131,15 +130,53 @@ const BLOCK_DEFAULTS: Record<string, Record<string, unknown>> = {
   'page-reference': { pageId: '' },
 };
 
-/* ─── TipTap Editor ─── */
-function TipTapEditor({ content, onUpdate, debounceMs = 1000 }: {
-  content: Record<string, unknown>; onUpdate: (json: Record<string, unknown>) => void; debounceMs?: number;
+function extractTextFromContent(content: Record<string, unknown>): string {
+  if (!content) return '';
+  if (typeof content.text === 'string') return content.text;
+  if (typeof content.label === 'string') return content.label;
+  if (typeof content.code === 'string') return content.code;
+  if (typeof content.url === 'string') return content.url;
+  if (content.json && typeof content.json === 'object') {
+    const json = content.json as Record<string, unknown>;
+    if (json.content && Array.isArray(json.content)) {
+      return json.content
+        .filter((block: any) => block.type === 'paragraph' || block.type === 'heading')
+        .map((block: any) => {
+          if (block.content && Array.isArray(block.content)) {
+            return block.content
+              .filter((inline: any) => inline.type === 'text')
+              .map((inline: any) => inline.text || '')
+              .join('');
+          }
+          return '';
+        })
+        .join('\n');
+    }
+  }
+  return '';
+}
+
+function textToTipTapJson(text: string): Record<string, unknown> {
+  if (!text) return { type: 'doc', content: [] };
+  const paragraphs = text.split('\n').filter(Boolean);
+  return {
+    type: 'doc',
+    content: paragraphs.map(p => ({
+      type: 'paragraph',
+      content: [{ type: 'text', text: p }],
+    })),
+  };
+}
+
+/* ─── TipTap Editor (inline, Notion-style) ─── */
+function TipTapEditor({ content, onUpdate, placeholder, debounceMs = 800 }: {
+  content: Record<string, unknown>; onUpdate: (json: Record<string, unknown>) => void; placeholder?: string; debounceMs?: number;
 }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
-      Placeholder.configure({ placeholder: 'Text eingeben...' }),
+      Placeholder.configure({ placeholder: placeholder ?? 'Text eingeben...' }),
     ],
     content: (content?.json as Record<string, unknown>) ?? { type: 'doc', content: [] },
     onUpdate: ({ editor: ed }) => {
@@ -149,7 +186,9 @@ function TipTapEditor({ content, onUpdate, debounceMs = 1000 }: {
       }, debounceMs);
     },
     editorProps: {
-      attributes: { class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[80px]' },
+      attributes: {
+        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[1.2em]',
+      },
     },
   });
 
@@ -157,61 +196,9 @@ function TipTapEditor({ content, onUpdate, debounceMs = 1000 }: {
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
-  if (!editor) return <div className="h-20 animate-pulse bg-zinc-200 dark:bg-zinc-800 rounded" />;
+  if (!editor) return <div className="h-6 animate-pulse bg-zinc-100 dark:bg-zinc-800 rounded" />;
 
-  return (
-    <div className="border border-zinc-300 dark:border-zinc-700 rounded-lg overflow-hidden">
-      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`p-1 rounded ${editor.isActive('bold') ? 'bg-zinc-300 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-        >
-          <Bold className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`p-1 rounded ${editor.isActive('italic') ? 'bg-zinc-300 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-        >
-          <Italic className="h-3.5 w-3.5" />
-        </button>
-        <span className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 mx-1" />
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={`p-1 rounded text-xs font-bold ${editor.isActive('heading', { level: 1 }) ? 'bg-zinc-300 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-        >
-          H1
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`p-1 rounded text-xs font-bold ${editor.isActive('heading', { level: 2 }) ? 'bg-zinc-300 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-        >
-          H2
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`p-1 rounded text-xs font-bold ${editor.isActive('heading', { level: 3 }) ? 'bg-zinc-300 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-        >
-          H3
-        </button>
-        <span className="w-px h-4 bg-zinc-300 dark:bg-zinc-700 mx-1" />
-        <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`p-1 rounded ${editor.isActive('bulletList') ? 'bg-zinc-300 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-        >
-          <List className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`p-1 rounded ${editor.isActive('orderedList') ? 'bg-zinc-300 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-        >
-          <ListOrdered className="h-3.5 w-3.5" />
-        </button>
-      </div>
-      <div className="p-3">
-        <EditorContent editor={editor} />
-      </div>
-    </div>
-  );
+  return <EditorContent editor={editor} />;
 }
 
 /* ─── Media Picker ─── */
@@ -398,7 +385,7 @@ function CreatePageDialog({ open, onClose, onSuccess, pages }: {
   );
 }
 
-/* ─── Block Editor (inline) ─── */
+/* ─── Block Editor (inline, Notion-style) ─── */
 function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
   block: PageBlock; onUpdate: (data: Partial<PageBlock>) => void; pageId: string;
   allPages: Page[]; onNavigate: (id: string) => void;
@@ -414,52 +401,61 @@ function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
         ? 'text-xl font-semibold'
         : 'text-2xl font-semibold';
     return (
-      <div className="group/heading">
+      <div className="flex items-start gap-1">
+        <select
+          value={level}
+          onChange={(e) => onUpdate({ content: { ...block.content, level: Number(e.target.value) } })}
+          className="mt-1 text-xs bg-transparent text-fg-muted border-none outline-none cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <option value={1}>H1</option>
+          <option value={2}>H2</option>
+          <option value={3}>H3</option>
+        </select>
         <div
           contentEditable
           suppressContentEditableWarning
-          className={`outline-none min-h-[1em] ${levelClasses} placeholder:text-fg-muted`}
+          className={`flex-1 outline-none min-h-[1em] ${levelClasses} placeholder:text-fg-muted`}
           data-placeholder={level === 1 ? 'Überschrift 1' : level === 3 ? 'Überschrift 3' : 'Überschrift 2'}
           onBlur={(e) => onUpdate({ content: { ...block.content, text: e.currentTarget.textContent ?? '' } })}
-          dangerouslySetInnerHTML={{ __html: text }}
-        />
+        >
+          {text}
+        </div>
       </div>
     );
   }
 
   if (block.type === 'text') {
     return (
-      <div className="group">
-        <TipTapEditor
-          content={block.content}
-          onUpdate={(json) => onUpdate({ content: json })}
-        />
-      </div>
+      <TipTapEditor
+        content={block.content}
+        onUpdate={(json) => onUpdate({ content: json })}
+        placeholder="Text eingeben..."
+      />
     );
   }
 
   if (block.type === 'image') {
     const mediaId = block.content?.mediaId as string | undefined;
     return (
-      <div className="group">
-        <div className="text-xs text-fg-muted mb-1 flex items-center gap-2">
-          {blockLabel.image}
-          <button
-            onClick={() => setShowMediaPicker(true)}
-            className="text-amber-600 hover:underline text-[10px]"
-          >
-            {mediaId ? 'Ändern' : 'Auswählen'}
-          </button>
-        </div>
+      <div>
         {mediaId ? (
-          <div className="rounded-lg border border-zinc-300 dark:border-zinc-700 p-3 text-sm text-fg-muted">
-            <Image className="h-5 w-5 inline mr-2" />
-            Medien-ID: {mediaId}
+          <div className="relative group/img">
+            <img
+              src={`http://${window.location.hostname}:3007/api/v1/media/files/${mediaId}/stream?token=${typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('lifehub-auth') || '{}')?.state?.accessToken ?? '') : ''}`}
+              alt=""
+              className="max-w-full rounded-lg"
+            />
+            <button
+              onClick={() => setShowMediaPicker(true)}
+              className="absolute top-2 right-2 px-2 py-1 rounded bg-black/50 text-white text-xs opacity-0 group-hover/img:opacity-100 transition-opacity"
+            >
+              Ändern
+            </button>
           </div>
         ) : (
           <button
             onClick={() => setShowMediaPicker(true)}
-            className="w-full py-8 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg transition-colors flex items-center justify-center gap-2"
+            className="w-full py-12 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors flex items-center justify-center gap-2"
           >
             <Image className="h-5 w-5" /> Bild auswählen
           </button>
@@ -477,19 +473,10 @@ function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
   if (block.type === 'gallery') {
     const mediaIds = (block.content?.mediaIds as string[]) ?? [];
     return (
-      <div className="group">
-        <div className="text-xs text-fg-muted mb-1 flex items-center gap-2">
-          {blockLabel.gallery}
-          <button
-            onClick={() => setShowMediaPicker(true)}
-            className="text-amber-600 hover:underline text-[10px]"
-          >
-            {mediaIds.length > 0 ? `${mediaIds.length} Bilder` : 'Auswählen'}
-          </button>
-        </div>
+      <div>
         <button
           onClick={() => setShowMediaPicker(true)}
-          className="w-full py-4 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg transition-colors flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors flex items-center justify-center gap-2"
         >
           <Grid3X3 className="h-5 w-5" /> {mediaIds.length > 0 ? `${mediaIds.length} Bilder ausgewählt` : 'Bilder auswählen'}
         </button>
@@ -505,127 +492,103 @@ function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
 
   if (block.type === 'file-list') {
     return (
-      <div className="group">
-        <div className="text-sm text-fg-muted">
-          {blockIcon['file-list']} {blockLabel['file-list']} Block
-        </div>
+      <div className="text-sm text-fg-muted py-2">
+        <File className="h-4 w-4 inline mr-2" /> Dateiliste (bald verfügbar)
       </div>
     );
   }
 
   if (block.type === 'divider') {
-    return (
-      <div className="group py-2">
-        <hr className="border-border" />
-      </div>
-    );
+    return <hr className="border-border my-2" />;
   }
 
   if (block.type === 'todo') {
     return (
-      <div className="group">
-        <TodoBlock
-          checked={(block.content?.checked as boolean) ?? false}
-          text={(block.content?.text as string) ?? ''}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <TodoBlock
+        checked={(block.content?.checked as boolean) ?? false}
+        text={(block.content?.text as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   if (block.type === 'toggle') {
     return (
-      <div className="group">
-        <ToggleBlock
-          label={(block.content?.label as string) ?? ''}
-          content={(block.content?.content as string) ?? ''}
-          isOpen={(block.content?.isOpen as boolean) ?? false}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <ToggleBlock
+        label={(block.content?.label as string) ?? ''}
+        content={(block.content?.content as string) ?? ''}
+        isOpen={(block.content?.isOpen as boolean) ?? false}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   if (block.type === 'callout') {
     return (
-      <div className="group">
-        <CalloutBlock
-          icon={(block.content?.icon as string) ?? '💡'}
-          variant={(block.content?.variant as 'info' | 'warning' | 'error' | 'success') ?? 'info'}
-          text={(block.content?.text as string) ?? ''}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <CalloutBlock
+        icon={(block.content?.icon as string) ?? '💡'}
+        variant={(block.content?.variant as 'info' | 'warning' | 'error' | 'success') ?? 'info'}
+        text={(block.content?.text as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   if (block.type === 'quote') {
     return (
-      <div className="group">
-        <QuoteBlock
-          text={(block.content?.text as string) ?? ''}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <QuoteBlock
+        text={(block.content?.text as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   if (block.type === 'code') {
     return (
-      <div className="group">
-        <CodeBlock
-          language={(block.content?.language as string) ?? 'javascript'}
-          code={(block.content?.code as string) ?? ''}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <CodeBlock
+        language={(block.content?.language as string) ?? 'javascript'}
+        code={(block.content?.code as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   if (block.type === 'bookmark') {
     return (
-      <div className="group">
-        <BookmarkBlock
-          url={(block.content?.url as string) ?? ''}
-          title={block.content?.title as string}
-          description={block.content?.description as string}
-          image={block.content?.image as string}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <BookmarkBlock
+        url={(block.content?.url as string) ?? ''}
+        title={block.content?.title as string}
+        description={block.content?.description as string}
+        image={block.content?.image as string}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   if (block.type === 'table') {
     return (
-      <div className="group">
-        <TableBlock
-          columns={(block.content?.columns as Array<{ id: string; name: string; type: 'text' | 'number' | 'date' }>) ?? []}
-          rows={(block.content?.rows as Array<{ id: string; cells: Record<string, string> }>) ?? []}
-          functions={(block.content?.functions as Record<string, 'sum' | 'avg' | 'min' | 'max' | 'count'>) ?? {}}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <TableBlock
+        columns={(block.content?.columns as Array<{ id: string; name: string; type: 'text' | 'number' | 'date' }>) ?? []}
+        rows={(block.content?.rows as Array<{ id: string; cells: Record<string, string> }>) ?? []}
+        functions={(block.content?.functions as Record<string, 'sum' | 'avg' | 'min' | 'max' | 'count'>) ?? {}}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   if (block.type === 'page-reference') {
     return (
-      <div className="group">
-        <PageReferenceBlock
-          pageId={(block.content?.pageId as string) ?? ''}
-          pages={allPages}
-          onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
-        />
-      </div>
+      <PageReferenceBlock
+        pageId={(block.content?.pageId as string) ?? ''}
+        pages={allPages}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
     );
   }
 
   return (
-    <div className="group">
-      <div className="text-sm text-fg-muted">
-        {blockIcon[block.type]} {blockLabel[block.type]} Block
-      </div>
+    <div className="text-sm text-fg-muted py-1">
+      {blockLabel[block.type]} Block
     </div>
   );
 }
@@ -728,9 +691,44 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
   };
 
   const handleBlockTypeChange = (blockId: string, newType: BlockType) => {
+    const block = page?.blocks.find(b => b.id === blockId);
+    if (!block) return;
+    
+    const oldText = extractTextFromContent(block.content ?? {});
+    let newContent: Record<string, unknown>;
+    
+    switch (newType) {
+      case 'heading':
+        newContent = { level: 2, text: oldText };
+        break;
+      case 'text':
+        newContent = { json: textToTipTapJson(oldText) };
+        break;
+      case 'todo':
+        newContent = { checked: false, text: oldText };
+        break;
+      case 'toggle':
+        newContent = { label: oldText, content: '', isOpen: false };
+        break;
+      case 'callout':
+        newContent = { icon: '💡', variant: 'info', text: oldText };
+        break;
+      case 'quote':
+        newContent = { text: oldText };
+        break;
+      case 'code':
+        newContent = { language: 'javascript', code: oldText };
+        break;
+      case 'bookmark':
+        newContent = { url: oldText.startsWith('http') ? oldText : '' };
+        break;
+      default:
+        newContent = BLOCK_DEFAULTS[newType] ?? {};
+    }
+    
     updateBlockMutation.mutate({
       blockId,
-      data: { type: newType as PageBlock['type'], content: BLOCK_DEFAULTS[newType] ?? {} },
+      data: { type: newType as PageBlock['type'], content: newContent },
     });
   };
 
@@ -782,10 +780,10 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
           </div>
         ) : (
           <DragDropContainer blocks={sortedBlocks} onReorder={handleReorder}>
-            {(block, dragHandleProps) => {
+            {(block, dragHandleProps, isDragging) => {
               const pageBlock = block as unknown as PageBlock;
               return (
-                <div className="group relative">
+                <div className={`group relative rounded-md transition-colors ${isDragging ? 'bg-brand-500/5 ring-1 ring-brand-500/20' : 'hover:bg-bg-surface/50'}`}>
                   <BlockHandle
                     blockId={block.id}
                     currentType={(block.type ?? 'text') as BlockType}
@@ -810,27 +808,35 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
         )}
       </div>
 
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+      <div className="py-2">
         {addingBlock ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {(['heading', 'text', 'todo', 'toggle', 'image', 'gallery', 'file-list', 'divider', 'callout', 'quote', 'code', 'bookmark', 'table', 'page-reference'] as const).map((type) => (
-              <button
-                key={type}
-                onClick={() => addBlockMutation.mutate(type)}
-                disabled={addBlockMutation.isPending}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-bg-surface text-sm transition-colors disabled:opacity-50"
-              >
-                {blockIcon[type]} {blockLabel[type]}
-              </button>
-            ))}
-            <button onClick={() => setAddingBlock(null)} className="px-3 py-2 rounded-lg text-sm text-fg-muted hover:text-fg transition-colors">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-border p-3 max-w-md">
+            <input
+              type="text"
+              placeholder="Block suchen..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-sm outline-none focus:border-brand-500 mb-2"
+              autoFocus
+            />
+            <div className="grid grid-cols-2 gap-1 max-h-[200px] overflow-y-auto">
+              {(['heading', 'text', 'todo', 'toggle', 'image', 'gallery', 'file-list', 'divider', 'callout', 'quote', 'code', 'bookmark', 'table', 'page-reference'] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => addBlockMutation.mutate(type)}
+                  disabled={addBlockMutation.isPending}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-surface text-sm text-left transition-colors disabled:opacity-50"
+                >
+                  {blockIcon[type]} {blockLabel[type]}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setAddingBlock(null)} className="w-full mt-2 px-3 py-1.5 rounded-lg text-sm text-fg-muted hover:text-fg hover:bg-bg-surface transition-colors">
               Abbrechen
             </button>
           </div>
         ) : (
           <button
             onClick={() => setAddingBlock('menu')}
-            className="w-full py-3 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 rounded-lg text-sm text-fg-muted hover:text-fg hover:bg-bg-surface transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" /> Block hinzufügen
           </button>

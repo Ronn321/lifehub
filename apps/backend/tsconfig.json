@@ -1,0 +1,42 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "./dist",
+    "rootDir": "../../",
+    "baseUrl": ".",
+    "paths": {
+      "@lifehub/db": ["../../shared/db/src"],
+      "@lifehub/db/*": ["../../shared/db/src/*"],
+      "@lifehub/auth": ["../../shared/auth/src"],
+      "@lifehub/auth/*": ["../../shared/auth/src/*"],
+      "@lifehub/permissions": ["../../shared/permissions/src"],
+      "@lifehub/permissions/*": ["../../shared/permissions/src/*"],
+      "@lifehub/audit": ["../../shared/audit/src"],
+      "@lifehub/audit/*": ["../../shared/audit/src/*"],
+      "@lifehub/events": ["../../shared/events/src"],
+      "@lifehub/events/*": ["../../shared/events/src/*"],
+      "@lifehub/storage": ["../../shared/storage/src"],
+      "@lifehub/storage/*": ["../../shared/storage/src/*"],
+      "@lifehub/users-domain": ["../../domains/users/src"],
+      "@lifehub/users-domain/*": ["../../domains/users/src/*"],
+      "@lifehub/media-domain": ["../../domains/media/src"],
+      "@lifehub/media-domain/*": ["../../domains/media/src/*"],
+      "@lifehub/dashboard-domain": ["../../domains/dashboard/src"],
+      "@lifehub/dashboard-domain/*": ["../../domains/dashboard/src/*"],
+      "@lifehub/travel-domain": ["../../domains/travel/src"],
+      "@lifehub/travel-domain/*": ["../../domains/travel/src/*"],
+      "@lifehub/finance-domain": ["../../domains/finance/src"],
+      "@lifehub/finance-domain/*": ["../../domains/finance/src/*"]
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "declaration": false,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "../domains/**/*", "../shared/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "src/db/migrate.ts", "src/db/reset.ts", "src/db/seed.ts"]
+}

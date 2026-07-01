@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    /* Light mode (default) */
+    --bg: 255 255 255;
+    --bg-surface: 244 244 245;
+    --bg-raised: 228 228 231;
+    --fg: 9 9 11;
+    --fg-muted: 82 82 91;
+    --fg-subtle: 161 161 170;
+    --border-c: 228 228 231;
+    --border-strong: 212 212 216;
+  }
+
+  :root.dark,
+  .dark {
+    --bg: 9 9 11;
+    --bg-surface: 24 24 27;
+    --bg-raised: 39 39 42;
+    --fg: 250 250 250;
+    --fg-muted: 161 161 170;
+    --fg-subtle: 113 113 122;
+    --border-c: 39 39 42;
+    --border-strong: 63 63 70;
+  }
+
+  body {
+    @apply antialiased;
+    background-color: rgb(var(--bg));
+    color: rgb(var(--fg));
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+@layer utilities {
+  .bg-bg { background-color: rgb(var(--bg)); }
+  .bg-bg-surface { background-color: rgb(var(--bg-surface)); }
+  .bg-bg-raised { background-color: rgb(var(--bg-raised)); }
+  .text-fg { color: rgb(var(--fg)); }
+  .text-fg-muted { color: rgb(var(--fg-muted)); }
+  .text-fg-subtle { color: rgb(var(--fg-subtle)); }
+  .border-border { border-color: rgb(var(--border-c)); }
+  .border-border-strong { border-color: rgb(var(--border-strong)); }
+
+  .glass {
+    background: rgba(24, 24, 27, 0.7);
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .dashboard-grid {
+    display: grid;
+    container-type: inline-size;
+    container-name: dashboard-grid;
+  }
+
+  @keyframes widget-enter {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .widget-enter { animation: widget-enter 200ms ease-out; }
+}

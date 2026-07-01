@@ -1,0 +1,16 @@
+{
+  "name": "@lifehub/dashboard-domain",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --outDir dist --rootDir src --module CommonJS --moduleResolution Node --experimentalDecorators --emitDecoratorMetadata --esModuleInterop --skipLibCheck"
+  },
+  "dependencies": {
+    "@lifehub/auth": "workspace:*",
+    "@lifehub/permissions": "workspace:*",
+    "@lifehub/db": "workspace:*",
+    "@nestjs/common": "^10.4.0"
+  }
+}

@@ -1,0 +1,57 @@
+# Build outputs
+node_modules/
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# graphify outputs (siehe docs/GRAPHIFY.md)
+graphify-out/
+# Ausnahme: GRAPH_REPORT.md darf committed werden (lebendige Doku)
+!graphify-out/GRAPH_REPORT.md
+
+# Screenshots & test artifacts
+*.png
+*.jpg
+test-results/
+token.json
+backend_log.txt
+nul
+start-backend.cmd
+test-media.sh
+test_*.py
+test-*.py
+test_*.mjs
+test-*.mjs
+
+# Backend artifacts
+apps/backend/backend.pid
+apps/backend/lh_*.json
+apps/backend/lh_*.txt
+apps/backend/login_*.json
+apps/backend/check.js
+apps/backend/storage/
+scripts/*.py
+scripts/*.js

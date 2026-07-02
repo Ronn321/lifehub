@@ -1,15 +1,14 @@
 @echo off
 REM LifeHub Deploy Script (Windows)
-REM Baut Docker Images und pushed sie zur privaten Registry auf dem NAS.
-REM Nutzung: scripts\deploy.cmd [VERSION] [REGISTRY]
-REM Beispiel: scripts\deploy.cmd v0.1.0 100.64.0.1:5000
+REM Baut Docker Images und pushed sie zu ghcr.io (GitHub Container Registry).
+REM Nutzung: scripts\deploy.cmd [VERSION]
+REM Beispiel: scripts\deploy.cmd v0.1.0
 
 setlocal enabledelayedexpansion
 
 set VERSION=%1
-set REGISTRY=%2
 if "%VERSION%"=="" set VERSION=latest
-if "%REGISTRY%"=="" set REGISTRY=localhost:5000
+set REGISTRY=ghcr.io/ronn321
 
 echo ============================================
 echo   LifeHub Deploy
@@ -23,6 +22,13 @@ docker info >nul 2>&1
 if errorlevel 1 (
     echo Fehler: Docker laeuft nicht. Bitte starte Docker Desktop.
     exit /b 1
+)
+
+REM GHCR Login
+if defined GITHUB_TOKEN (
+    echo %GITHUB_TOKEN% | docker login ghcr.io -u Ronn321 --password-stdin
+) else (
+    echo Warnung: Kein GITHUB_TOKEN gesetzt. Bitte manuell: docker login ghcr.io
 )
 
 REM Backend Image bauen
@@ -43,12 +49,12 @@ if errorlevel 1 (
 )
 echo   Frontend Image gebaut.
 
-REM Push zur Registry
-echo [3/4] Pushing backend:%VERSION% to %REGISTRY%...
+REM Push zu GHCR
+echo [3/4] Pushing backend:%VERSION%...
 docker push %REGISTRY%/lifehub-backend:%VERSION%
 docker push %REGISTRY%/lifehub-backend:latest
 
-echo [4/4] Pushing frontend:%VERSION% to %REGISTRY%...
+echo [4/4] Pushing frontend:%VERSION%...
 docker push %REGISTRY%/lifehub-frontend:%VERSION%
 docker push %REGISTRY%/lifehub-frontend:latest
 
@@ -62,7 +68,6 @@ echo   %REGISTRY%/lifehub-backend:%VERSION%
 echo   %REGISTRY%/lifehub-frontend:%VERSION%
 echo.
 echo Auf dem NAS jetzt ausfuehren:
-echo   cd /volume1/docker/lifehub
 echo   docker compose pull
 echo   docker compose up -d
 

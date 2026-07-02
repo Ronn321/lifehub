@@ -1,7 +1,7 @@
 # LifeHub Production Stack
-# Wird auf dem NAS deployed. Images aus privater Registry.
+# Wird auf dem NAS deployed. Images von ghcr.io (GitHub Container Registry).
 # Dev-Stack: docker-compose.dev.yml
-# Doku: docs/DOCKER_COMPOSE_PRODUCTION.md
+# Doku: docs/DEPLOYMENT.md
 
 name: lifehub
 
@@ -123,7 +123,7 @@ services:
 
   # ============ Backend ============
   backend:
-    image: ${LIFEHUB_REGISTRY:-localhost:5000}/lifehub-backend:latest
+    image: ghcr.io/ronn321/lifehub-backend:latest
     container_name: lifehub-backend
     restart: unless-stopped
     environment:
@@ -161,7 +161,7 @@ services:
 
   # ============ Worker ============
   worker:
-    image: ${LIFEHUB_REGISTRY:-localhost:5000}/lifehub-backend:latest
+    image: ghcr.io/ronn321/lifehub-backend:latest
     container_name: lifehub-worker
     restart: unless-stopped
     command: ["node", "apps/backend/dist/apps/backend/src/worker.js"]
@@ -187,7 +187,7 @@ services:
 
   # ============ Frontend ============
   frontend:
-    image: ${LIFEHUB_REGISTRY:-localhost:5000}/lifehub-frontend:latest
+    image: ghcr.io/ronn321/lifehub-frontend:latest
     container_name: lifehub-frontend
     restart: unless-stopped
     environment:

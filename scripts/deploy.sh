@@ -1,13 +1,13 @@
 #!/bin/bash
 # LifeHub Deploy Script
-# Baut Docker Images und pushed sie zur privaten Registry auf dem NAS.
-# Nutzung: ./scripts/deploy.sh [VERSION] [REGISTRY]
-# Beispiel: ./scripts/deploy.sh v0.1.0 100.64.0.1:5000
+# Baut Docker Images und pushed sie zu ghcr.io (GitHub Container Registry).
+# Nutzung: ./scripts/deploy.sh [VERSION]
+# Beispiel: ./scripts/deploy.sh v0.1.0
 
 set -e
 
 VERSION=${1:-latest}
-REGISTRY=${LIFEHUB_REGISTRY:-${2:-localhost:5000}}
+REGISTRY="ghcr.io/ronn321"
 
 echo "============================================"
 echo "  LifeHub Deploy"
@@ -20,6 +20,16 @@ echo ""
 if ! docker info > /dev/null 2>&1; then
   echo "Fehler: Docker laeuft nicht. Bitte starte Docker Desktop."
   exit 1
+fi
+
+# GHCR Login (Token muss gesetzt sein oder gh CLI muss eingeloggt sein)
+if [ -n "$GITHUB_TOKEN" ]; then
+  echo "$GITHUB_TOKEN" | docker login ghcr.io -u Ronn321 --password-stdin
+elif command -v gh &> /dev/null; then
+  gh auth token | docker login ghcr.io -u Ronn321 --password-stdin
+else
+  echo "Warnung: Kein GITHUB_TOKEN gesetzt und gh CLI nicht installiert."
+  echo "Bitte manuell: docker login ghcr.io"
 fi
 
 # Backend Image bauen
@@ -40,12 +50,12 @@ docker build \
   .
 echo "  Frontend Image gebaut."
 
-# Push zur Registry
-echo "[3/4] Pushing backend:$VERSION to $REGISTRY..."
+# Push zu GHCR
+echo "[3/4] Pushing backend:$VERSION..."
 docker push "$REGISTRY/lifehub-backend:$VERSION"
 docker push "$REGISTRY/lifehub-backend:latest"
 
-echo "[4/4] Pushing frontend:$VERSION to $REGISTRY..."
+echo "[4/4] Pushing frontend:$VERSION..."
 docker push "$REGISTRY/lifehub-frontend:$VERSION"
 docker push "$REGISTRY/lifehub-frontend:latest"
 
@@ -59,6 +69,5 @@ echo "  $REGISTRY/lifehub-backend:$VERSION"
 echo "  $REGISTRY/lifehub-frontend:$VERSION"
 echo ""
 echo "Auf dem NAS jetzt ausfuehren:"
-echo "  cd /volume1/docker/lifehub"
 echo "  docker compose pull"
 echo "  docker compose up -d"

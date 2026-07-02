@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import {
   DndContext,
-  closestCorners,
+  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifiers';
+
 
 interface DragDropBlock {
   id: string;
@@ -63,9 +63,12 @@ export function DragDropContainer({ blocks, onReorder, children }: DragDropConta
       const { active, over } = event;
       setActiveId(null);
 
+      console.log('[DragDrop] handleDragEnd:', { activeId: active.id, overId: over?.id });
+
       if (over && active.id !== over.id) {
         const oldIndex = sortedBlocks.findIndex((b) => b.id === active.id);
         const newIndex = sortedBlocks.findIndex((b) => b.id === over.id);
+        console.log('[DragDrop] indices:', { oldIndex, newIndex });
         if (oldIndex !== -1 && newIndex !== -1) {
           onReorder(oldIndex, newIndex);
         }
@@ -77,10 +80,10 @@ export function DragDropContainer({ blocks, onReorder, children }: DragDropConta
   return (
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+        
       >
       <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
         <div className="space-y-1">

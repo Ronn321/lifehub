@@ -826,15 +826,16 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
   });
 
   const handleReorder = (oldIndex: number, newIndex: number) => {
+    console.log('[Pages] handleReorder:', { oldIndex, newIndex });
     if (!page) return;
     const sorted = [...page.blocks].sort((a, b) => a.sortOrder - b.sortOrder);
     const newBlocks = [...sorted];
     const [moved] = newBlocks.splice(oldIndex, 1);
     if (!moved) return;
     newBlocks.splice(newIndex, 0, moved);
-    reorderBlockMutation.mutate(
-      newBlocks.map((b, i) => ({ id: b.id, sortOrder: i }))
-    );
+    const payload = newBlocks.map((b, i) => ({ id: b.id, sortOrder: i }));
+    console.log('[Pages] reorder payload:', payload);
+    reorderBlockMutation.mutate(payload);
   };
 
   const handleMoveBlock = (blockId: string, direction: 'up' | 'down') => {

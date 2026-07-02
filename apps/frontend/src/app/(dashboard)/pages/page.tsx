@@ -27,11 +27,13 @@ import { VideoBlock } from './components/blocks/VideoBlock';
 import { FileBlock } from './components/blocks/FileBlock';
 import { LinkBlock } from './components/blocks/LinkBlock';
 import { MapBlock } from './components/blocks/MapBlock';
+import { BlockVersionHistory } from './components/BlockVersionHistory';
+import { PageVersionHistory } from './components/PageVersionHistory';
 import {
   Plus, Notebook, Loader2, Trash2,
   Heading, Type, Image, Grid3X3, File, Minus, Check,
   ChevronRight, MessageSquare, Quote, Code, Bookmark, Table2, Link2,
-  Calendar, PiggyBank, Server,
+  Calendar, PiggyBank, Server, History,
 } from 'lucide-react';
 
 interface Page {
@@ -758,6 +760,8 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
   const router = useRouter();
   const [addingBlock, setAddingBlock] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [showBlockHistory, setShowBlockHistory] = useState<string | null>(null);
+  const [showPageHistory, setShowPageHistory] = useState(false);
 
   const { data: page, isLoading } = useQuery<PageDetail>({
     queryKey: ['page', pageId],
@@ -917,7 +921,12 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
       <PageHeader page={page} allPages={allPages} onNavigate={(id) => id ? router.push(`/pages?open=${id}`) : onBack()} />
 
       <div className="flex items-center justify-between">
-        <div />
+        <button
+          onClick={() => setShowPageHistory(true)}
+          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg hover:bg-bg-surface transition-colors flex items-center gap-1.5"
+        >
+          <History className="h-3.5 w-3.5" /> Versionen
+        </button>
         <button
           onClick={() => { if (window.confirm(`"${page.title}" löschen?`)) deletePageMutation.mutate(); }}
           className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors flex items-center gap-1.5"
@@ -951,6 +960,7 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
                     onDuplicate={() => duplicateBlockMutation.mutate(pageBlock)}
                     onMoveUp={() => handleMoveBlock(block.id, 'up')}
                     onMoveDown={() => handleMoveBlock(block.id, 'down')}
+                    onShowHistory={() => setShowBlockHistory(block.id)}
                     dragHandleProps={dragHandleProps}
                   />
                   <BlockEditor
@@ -1004,6 +1014,21 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
 
       {/* Relations Section */}
       <RelationsSection pageId={pageId} allPages={allPages} onNavigate={(id) => router.push(`/pages?open=${id}`)} />
+
+      {/* Version History Modals */}
+      {showBlockHistory && (
+        <BlockVersionHistory
+          pageId={pageId}
+          blockId={showBlockHistory}
+          onClose={() => setShowBlockHistory(null)}
+        />
+      )}
+      {showPageHistory && (
+        <PageVersionHistory
+          pageId={pageId}
+          onClose={() => setShowPageHistory(false)}
+        />
+      )}
     </div>
   );
 }

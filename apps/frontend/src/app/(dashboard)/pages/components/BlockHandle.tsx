@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import {
-  GripVertical, Trash2, Copy, ChevronUp, ChevronDown, Plus,
+  GripVertical, Trash2, Copy, ChevronUp, ChevronDown, Plus, History,
   Type, Heading, List, ListOrdered, CheckSquare,
   Image, Grid3X3, File, Minus, Quote, Code,
   Bookmark, Table2, ToggleLeft, MessageSquare, Link2,
@@ -38,6 +38,7 @@ interface BlockHandleProps {
   onDuplicate: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  onShowHistory?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
 
@@ -48,6 +49,7 @@ export function BlockHandle({
   onDuplicate,
   onMoveUp,
   onMoveDown,
+  onShowHistory,
   dragHandleProps,
 }: BlockHandleProps) {
   const [showMenu, setShowMenu] = useState(false);
@@ -149,6 +151,14 @@ export function BlockHandle({
               >
                 <Copy className="h-3.5 w-3.5" /> Duplizieren
               </button>
+              {onShowHistory && (
+                <button
+                  onClick={() => { onShowHistory(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-bg-surface transition-colors"
+                >
+                  <History className="h-3.5 w-3.5" /> Versionen
+                </button>
+              )}
               <button
                 onClick={() => { onDelete(); setShowMenu(false); }}
                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"

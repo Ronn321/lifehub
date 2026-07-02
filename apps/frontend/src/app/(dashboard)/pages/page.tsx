@@ -749,9 +749,9 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
     const [moved] = newBlocks.splice(oldIndex, 1);
     if (!moved) return;
     newBlocks.splice(newIndex, 0, moved);
-    const payload = newBlocks.map((b, i) => ({ id: b.id, sortOrder: i }));
-    console.log('[Pages] handleReorder:', { oldIndex, newIndex, payload });
-    reorderBlockMutation.mutate(payload);
+    reorderBlockMutation.mutate(
+      newBlocks.map((b, i) => ({ id: b.id, sortOrder: i }))
+    );
   };
 
   const handleMoveBlock = (blockId: string, direction: 'up' | 'down') => {

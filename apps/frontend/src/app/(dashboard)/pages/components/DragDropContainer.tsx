@@ -63,12 +63,9 @@ export function DragDropContainer({ blocks, onReorder, children }: DragDropConta
       const { active, over } = event;
       setActiveId(null);
 
-      console.log('[DragDrop] handleDragEnd:', { activeId: active.id, overId: over?.id });
-
       if (over && active.id !== over.id) {
         const oldIndex = sortedBlocks.findIndex((b) => b.id === active.id);
         const newIndex = sortedBlocks.findIndex((b) => b.id === over.id);
-        console.log('[DragDrop] indices:', { oldIndex, newIndex });
         if (oldIndex !== -1 && newIndex !== -1) {
           onReorder(oldIndex, newIndex);
         }

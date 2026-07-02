@@ -20,6 +20,13 @@ import { BookmarkBlock } from './components/blocks/BookmarkBlock';
 import { TableBlock } from './components/blocks/TableBlock';
 import { PageReferenceBlock } from './components/blocks/PageReferenceBlock';
 import { ResearchWorkspaceBlock } from './components/blocks/ResearchWorkspaceBlock';
+import { ChecklistBlock } from './components/blocks/ChecklistBlock';
+import { TimelineBlock } from './components/blocks/TimelineBlock';
+import { EmbedBlock } from './components/blocks/EmbedBlock';
+import { VideoBlock } from './components/blocks/VideoBlock';
+import { FileBlock } from './components/blocks/FileBlock';
+import { LinkBlock } from './components/blocks/LinkBlock';
+import { MapBlock } from './components/blocks/MapBlock';
 import {
   Plus, Notebook, Loader2, Trash2,
   Heading, Type, Image, Grid3X3, File, Minus, Check,
@@ -661,6 +668,78 @@ function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
       <ResearchWorkspaceBlock
         pageId={pageId}
         content={block.content}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'checklist') {
+    return (
+      <ChecklistBlock
+        items={(block.content?.items as Array<{ id: string; text: string; checked: boolean }>) ?? []}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'timeline') {
+    return (
+      <TimelineBlock
+        entries={(block.content?.entries as Array<{ id: string; date: string; title: string; description: string }>) ?? []}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'embed') {
+    return (
+      <EmbedBlock
+        url={(block.content?.url as string) ?? ''}
+        html={(block.content?.html as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'video') {
+    return (
+      <VideoBlock
+        mediaId={(block.content?.mediaId as string) ?? ''}
+        url={(block.content?.url as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'file') {
+    return (
+      <FileBlock
+        mediaId={(block.content?.mediaId as string) ?? ''}
+        filename={(block.content?.filename as string) ?? ''}
+        url={(block.content?.url as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'link') {
+    return (
+      <LinkBlock
+        url={(block.content?.url as string) ?? ''}
+        title={(block.content?.title as string) ?? ''}
+        description={(block.content?.description as string) ?? ''}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'map') {
+    return (
+      <MapBlock
+        lat={(block.content?.lat as number) ?? 0}
+        lng={(block.content?.lng as number) ?? 0}
+        zoom={(block.content?.zoom as number) ?? 13}
+        markerTitle={(block.content?.markerTitle as string) ?? ''}
         onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
       />
     );

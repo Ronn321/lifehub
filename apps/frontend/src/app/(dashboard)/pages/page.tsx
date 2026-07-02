@@ -813,7 +813,29 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
   const reorderBlockMutation = useMutation({
     mutationFn: (blocks: Array<{ id: string; sortOrder: number }>) =>
       api.put(`/pages/${pageId}/blocks/reorder`, { blocks }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['page', pageId] }); },
+    onMutate: async (blocks) => {
+      await queryClient.cancelQueries({ queryKey: ['page', pageId] });
+      const previousPage = queryClient.getQueryData<PageDetail>(['page', pageId]);
+      if (previousPage) {
+        const updatedBlocks = previousPage.blocks.map(block => {
+          const update = blocks.find(b => b.id === block.id);
+          return update ? { ...block, sortOrder: update.sortOrder } : block;
+        });
+        queryClient.setQueryData<PageDetail>(['page', pageId], {
+          ...previousPage,
+          blocks: updatedBlocks,
+        });
+      }
+      return { previousPage };
+    },
+    onError: (err, blocks, context) => {
+      if (context?.previousPage) {
+        queryClient.setQueryData(['page', pageId], context.previousPage);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['page', pageId] });
+    },
   });
 
   const deletePageMutation = useMutation({

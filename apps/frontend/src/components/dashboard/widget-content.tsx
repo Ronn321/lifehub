@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { getMediaStreamUrl } from '@/lib/media';
 import type { Widget, WidgetConfig } from '@/lib/grid-utils';
 import type { CalendarConfig, WeatherConfig, MediaConfig, WeatherLocation } from '@/lib/grid-utils';
 import { WIDGET_LABELS } from '@/lib/grid-utils';
@@ -149,19 +150,42 @@ function WeatherSettings({
   config: WeatherConfig;
   onChange: (c: WeatherConfig) => void;
 }) {
-  const [name, setName] = useState('');
-  const [lat, setLat] = useState('');
-  const [lng, setLng] = useState('');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<{ name: string; lat: number; lng: number; admin1?: string; country: string }[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
 
-  const addLocation = () => {
-    const parsedLat = parseFloat(lat);
-    const parsedLng = parseFloat(lng);
-    if (!name.trim() || isNaN(parsedLat) || isNaN(parsedLng)) return;
-    const newLocations = [...config.locations, { name: name.trim(), lat: parsedLat, lng: parsedLng }];
+  const searchCity = async () => {
+    if (!query.trim()) return;
+    setSearching(true);
+    setSearched(true);
+    try {
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query.trim())}&count=5&language=de&format=json`);
+      const data = await res.json();
+      if (data.results) {
+        setResults(data.results.map((r: { name: string; latitude: number; longitude: number; admin1?: string; country: string }) => ({
+          name: r.name,
+          lat: r.latitude,
+          lng: r.longitude,
+          admin1: r.admin1,
+          country: r.country,
+        })));
+      } else {
+        setResults([]);
+      }
+    } catch {
+      setResults([]);
+    }
+    setSearching(false);
+  };
+
+  const addLocation = (loc: { name: string; lat: number; lng: number }) => {
+    if (config.locations.some((l) => Math.abs(l.lat - loc.lat) < 0.01 && Math.abs(l.lng - loc.lng) < 0.01)) return;
+    const newLocations = [...config.locations, loc];
     onChange({ ...config, locations: newLocations });
-    setName('');
-    setLat('');
-    setLng('');
+    setQuery('');
+    setResults(null);
+    setSearched(false);
   };
 
   const removeLocation = (index: number) => {
@@ -174,10 +198,13 @@ function WeatherSettings({
     <div className="space-y-4">
       <div className="space-y-2">
         <p className="text-sm font-medium text-fg">Gespeicherte Orte</p>
+        {config.locations.length === 0 && (
+          <p className="text-xs text-fg-muted">Keine Orte gespeichert</p>
+        )}
         {config.locations.map((loc, i) => (
           <div key={i} className="flex items-center justify-between rounded-md border border-border bg-bg px-3 py-2">
             <span className="text-sm text-fg truncate">{loc.name}</span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               {i !== config.activeLocationIndex && (
                 <button
                   onClick={() => onChange({ ...config, activeLocationIndex: i })}
@@ -202,37 +229,44 @@ function WeatherSettings({
       </div>
 
       <div className="space-y-2 border-t border-border pt-3">
-        <p className="text-sm font-medium text-fg">Ort hinzufügen</p>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name (z.B. Berlin)"
-          className="w-full rounded-md border border-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-brand-500"
-        />
+        <p className="text-sm font-medium text-fg">Stadt suchen</p>
         <div className="flex gap-2">
           <input
-            value={lat}
-            onChange={(e) => setLat(e.target.value)}
-            placeholder="Breitengrad"
-            type="number"
-            step="any"
-            className="w-1/2 rounded-md border border-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-brand-500"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setResults(null); setSearched(false); }}
+            onKeyDown={(e) => e.key === 'Enter' && searchCity()}
+            placeholder="Stadtname (z.B. Berlin)"
+            className="flex-1 rounded-md border border-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-brand-500"
           />
-          <input
-            value={lng}
-            onChange={(e) => setLng(e.target.value)}
-            placeholder="Längengrad"
-            type="number"
-            step="any"
-            className="w-1/2 rounded-md border border-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-brand-500"
-          />
+          <button
+            onClick={searchCity}
+            disabled={searching || !query.trim()}
+            className="flex items-center gap-1 text-sm rounded-md bg-brand-500 px-3 py-1.5 text-white hover:bg-brand-600 disabled:opacity-50"
+          >
+            {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            Suchen
+          </button>
         </div>
-        <button
-          onClick={addLocation}
-          className="flex items-center gap-1 text-sm rounded-md bg-brand-500 px-3 py-1.5 text-white hover:bg-brand-600"
-        >
-          <Plus className="h-3.5 w-3.5" /> Hinzufügen
-        </button>
+
+        {searched && results !== null && results.length === 0 && (
+          <p className="text-xs text-fg-muted">Keine Ergebnisse gefunden</p>
+        )}
+
+        {results && results.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-fg-muted">Ergebnisse:</p>
+            {results.map((r) => (
+              <button
+                key={`${r.lat}-${r.lng}`}
+                onClick={() => addLocation(r)}
+                className="w-full flex items-center justify-between rounded-md border border-border bg-bg px-3 py-2 text-sm text-fg hover:bg-bg-raised"
+              >
+                <span>{r.name}{r.admin1 ? `, ${r.admin1}` : ''}</span>
+                <span className="text-xs text-fg-subtle">{r.country}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -533,9 +567,7 @@ export function MediaWidget({ config }: { config: MediaConfig }) {
   if (!current) return <div className="text-sm text-fg-muted">Keine Medien</div>;
 
   const isVideo = current.mimeType?.startsWith('video/');
-  const imgSrc = current.thumbnailPath || (current.id
-    ? `http://${window.location.hostname}:3007/api/v1/media/files/${current.id}/stream?token=${typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('lifehub-auth') || '{}')?.state?.accessToken ?? '') : ''}`
-    : null);
+  const imgSrc = current.id ? getMediaStreamUrl(current.id) : null;
 
   return (
     <div className="flex flex-col gap-2 h-full">

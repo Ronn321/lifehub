@@ -686,6 +686,52 @@ export const researchSources = pgTable('research_sources', {
   index('research_sources_type_idx').on(t.sessionId, t.type),
 ]);
 
+// ===================== jellyfin_servers =====================
+export const jellyfinServers = pgTable('jellyfin_servers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  url: text('url').notNull(),
+  apiKey: text('api_key').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('jellyfin_servers_owner_idx').on(t.ownerId),
+]);
+
+// ===================== jellyfin_libraries =====================
+export const jellyfinLibraries = pgTable('jellyfin_libraries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  serverId: uuid('server_id').notNull().references(() => jellyfinServers.id, { onDelete: 'cascade' }),
+  externalId: text('external_id'),
+  name: text('name').notNull(),
+  type: text('type'),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('jellyfin_libraries_server_idx').on(t.serverId),
+  index('jellyfin_libraries_owner_idx').on(t.ownerId),
+  uniqueIndex('jellyfin_libraries_server_ext_uq').on(t.serverId, t.externalId),
+]);
+
+// ===================== jellyfin_items =====================
+export const jellyfinItems = pgTable('jellyfin_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  libraryId: uuid('library_id').notNull().references(() => jellyfinLibraries.id, { onDelete: 'cascade' }),
+  externalId: text('external_id'),
+  name: text('name').notNull(),
+  type: text('type').notNull(),
+  path: text('path'),
+  watched: boolean('watched').notNull().default(false),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('jellyfin_items_library_idx').on(t.libraryId),
+  index('jellyfin_items_owner_idx').on(t.ownerId),
+  uniqueIndex('jellyfin_items_library_ext_uq').on(t.libraryId, t.externalId),
+]);
+
 // ===================== research_collections =====================
 export const researchCollections = pgTable('research_collections', {
   id: uuid('id').primaryKey().defaultRandom(),

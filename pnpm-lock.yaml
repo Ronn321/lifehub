@@ -35,6 +35,9 @@ importers:
       '@lifehub/finance-domain':
         specifier: workspace:*
         version: link:../../domains/finance
+      '@lifehub/jellyfin-domain':
+        specifier: workspace:*
+        version: link:../../domains/jellyfin
       '@lifehub/pages-domain':
         specifier: workspace:*
         version: link:../../domains/pages

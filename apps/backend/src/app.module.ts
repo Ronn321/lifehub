@@ -18,6 +18,7 @@ import { RecipesModule } from '@lifehub/recipes-domain';
 import { ShoppingModule } from '@lifehub/shopping-domain';
 import { FinanceModule } from '@lifehub/finance-domain';
 import { PagesModule } from '@lifehub/pages-domain';
+import { JellyfinModule } from '@lifehub/jellyfin-domain';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { PagesModule } from '@lifehub/pages-domain';
     ShoppingModule,
     FinanceModule,
     PagesModule,
+    JellyfinModule,
   ],
   controllers: [HealthController],
 })

@@ -7,12 +7,32 @@ import type { CreateServerInput } from '../dtos/jellyfin.dto';
 
 @Injectable()
 export class JellyfinService {
-  // In-memory subtitle cache: key = "itemId:subtitleIndex" → VTT text
   private subtitleCache = new Map<string, string>();
+
+  private readonly defaultUrl = process.env.JELLYFIN_URL || 'http://192.168.31.35:8096';
+  private readonly defaultApiKey = process.env.JELLYFIN_API_KEY || '0fde01a7adda4a40a3281c1cd3af1c5d';
 
   constructor(
     @Inject(JellyfinRepository) private readonly repo: JellyfinRepository,
   ) {}
+
+  private async findServerOrFallback(serverId: string, ownerId?: string): Promise<JellyfinServer> {
+    const server = await this.repo.findServerById(serverId);
+    if (server && (!ownerId || server.ownerId === ownerId)) return server;
+    return {
+      id: 'default',
+      url: this.defaultUrl,
+      apiKey: this.defaultApiKey,
+      isActive: true,
+      ownerId: ownerId ?? '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
+  async getDefaultServer(): Promise<{ url: string; apiKey: string; id: string }> {
+    return { url: this.defaultUrl, apiKey: this.defaultApiKey, id: 'default' };
+  }
 
   // =================== Servers ===================
   async listServers(ownerId: string): Promise<JellyfinServer[]> {

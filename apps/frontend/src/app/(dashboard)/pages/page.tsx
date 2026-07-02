@@ -23,6 +23,7 @@ import {
   Plus, Notebook, Loader2, Trash2,
   Heading, Type, Image, Grid3X3, File, Minus, Check,
   ChevronRight, MessageSquare, Quote, Code, Bookmark, Table2, Link2,
+  Calendar, PiggyBank, Server,
 } from 'lucide-react';
 
 interface Page {
@@ -82,6 +83,18 @@ const blockIcon: Record<string, React.ReactNode> = {
   bookmark: <Bookmark className="h-4 w-4" />,
   table: <Table2 className="h-4 w-4" />,
   'page-reference': <Link2 className="h-4 w-4" />,
+  checklist: <Check className="h-4 w-4" />,
+  timeline: <Calendar className="h-4 w-4" />,
+  embed: <Code className="h-4 w-4" />,
+  video: <Image className="h-4 w-4" />,
+  file: <File className="h-4 w-4" />,
+  link: <Link2 className="h-4 w-4" />,
+  map: <Image className="h-4 w-4" />,
+  research_workspace: <Notebook className="h-4 w-4" />,
+  calendar_view: <Calendar className="h-4 w-4" />,
+  finance_widget: <PiggyBank className="h-4 w-4" />,
+  it_inventory_widget: <Server className="h-4 w-4" />,
+  jellyfin_player: <Image className="h-4 w-4" />,
 };
 
 const blockLabel: Record<string, string> = {
@@ -99,6 +112,18 @@ const blockLabel: Record<string, string> = {
   bookmark: 'Link',
   table: 'Tabelle',
   'page-reference': 'Seiten-Verweis',
+  checklist: 'Checkliste',
+  timeline: 'Zeitstrahl',
+  embed: 'Einbettung',
+  video: 'Video',
+  file: 'Datei',
+  link: 'Verknüpfung',
+  map: 'Karte',
+  research_workspace: 'Recherche',
+  calendar_view: 'Kalender-Ansicht',
+  finance_widget: 'Finanzen',
+  it_inventory_widget: 'IT-Inventar',
+  jellyfin_player: 'Jellyfin Player',
 };
 
 function flattenPages(pages: Page[]): Page[] {
@@ -310,16 +335,24 @@ function CreatePageDialog({ open, onClose, onSuccess, pages }: {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [parentId, setParentId] = useState('');
+  const [templateId, setTemplateId] = useState('');
   const [error, setError] = useState('');
+
+  const { data: templates } = useQuery({
+    queryKey: ['page-templates'],
+    queryFn: () => api.get<Array<{ id: string; name: string; description: string | null; icon: string | null; domain: string | null }>>('/pages/templates/list'),
+    enabled: open,
+  });
 
   const mutation = useMutation({
     mutationFn: () => api.post<Page>('/pages', {
       title,
       description: description || undefined,
       parentId: parentId || undefined,
+      templateId: templateId || undefined,
     }),
     onSuccess: () => {
-      setTitle(''); setDescription(''); setParentId(''); setError('');
+      setTitle(''); setDescription(''); setParentId(''); setTemplateId(''); setError('');
       onSuccess(); onClose();
     },
     onError: (e: Error) => setError(e.message),
@@ -341,6 +374,42 @@ function CreatePageDialog({ open, onClose, onSuccess, pages }: {
       <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg p-6 mx-4" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">Neue Seite</h2>
         <div className="space-y-4">
+          {/* Template Selection */}
+          {templates && templates.length > 0 && (
+            <div>
+              <label className="block text-sm text-muted-foreground mb-1">Vorlage (optional)</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTemplateId('')}
+                  className={`px-3 py-2 rounded-lg border text-sm text-left transition-colors ${
+                    !templateId
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300'
+                      : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <span className="font-medium">Leer</span>
+                  <p className="text-xs text-fg-muted mt-0.5">Ohne Vorlage</p>
+                </button>
+                {templates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTemplateId(t.id)}
+                    className={`px-3 py-2 rounded-lg border text-sm text-left transition-colors ${
+                      templateId === t.id
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300'
+                        : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                    }`}
+                  >
+                    <span className="font-medium">{t.icon} {t.name}</span>
+                    {t.description && <p className="text-xs text-fg-muted mt-0.5 line-clamp-1">{t.description}</p>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Titel</label>
             <input
@@ -818,7 +887,7 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
               autoFocus
             />
             <div className="grid grid-cols-2 gap-1 max-h-[200px] overflow-y-auto">
-              {(['heading', 'text', 'todo', 'toggle', 'image', 'gallery', 'file-list', 'divider', 'callout', 'quote', 'code', 'bookmark', 'table', 'page-reference'] as const).map((type) => (
+              {(['heading', 'text', 'todo', 'toggle', 'image', 'gallery', 'file-list', 'divider', 'callout', 'quote', 'code', 'bookmark', 'table', 'page-reference', 'checklist', 'timeline', 'embed', 'video', 'file', 'link', 'map', 'research_workspace'] as const).map((type) => (
                 <button
                   key={type}
                   onClick={() => addBlockMutation.mutate(type)}
@@ -842,6 +911,120 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
           </button>
         )}
       </div>
+
+      {/* Relations Section */}
+      <RelationsSection pageId={pageId} allPages={allPages} onNavigate={(id) => router.push(`/pages?open=${id}`)} />
+    </div>
+  );
+}
+
+/* ─── Relations Section ─── */
+function RelationsSection({ pageId, allPages, onNavigate }: {
+  pageId: string; allPages: Page[]; onNavigate: (id: string) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [showAdd, setShowAdd] = useState(false);
+  const [targetPageId, setTargetPageId] = useState('');
+  const [relationType, setRelationType] = useState<string>('reference');
+
+  const { data: relations } = useQuery({
+    queryKey: ['page-relations', pageId],
+    queryFn: () => api.get<Array<{ id: string; sourcePageId: string; targetPageId: string; relationType: string; label: string | null }>>(`/pages/${pageId}/relations`),
+  });
+
+  const addRelationMutation = useMutation({
+    mutationFn: () => api.post(`/pages/${pageId}/relations`, {
+      targetPageId,
+      relationType,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['page-relations', pageId] });
+      setShowAdd(false);
+      setTargetPageId('');
+    },
+  });
+
+  const deleteRelationMutation = useMutation({
+    mutationFn: (relationId: string) => api.delete(`/pages/relations/${relationId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['page-relations', pageId] }),
+  });
+
+  const relatedPages = relations?.map(r => {
+    const targetId = r.sourcePageId === pageId ? r.targetPageId : r.sourcePageId;
+    const page = allPages.find(p => p.id === targetId);
+    return { ...r, targetId, pageTitle: page?.title || 'Unbekannt' };
+  }) || [];
+
+  return (
+    <div className="border-t border-border pt-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-fg flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-fg-muted" /> Verknüpfte Seiten
+        </h3>
+        <button
+          onClick={() => setShowAdd(!showAdd)}
+          className="text-xs text-amber-600 hover:text-amber-700"
+        >
+          {showAdd ? 'Abbrechen' : '+ Hinzufügen'}
+        </button>
+      </div>
+
+      {showAdd && (
+        <div className="flex gap-2 mb-3">
+          <select
+            value={targetPageId}
+            onChange={(e) => setTargetPageId(e.target.value)}
+            className="flex-1 px-2 py-1.5 rounded border border-border bg-bg text-sm"
+          >
+            <option value="">Seite wählen...</option>
+            {allPages.filter(p => p.id !== pageId).map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+          <select
+            value={relationType}
+            onChange={(e) => setRelationType(e.target.value)}
+            className="px-2 py-1.5 rounded border border-border bg-bg text-sm"
+          >
+            <option value="reference">Referenz</option>
+            <option value="related">Verwandt</option>
+            <option value="dependency">Abhängigkeit</option>
+            <option value="embedded">Eingebettet</option>
+          </select>
+          <button
+            onClick={() => addRelationMutation.mutate()}
+            disabled={!targetPageId || addRelationMutation.isPending}
+            className="px-3 py-1.5 rounded bg-amber-600 text-white text-sm disabled:opacity-50"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {relatedPages.length > 0 ? (
+        <div className="space-y-1">
+          {relatedPages.map((rel) => (
+            <div key={rel.id} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-bg-surface group">
+              <button
+                onClick={() => onNavigate(rel.targetId)}
+                className="text-sm text-amber-600 hover:underline flex items-center gap-2"
+              >
+                <Link2 className="h-3.5 w-3.5" />
+                {rel.pageTitle}
+                <span className="text-xs text-fg-muted">({rel.relationType})</span>
+              </button>
+              <button
+                onClick={() => deleteRelationMutation.mutate(rel.id)}
+                className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-fg-muted">Keine Verknüpfungen</p>
+      )}
     </div>
   );
 }

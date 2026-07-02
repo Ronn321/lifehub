@@ -24,8 +24,7 @@ export class JellyfinController {
   }
 
   @Get('default')
-  @RequirePermission('jellyfin', 'read')
-  @ApiOperation({ summary: 'Hardcodierten Default-Jellyfin-Server abrufen' })
+  @ApiOperation({ summary: 'Hardcodierten Default-Jellyfin-Server abrufen (keine Permission nötig)' })
   async getDefaultServer() {
     return this.jellyfin.getDefaultServer();
   }

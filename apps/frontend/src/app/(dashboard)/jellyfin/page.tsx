@@ -291,6 +291,27 @@ export default function JellyfinPage() {
     },
   });
 
+  const autoConnectMut = useMutation({
+    mutationFn: (body: { url: string; apiKey: string }) =>
+      api.post('/jellyfin/servers', body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jellyfin-servers'] });
+    },
+  });
+
+  // Auto-connect hardcoded default server when no servers exist
+  useEffect(() => {
+    if (servers && servers.length === 0 && !serversLoading && !autoConnectMut.isPending) {
+      api.get<{ url: string; apiKey: string }>('/jellyfin/default')
+        .then((defaultServer) => {
+          autoConnectMut.mutate({ url: defaultServer.url, apiKey: defaultServer.apiKey });
+        })
+        .catch(() => {
+          // default endpoint not available — user must connect manually
+        });
+    }
+  }, [servers, serversLoading]);
+
   function handleSync() {
     if (activeServer) syncMut.mutate(activeServer.id);
   }

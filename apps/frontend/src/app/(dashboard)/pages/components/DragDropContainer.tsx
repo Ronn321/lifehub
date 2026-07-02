@@ -47,7 +47,7 @@ export function DragDropContainer({ blocks, onReorder, children }: DragDropConta
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 1 },
+      activationConstraint: { distance: 5 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -55,6 +55,7 @@ export function DragDropContainer({ blocks, onReorder, children }: DragDropConta
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    console.log('[DragDrop] handleDragStart:', { activeId: event.active.id });
     setActiveId(event.active.id as string);
   }, []);
 

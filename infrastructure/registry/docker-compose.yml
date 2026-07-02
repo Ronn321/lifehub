@@ -1,0 +1,29 @@
+# LifeHub Private Docker Registry
+# Laeuft auf dem NAS. Erreichbar via Tailscale Port 5000.
+# Doku: docs/DEPLOYMENT.md
+
+services:
+  registry:
+    image: registry:2
+    container_name: lifehub-registry
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+      - ./auth:/auth:ro
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "LifeHub Registry"
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:5000/v2/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
+
+volumes:
+  registry-data:

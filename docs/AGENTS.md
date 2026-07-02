@@ -39,6 +39,7 @@ Dieser Ordner `docs/` enthält die **Master-Orchestrierung** des Projekts: Featu
 | `DOMAIN_STATUS.md` | Live-Status pro Domain | jeder Status-Transition einer Domain |
 | `CODE_GENERATION_TEMPLATES.md` | Boilerplate-Skelette | jeder Template-Änderung |
 | `DOCKER_COMPOSE_PRODUCTION.md` | NAS-Deployment | jeder Compose-, Container-, Mount-, Secret-Änderung |
+| `DEPLOYMENT.md` | Deployment-Workflow, Registry, Build, Versionierung | jeder CI/CD-, Registry-, Deploy-Script-Änderung |
 
 ### 3.2 Schreibregeln für `docs/*.md`
 
@@ -108,6 +109,7 @@ Sobald CI existiert (Phase MVP): Link-Checker als Job.
 | `DOMAIN_STATUS.md` | Live-Status pro Domain (Tabellen) | Status-Transition |
 | `CODE_GENERATION_TEMPLATES.md` | Boilerplate-Skelette | Code-Datei in `domains/` oder `apps/` |
 | `DOCKER_COMPOSE_PRODUCTION.md` | NAS-Deployment | Compose-, Container-, Mount-, Secret-Änderung |
+| `DEPLOYMENT.md` | Deployment-Workflow, Registry, Build, Versionierung | CI/CD-, Registry-, Deploy-Änderung |
 | `GRAPHIFY.md` | Knowledge-Graph-Workflow (graphify) | Tool-Install, Watch-/Hook-Workflow, Korpus-Erweiterung |
 
 Keine Sub-Ordner. Wenn künftig z.B. `docs/adr/` entsteht, bekommt **er** eine eigene `AGENTS.md` und wird hier im Index aufgenommen.

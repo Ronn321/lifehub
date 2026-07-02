@@ -82,6 +82,8 @@ Diese Dateien sind **Single Source of Truth** für die jeweilige Domäne. Agente
 | Live-Status pro Domain | `docs/DOMAIN_STATUS.md` | jeder Status-Änderung |
 | Boilerplates | `docs/CODE_GENERATION_TEMPLATES.md` | jeder Code-Datei in `domains/` oder `apps/` |
 | NAS-Deployment | `docs/DOCKER_COMPOSE_PRODUCTION.md` | jeder Compose-, Container-, Mount-, Secret-Änderung |
+| Deployment-Workflow | `docs/DEPLOYMENT.md` | jeder CI/CD-, Registry-, Build-, Versionierungs-Änderung |
+| Container-Deployment-Plan | `CONTAINER_DEPLOYMENT_PLAN.md` | jeder Plan-, Status-, Fortschritts-Änderung |
 | Knowledge-Graph-Workflow | `docs/GRAPHIFY.md` | Tool-Setup, Korpus-Erweiterung, Workflow-Änderung |
 
 **Regel:** Wenn zwei Quellen widersprechen, gewinnt die **nähere** Datei für lokale Details, aber keine darf die obigen Master-Regeln aushebeln.

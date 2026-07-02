@@ -1,0 +1,69 @@
+# Git
+.git/
+.gitignore
+
+# Dependencies (werden im Container neu installiert)
+node_modules/
+
+# Build outputs (werden im Container neu gebaut)
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Environment files (Secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Test artifacts
+test-results/
+coverage/
+*.png
+*.jpg
+*.mp4
+token.json
+
+# Documentation (nicht fuer Build noetig)
+docs/
+features/
+*.md
+!README.md
+
+# Runtime data (nicht committen)
+infrastructure/lifehub/
+infrastructure/postgres/backups/
+
+# Top-level scripts (nicht fuer Build noetig)
+scripts/
+test_*.py
+test_*.mjs
+test-*.sh
+start-backend.cmd
+nul
+backend*.log
+dev*.log
+
+# Docker Compose (nicht im Build-Context)
+docker-compose*.yml
+
+# Design files
+designs/
+tmp/

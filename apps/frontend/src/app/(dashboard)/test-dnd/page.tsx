@@ -71,7 +71,7 @@ export default function TestDndPage() {
         
         const newItems = [...prev];
         const [moved] = newItems.splice(oldIndex, 1);
-        newItems.splice(newIndex, 0, moved);
+        if (moved) newItems.splice(newIndex, 0, moved);
         return newItems;
       });
     }

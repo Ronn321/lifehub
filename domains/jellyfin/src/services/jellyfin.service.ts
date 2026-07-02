@@ -136,8 +136,7 @@ export class JellyfinService {
     serverId: string,
     externalId: string,
   ): Promise<{ mediaSourceId: string; streams: MediaStreamInfo[] }> {
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
     const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
@@ -186,13 +185,11 @@ export class JellyfinService {
     const cached = this.subtitleCache.get(cacheKey);
     if (cached) return cached;
 
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
     const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
 
-    // Get MediaSourceId from PlaybackInfo
     const userId = await this.getJellyfinUserId(server);
     const infoRes = await fetch(`${baseUrl}/Items/${externalId}/PlaybackInfo`, {
       method: 'POST',
@@ -242,8 +239,7 @@ export class JellyfinService {
     if (!item || item.ownerId !== ownerId) throw new NotFoundException('Item nicht gefunden');
     const library = await this.repo.findLibraryById(item.libraryId);
     if (!library) throw new NotFoundException('Bibliothek nicht gefunden');
-    const server = await this.repo.findServerById(library.serverId);
-    if (!server) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(library.serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
 
@@ -340,14 +336,12 @@ export class JellyfinService {
     if (!item.externalId) throw new BadRequestException('Item hat keine Jellyfin-ID');
     const library = await this.repo.findLibraryById(item.libraryId);
     if (!library) throw new NotFoundException('Bibliothek nicht gefunden');
-    const server = await this.repo.findServerById(library.serverId);
-    if (!server) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(library.serverId, ownerId);
     return this.fetchJellyfinChildren(server, item.externalId);
   }
 
   async getExternalChildren(ownerId: string, serverId: string, externalId: string): Promise<any[]> {
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
     return this.fetchJellyfinChildren(server, externalId);
   }
 
@@ -361,15 +355,13 @@ export class JellyfinService {
   }
 
   async getArtists(ownerId: string, serverId: string): Promise<any[]> {
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
     const data = await this.fetchFromJellyfin(server, '/Artists/AlbumArtists');
     return data.Items ?? [];
   }
 
   async getAlbums(ownerId: string, serverId: string, artistId: string): Promise<any[]> {
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
     const userId = await this.getJellyfinUserId(server);
     const data = await this.fetchFromJellyfin(
       server,
@@ -386,8 +378,7 @@ export class JellyfinService {
     audioStreamIndex?: number,
     subtitleStreamIndex?: number,
   ): Promise<string> {
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
     const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
@@ -422,8 +413,7 @@ export class JellyfinService {
     width: number,
     height: number,
   ) {
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
     const imageUrl = `${baseUrl}/Items/${externalId}/Images/Primary?fillHeight=${height}&fillWidth=${width}&quality=90`;
@@ -443,8 +433,7 @@ export class JellyfinService {
     externalId: string,
     segmentPath: string,
   ) {
-    const server = await this.repo.findServerById(serverId);
-    if (!server || server.ownerId !== ownerId) throw new NotFoundException('Server nicht gefunden');
+    const server = await this.findServerOrFallback(serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
     const segmentUrl = `${baseUrl}/Videos/${externalId}/${segmentPath}`;

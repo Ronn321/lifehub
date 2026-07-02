@@ -19,6 +19,7 @@ import { CodeBlock } from './components/blocks/CodeBlock';
 import { BookmarkBlock } from './components/blocks/BookmarkBlock';
 import { TableBlock } from './components/blocks/TableBlock';
 import { PageReferenceBlock } from './components/blocks/PageReferenceBlock';
+import { ResearchWorkspaceBlock } from './components/blocks/ResearchWorkspaceBlock';
 import {
   Plus, Notebook, Loader2, Trash2,
   Heading, Type, Image, Grid3X3, File, Minus, Check,
@@ -650,6 +651,16 @@ function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
       <PageReferenceBlock
         pageId={(block.content?.pageId as string) ?? ''}
         pages={allPages}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'research_workspace') {
+    return (
+      <ResearchWorkspaceBlock
+        pageId={pageId}
+        content={block.content}
         onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
       />
     );

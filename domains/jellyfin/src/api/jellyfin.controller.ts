@@ -23,6 +23,13 @@ export class JellyfinController {
     return this.jellyfin.connectServer(user.sub, dto);
   }
 
+  @Get('default')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Hardcodierten Default-Jellyfin-Server abrufen' })
+  async getDefaultServer() {
+    return this.jellyfin.getDefaultServer();
+  }
+
   @Get('servers')
   @RequirePermission('jellyfin', 'read')
   @ApiOperation({ summary: 'Verbunde Jellyfin-Server auflisten' })

@@ -549,6 +549,10 @@ export const pages = pgTable('pages', {
   icon: text('icon'),
   coverMediaId: uuid('cover_media_id'),
   description: text('description'),
+  templateId: uuid('template_id'),
+  status: text('status').notNull().default('published'),
+  tags: jsonb('tags').notNull().default('[]'),
+  metadata: jsonb('metadata').notNull().default('{}'),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -556,6 +560,7 @@ export const pages = pgTable('pages', {
 }, (t) => [
   index('pages_owner_idx').on(t.ownerId, t.deletedAt),
   index('pages_parent_idx').on(t.parentId),
+  index('pages_status_idx').on(t.ownerId, t.status),
 ]);
 
 // ===================== page_blocks =====================
@@ -564,9 +569,132 @@ export const pageBlocks = pgTable('page_blocks', {
   pageId: uuid('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
   type: text('type').notNull(),
   content: jsonb('content').notNull().default('{}'),
+  layout: jsonb('layout'),
+  metadata: jsonb('metadata'),
+  permissions: jsonb('permissions'),
+  version: integer('version').notNull().default(1),
+  status: text('status').notNull().default('active'),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
   index('page_blocks_page_idx').on(t.pageId, t.sortOrder),
+  index('page_blocks_status_idx').on(t.pageId, t.status),
+]);
+
+// ===================== block_versions =====================
+export const blockVersions = pgTable('block_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  blockId: uuid('block_id').notNull().references(() => pageBlocks.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  content: jsonb('content').notNull(),
+  layout: jsonb('layout'),
+  metadata: jsonb('metadata'),
+  changedBy: uuid('changed_by').notNull().references(() => users.id),
+  changeType: text('change_type').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('block_versions_block_idx').on(t.blockId, t.version),
+]);
+
+// ===================== page_versions =====================
+export const pageVersions = pgTable('page_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pageId: uuid('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  icon: text('icon'),
+  coverMediaId: uuid('cover_media_id'),
+  blocks: jsonb('blocks').notNull(),
+  changedBy: uuid('changed_by').notNull().references(() => users.id),
+  changeType: text('change_type').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('page_versions_page_idx').on(t.pageId, t.version),
+]);
+
+// ===================== page_relations =====================
+export const pageRelations = pgTable('page_relations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sourcePageId: uuid('source_page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  targetPageId: uuid('target_page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  relationType: text('relation_type').notNull().default('reference'),
+  label: text('label'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+}, (t) => [
+  uniqueIndex('page_relations_uq').on(t.sourcePageId, t.targetPageId, t.relationType),
+  index('page_relations_source_idx').on(t.sourcePageId),
+  index('page_relations_target_idx').on(t.targetPageId),
+]);
+
+// ===================== page_templates =====================
+export const pageTemplates = pgTable('page_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  description: text('description'),
+  icon: text('icon'),
+  domain: text('domain'),
+  blocks: jsonb('blocks').notNull().default('[]'),
+  metadata: jsonb('metadata'),
+  isSystem: boolean('is_system').notNull().default(false),
+  ownerId: uuid('owner_id').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('page_templates_domain_idx').on(t.domain),
+  index('page_templates_owner_idx').on(t.ownerId),
+]);
+
+// ===================== research_sessions =====================
+export const researchSessions = pgTable('research_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pageId: uuid('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  blockId: uuid('block_id').references(() => pageBlocks.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  mode: text('mode').notNull().default('active'),
+  searchHistory: jsonb('search_history').notNull().default('[]'),
+  pinnedSources: jsonb('pinned_sources').notNull().default('[]'),
+  notes: text('notes'),
+  tags: jsonb('tags').notNull().default('[]'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('research_sessions_page_idx').on(t.pageId),
+  index('research_sessions_block_idx').on(t.blockId),
+]);
+
+// ===================== research_sources =====================
+export const researchSources = pgTable('research_sources', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sessionId: uuid('session_id').notNull().references(() => researchSessions.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(),
+  url: text('url'),
+  title: text('title'),
+  description: text('description'),
+  thumbnailUrl: text('thumbnail_url'),
+  metadata: jsonb('metadata'),
+  isPinned: boolean('is_pinned').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('research_sources_session_idx').on(t.sessionId),
+  index('research_sources_type_idx').on(t.sessionId, t.type),
+]);
+
+// ===================== research_collections =====================
+export const researchCollections = pgTable('research_collections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sessionId: uuid('session_id').notNull().references(() => researchSessions.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  sourceIds: jsonb('source_ids').notNull().default('[]'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('research_collections_session_idx').on(t.sessionId),
 ]);

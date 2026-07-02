@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
-import { Shield, LayoutDashboard, Image, BookOpen, ShoppingCart, PiggyBank, Server, Key, LogOut, Menu, X, Users, Plane, Code2, Notebook, FileText, FolderLock, Calendar, Search, Puzzle, ShieldCheck, ScrollText } from 'lucide-react';
+import { Shield, LayoutDashboard, Image, BookOpen, ShoppingCart, PiggyBank, Server, Key, LogOut, Menu, X, Users, Plane, Code2, Notebook, FileText, FolderLock, Calendar, Search, Puzzle, ShieldCheck, ScrollText, Settings } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
@@ -83,6 +83,15 @@ export function Sidebar() {
           {/* Footer: Theme + User */}
           <div className="border-t border-border px-4 py-4 space-y-3">
             <ThemeToggle />
+            <Link href="/settings" className={cn(
+              'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+              pathname === '/settings'
+                ? 'bg-brand-500/10 text-brand-500 font-medium'
+                : 'text-fg-muted hover:text-fg hover:bg-bg'
+            )}>
+              <Settings className="h-4 w-4" />
+              Einstellungen
+            </Link>
             {user && (
               <>
                 <p className="text-sm font-medium truncate">{user.displayName}</p>

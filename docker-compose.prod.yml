@@ -2,6 +2,9 @@
 # Wird auf dem NAS deployed. Images von ghcr.io (GitHub Container Registry).
 # Dev-Stack: docker-compose.dev.yml
 # Doku: docs/DEPLOYMENT.md
+#
+# Konfiguration: .env Datei im gleichen Verzeichnis.
+# Siehe .env.example fuer alle verfuegbaren Variablen.
 
 name: lifehub
 
@@ -30,7 +33,7 @@ services:
     ports: ["443:443", "80:80"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./infrastructure/traefik:/etc/traefik
+      - ${LIFEHUB_BASE_PATH:-.}/infrastructure/traefik:/etc/traefik
       - traefik-acme:/etc/traefik/acme.json
     networks: [lifehub]
     logging: *default-logging
@@ -46,11 +49,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-lifehub}
       - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+      - ${LIFEHUB_DATA_PATH:-./data}/postgres:/var/lib/postgresql/data
+      - ${LIFEHUB_BASE_PATH:-.}/infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
     command:
       - "postgres"
-      - "-c" 
+      - "-c"
       - "shared_buffers=256MB"
       - "-c"
       - "effective_cache_size=1GB"
@@ -98,7 +101,7 @@ services:
       - "--appendonly"
       - "yes"
     volumes:
-      - redis-data:/data
+      - ${LIFEHUB_DATA_PATH:-./data}/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
@@ -117,7 +120,7 @@ services:
       - MEILI_NO_ANALYTICS=true
       - MEILI_ENV=production
     volumes:
-      - meili-data:/meili_data
+      - ${LIFEHUB_DATA_PATH:-./data}/meilisearch:/meili_data
     networks: [lifehub]
     logging: *default-logging
 
@@ -126,6 +129,8 @@ services:
     image: ghcr.io/ronn321/lifehub-backend:latest
     container_name: lifehub-backend
     restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3007}:3007"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-lifehub}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB:-lifehub}
@@ -134,16 +139,24 @@ services:
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
       - JWT_PRIVATE_KEY_BASE64=${JWT_PRIVATE_KEY_BASE64}
       - JWT_PUBLIC_KEY_BASE64=${JWT_PUBLIC_KEY_BASE64}
+      - STORAGE_BASE_PATH=/data/storage
+      - LIFEHUB_DATA_PATH=/data
+      - LIFEHUB_PHOTOS_PATH=/mnt/media/photos
+      - LIFEHUB_VIDEOS_PATH=/mnt/media/videos
+      - LIFEHUB_DOCUMENTS_PATH=/mnt/documents
+      - LIFEHUB_PROJECTS_PATH=/mnt/projects
       - TZ=${TZ:-Europe/Berlin}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGINS=http://localhost:${FRONTEND_PORT:-3100},http://localhost:3001
     volumes:
+      - ${LIFEHUB_DATA_PATH:-./data}/storage:/data/storage
       - ${LIFEHUB_PHOTOS_PATH:-/volume1/photo}:/mnt/media/photos:rw
       - ${LIFEHUB_VIDEOS_PATH:-/volume1/video}:/mnt/media/videos:rw
-      - lifehub-thumbnails:/mnt/media/thumbnails:rw
+      - ${LIFEHUB_DATA_PATH:-./data}/thumbnails:/mnt/media/thumbnails:rw
       - ${LIFEHUB_DOCUMENTS_PATH:-/volume1/documents}:/mnt/documents:rw
       - ${LIFEHUB_PROJECTS_PATH:-/volume1/projects}:/mnt/projects:rw
-      - lifehub-vault:/mnt/vault-blobs:rw
-      - lifehub-tmp:/mnt/tmp:rw
+      - ${LIFEHUB_DATA_PATH:-./data}/vault:/mnt/vault-blobs:rw
+      - ${LIFEHUB_DATA_PATH:-./data}/tmp:/mnt/tmp:rw
     depends_on:
       postgres:    { condition: service_healthy }
       redis:       { condition: service_healthy }
@@ -171,15 +184,22 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - MEILI_URL=http://meilisearch:7700
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - STORAGE_BASE_PATH=/data/storage
+      - LIFEHUB_DATA_PATH=/data
+      - LIFEHUB_PHOTOS_PATH=/mnt/media/photos
+      - LIFEHUB_VIDEOS_PATH=/mnt/media/videos
+      - LIFEHUB_DOCUMENTS_PATH=/mnt/documents
+      - LIFEHUB_PROJECTS_PATH=/mnt/projects
       - TZ=${TZ:-Europe/Berlin}
     volumes:
+      - ${LIFEHUB_DATA_PATH:-./data}/storage:/data/storage
       - ${LIFEHUB_PHOTOS_PATH:-/volume1/photo}:/mnt/media/photos:rw
       - ${LIFEHUB_VIDEOS_PATH:-/volume1/video}:/mnt/media/videos:rw
-      - lifehub-thumbnails:/mnt/media/thumbnails:rw
+      - ${LIFEHUB_DATA_PATH:-./data}/thumbnails:/mnt/media/thumbnails:rw
       - ${LIFEHUB_DOCUMENTS_PATH:-/volume1/documents}:/mnt/documents:rw
       - ${LIFEHUB_PROJECTS_PATH:-/volume1/projects}:/mnt/projects:rw
-      - lifehub-vault:/mnt/vault-blobs:rw
-      - lifehub-tmp:/mnt/tmp:rw
+      - ${LIFEHUB_DATA_PATH:-./data}/vault:/mnt/vault-blobs:rw
+      - ${LIFEHUB_DATA_PATH:-./data}/tmp:/mnt/tmp:rw
     depends_on:
       backend: { condition: service_started }
     networks: [lifehub]
@@ -190,9 +210,11 @@ services:
     image: ghcr.io/ronn321/lifehub-frontend:latest
     container_name: lifehub-frontend
     restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3100}:3001"
     environment:
-      - NEXT_PUBLIC_API_BASE=https://${LIFEHUB_HOST}/api
-      - NEXT_PUBLIC_BRAND_NAME=LifeHub
+      - NEXT_PUBLIC_API_BASE=http://localhost:${BACKEND_PORT:-3007}/api/v1
+      - NEXT_PUBLIC_BRAND_NAME=${NEXT_PUBLIC_BRAND_NAME:-LifeHub}
       - TZ=${TZ:-Europe/Berlin}
     networks: [lifehub]
     labels:
@@ -212,7 +234,7 @@ services:
     profiles: ["jellyfin"]
     volumes:
       - ${LIFEHUB_VIDEOS_PATH:-/volume1/video}:/media:ro
-      - jellyfin-config:/config
+      - ${LIFEHUB_DATA_PATH:-./data}/jellyfin:/config
     ports: ["8096:8096"]
     networks: [lifehub]
     logging: *default-logging
@@ -222,10 +244,3 @@ networks:
 
 volumes:
   traefik-acme:
-  postgres-data:
-  redis-data:
-  meili-data:
-  lifehub-thumbnails:
-  lifehub-vault:
-  lifehub-tmp:
-  jellyfin-config:

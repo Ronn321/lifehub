@@ -8,21 +8,23 @@ import type { StorageService } from './storage.interface.js';
 
 /**
  * LocalDisk-Storage-Adapter.
- * Basis-Verzeichnis aus STORAGE_BASE_PATH (Default: ./storage).
+ * Basis-Verzeichnis aus STORAGE_BASE_PATH oder System-Settings.
  * In Production wird das NAS-Mount in diesen Pfad gemountet.
  */
 @Injectable()
 export class LocalDiskStorage implements StorageService {
   private readonly logger = new Logger(LocalDiskStorage.name);
-  private readonly base = resolve(process.env.STORAGE_BASE_PATH ?? './storage');
   private readonly signingSecret = process.env.STORAGE_SIGNING_SECRET ?? 'dev-only-change-me';
 
+  private getBase(): string {
+    return resolve(process.env.STORAGE_BASE_PATH ?? './storage');
+  }
+
   private resolveKey(domain: string, key: string): string {
-    // verhindert path-traversal: keine "..", keine absoluten Keys
     if (key.includes('..') || key.startsWith('/')) {
       throw new Error(`Invalid key: ${key}`);
     }
-    return join(this.base, domain, key);
+    return join(this.getBase(), domain, key);
   }
 
   async put(domain: string, key: string, data: Readable | Buffer): Promise<string> {

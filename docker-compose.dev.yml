@@ -1,8 +1,11 @@
 # LifeHub Development Stack
-# Minimal: Postgres, Redis, Meilisearch. KEIN Tailscale, KEIN Traefik, KEIN Backup.
-# Für Production: docs/DOCKER_COMPOSE_PRODUCTION.md
+# Full Stack: Postgres, Redis, Meilisearch, Backend, Frontend
+# Hot-Reload via Volume-Mounts auf src/, shared/, domains/
+# Für Production: docker-compose.prod.yml
 
 services:
+
+  # ============ Datenbank ============
   postgres:
     image: postgres:16-alpine
     container_name: lifehub-postgres-dev
@@ -23,6 +26,7 @@ services:
       timeout: 3s
       retries: 10
 
+  # ============ Cache & Queues ============
   redis:
     image: redis:7-alpine
     container_name: lifehub-redis-dev
@@ -41,6 +45,7 @@ services:
       timeout: 3s
       retries: 5
 
+  # ============ Suche ============
   meilisearch:
     image: getmeili/meilisearch:v1.8
     container_name: lifehub-meili-dev
@@ -59,6 +64,68 @@ services:
       timeout: 3s
       retries: 5
 
+  # ============ Backend ============
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile.dev
+    container_name: lifehub-backend-dev
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3007}:3007"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-lifehub}:${POSTGRES_PASSWORD:-lifehub_dev_password}@postgres:5432/${POSTGRES_DB:-lifehub}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379
+      MEILI_URL: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-meili_dev_master_key}
+      STORAGE_BASE_PATH: /data/storage
+      LIFEHUB_DATA_PATH: /data
+      LIFEHUB_PHOTOS_PATH: /mnt/media/photos
+      LIFEHUB_VIDEOS_PATH: /mnt/media/videos
+      LIFEHUB_DOCUMENTS_PATH: /mnt/documents
+      LIFEHUB_PROJECTS_PATH: /mnt/projects
+      NODE_ENV: development
+      LIFEHUB_API_PORT: "3007"
+      LOG_LEVEL: debug
+      JWT_PRIVATE_KEY_BASE64: ${JWT_PRIVATE_KEY_BASE64:-}
+      JWT_PUBLIC_KEY_BASE64: ${JWT_PUBLIC_KEY_BASE64:-}
+      CORS_ORIGINS: http://localhost:${FRONTEND_PORT:-3001},http://localhost:3001
+      TZ: Europe/Berlin
+    volumes:
+      - ./apps/backend/src:/app/apps/backend/src
+      - ./shared:/app/shared
+      - ./domains:/app/domains
+      - lifehub-data:/data
+      - ${LIFEHUB_PHOTOS_PATH:-./data/photos}:/mnt/media/photos
+      - ${LIFEHUB_VIDEOS_PATH:-./data/videos}:/mnt/media/videos
+      - ${LIFEHUB_DOCUMENTS_PATH:-./data/documents}:/mnt/documents
+      - ${LIFEHUB_PROJECTS_PATH:-./data/projects}:/mnt/projects
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      meilisearch: { condition: service_healthy }
+
+  # ============ Frontend ============
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile.dev
+    container_name: lifehub-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3001}:3001"
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:${BACKEND_PORT:-3007}/api/v1
+      NEXT_PUBLIC_BRAND_NAME: ${NEXT_PUBLIC_BRAND_NAME:-LifeHub}
+      NODE_ENV: development
+      TZ: Europe/Berlin
+    volumes:
+      - ./apps/frontend/src:/app/apps/frontend/src
+      - ./apps/frontend/public:/app/apps/frontend/public
+    depends_on:
+      - backend
+
 volumes:
   postgres-data:
   meili-data:
+  lifehub-data:

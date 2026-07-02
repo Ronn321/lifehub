@@ -1,0 +1,28 @@
+# LifeHub Frontend — Dev Dockerfile
+# Hot-Reload via Volume-Mount auf src/, public/
+# Build-Context: Repo-Root (wg. pnpm Workspaces)
+
+FROM node:20-alpine
+
+RUN corepack enable && \
+    corepack prepare pnpm@9.15.0 --activate
+
+WORKDIR /app
+
+# Package-Files kopieren
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/frontend/package.json ./apps/frontend/
+
+# Shared-Packages
+COPY shared/db/package.json ./shared/db/ 2>/dev/null || true
+COPY shared/auth/package.json ./shared/auth/ 2>/dev/null || true
+COPY shared/permissions/package.json ./shared/permissions/ 2>/dev/null || true
+COPY shared/audit/package.json ./shared/audit/ 2>/dev/null || true
+COPY shared/events/package.json ./shared/events/ 2>/dev/null || true
+COPY shared/storage/package.json ./shared/storage/ 2>/dev/null || true
+
+RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+
+EXPOSE 3001
+
+CMD ["pnpm", "--filter", "@lifehub/frontend", "dev"]

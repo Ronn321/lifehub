@@ -51,7 +51,7 @@ services:
     ports:
       - "3007:3007"
     environment:
-      DATABASE_URL: postgresql://lifehub:lifehub@db:5432/lifehub
+DATABASE_URL: postgresql://lifehub:lifehub@db:5432/lifehub
       REDIS_URL: redis://:lifehub@cache:6379
       MEILI_URL: http://search:7700
       MEILI_MASTER_KEY: lifehub
@@ -59,9 +59,6 @@ services:
       LIFEHUB_DATA_PATH: /data
     volumes:
       - lifehub-data:/data
-      # Optional: NAS media mounts (uncomment and adjust paths)
-      # - /volume1/photo:/mnt/media/photos:rw
-      # - /volume1/video:/mnt/media/videos:rw
     depends_on:
       db: { condition: service_healthy }
       cache: { condition: service_healthy }

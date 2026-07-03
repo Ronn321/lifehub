@@ -153,10 +153,8 @@ COPY --from=builder /app/apps/backend/scripts ./apps/backend/scripts
 # Drizzle config fuer CLI
 COPY --from=builder /app/apps/backend/drizzle.config.ts ./apps/backend/drizzle.config.ts
 
-# tsx fuer Migrations-Skript (ESM)
-RUN npm install -g tsx
-
-# Start-Script
+# Migration-Script + Start-Script
+COPY apps/backend/scripts/migrate.cjs ./apps/backend/scripts/migrate.cjs
 COPY apps/backend/scripts/start.sh ./start.sh
 RUN chmod +x ./start.sh
 

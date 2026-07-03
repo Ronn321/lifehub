@@ -1,9 +1,10 @@
 // Minimal API-Client: native fetch + JSON, typed via zod
 import { z } from 'zod';
 
-const API_BASE = typeof window !== 'undefined'
-  ? `http://${window.location.hostname}:3007/api/v1`
-  : (process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3007/api/v1');
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE
+  ?? (typeof window !== 'undefined'
+    ? `http://${window.location.hostname}:3007/api/v1`
+    : 'http://localhost:3007/api/v1');
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;

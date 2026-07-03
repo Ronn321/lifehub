@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify, importPKCS8, importSPKI, type KeyLike } from 'jose';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, generateKeyPairSync } from 'node:crypto';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 export interface JwtPayload {
   sub: string;          // userId
@@ -14,17 +16,75 @@ const ALG = 'RS256';
 const ACCESS_TTL = '15m';
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
+const KEYS_DIR = process.env.LIFEHUB_DATA_PATH
+  ? join(process.env.LIFEHUB_DATA_PATH, 'keys')
+  : join(process.cwd(), 'data', 'keys');
+
+const PRIVATE_KEY_PATH = join(KEYS_DIR, 'jwt_private.pem');
+const PUBLIC_KEY_PATH = join(KEYS_DIR, 'jwt_public.pem');
+
+function generateAndPersistKeys(): { privateBase64: string; publicBase64: string } {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'pkcs1', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs1', format: 'pem' },
+  });
+
+  mkdirSync(KEYS_DIR, { recursive: true });
+  writeFileSync(PRIVATE_KEY_PATH, privateKey);
+  writeFileSync(PUBLIC_KEY_PATH, publicKey);
+
+  const privateBase64 = Buffer.from(privateKey).toString('base64');
+  const publicBase64 = Buffer.from(publicKey).toString('base64');
+
+  console.log(`🔐 JWT Keys generated and saved to ${KEYS_DIR}`);
+  return { privateBase64, publicBase64 };
+}
+
+function loadExistingKeys(): { privateBase64: string; publicBase64: string } | null {
+  if (!existsSync(PRIVATE_KEY_PATH) || !existsSync(PUBLIC_KEY_PATH)) {
+    return null;
+  }
+  try {
+    const privatePem = readFileSync(PRIVATE_KEY_PATH, 'utf8');
+    const publicPem = readFileSync(PUBLIC_KEY_PATH, 'utf8');
+    return {
+      privateBase64: Buffer.from(privatePem).toString('base64'),
+      publicBase64: Buffer.from(publicPem).toString('base64'),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function getOrGenerateKeys(): { privateBase64: string; publicBase64: string } {
+  // 1. Aus ENV
+  const envPrivate = process.env.JWT_PRIVATE_KEY_BASE64;
+  const envPublic = process.env.JWT_PUBLIC_KEY_BASE64;
+  if (envPrivate && envPublic) {
+    return { privateBase64: envPrivate, publicBase64: envPublic };
+  }
+
+  // 2. Aus Datei (persistiert)
+  const existing = loadExistingKeys();
+  if (existing) {
+    console.log('🔐 JWT Keys loaded from file');
+    return existing;
+  }
+
+  // 3. Auto-generieren
+  return generateAndPersistKeys();
+}
+
 async function getPrivateKey(): Promise<KeyLike> {
-  const b64 = process.env.JWT_PRIVATE_KEY_BASE64;
-  if (!b64) throw new Error('JWT_PRIVATE_KEY_BASE64 not set');
-  const pem = Buffer.from(b64, 'base64').toString('utf8');
+  const keys = getOrGenerateKeys();
+  const pem = Buffer.from(keys.privateBase64, 'base64').toString('utf8');
   return (await importPKCS8(pem, ALG)) as KeyLike;
 }
 
 async function getPublicKey(): Promise<KeyLike> {
-  const b64 = process.env.JWT_PUBLIC_KEY_BASE64;
-  if (!b64) throw new Error('JWT_PUBLIC_KEY_BASE64 not set');
-  const pem = Buffer.from(b64, 'base64').toString('utf8');
+  const keys = getOrGenerateKeys();
+  const pem = Buffer.from(keys.publicBase64, 'base64').toString('utf8');
   return (await importSPKI(pem, ALG)) as KeyLike;
 }
 

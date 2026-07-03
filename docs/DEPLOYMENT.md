@@ -2,12 +2,37 @@
 
 # LifeHub — Deployment-Anleitung
 
-Version: 2.0
+Version: 3.0
 Status: verbindlich
 
 ---
 
-## 1. Übersicht
+## 1. Quick Start (NAS, Plex-like)
+
+**Ein Befehl — LifeHub läuft auf deinem NAS:**
+
+```bash
+# 1. Clone (oder einzelne Datei runterladen)
+git clone https://github.com/Ronn321/lifehub.git
+cd lifehub
+
+# 2. Setup (generiert .env, pullt Images, startet Stack)
+chmod +x scripts/setup.sh
+./scripts/setup.sh --auto
+
+# 3. Browser öffnen
+# http://<NAS-IP>:3100 → Registrieren → Fertig!
+```
+
+Oder noch kürzer — nur die Compose-Datei:
+
+```bash
+curl -O https://raw.githubusercontent.com/Ronn321/lifehub/main/docker-compose.yml
+docker compose up -d
+open http://localhost:3100
+```
+
+## 2. Übersicht (traditionell)
 
 ```
 Development PC (Windows)              UGREEN NAS (Docker)

@@ -76,6 +76,7 @@ Development PC (Windows)              UGREEN NAS (Docker)
 | 10 | Deploy-Scripts (GHCR) | ✅ DONE | `scripts/deploy.sh` + `scripts/deploy.cmd` |
 | 11 | Deployment-Doku | ✅ DONE | `docs/DEPLOYMENT.md` |
 | 12 | .env.prod.example | ✅ DONE | `.env.prod.example` |
+| 13 | Setup-Script (Plex-like) | ✅ DONE | `scripts/setup.sh` |
 
 ### Phase 3: Auto-Updater (später, Phase 2+)
 
@@ -112,10 +113,10 @@ Development PC (Windows)              UGREEN NAS (Docker)
 - [x] Dockerfiles für Backend und Frontend
 - [x] Production docker-compose.prod.yml mit GHCR-Images
 - [x] Deploy-Scripts für manuellen Build
-- [ ] Erster Tag `v0.1.0` → Images auf ghcr.io (manuell auslösen)
-- [ ] `.env` auf NAS konfigurieren
-- [ ] `docker compose pull && up -d` auf NAS testen
-- [ ] Login-Seite erreichbar
+- [x] Erster Tag `v0.1.0` → Images auf ghcr.io (via CI)
+- [x] `.env` auf NAS konfigurieren (via setup.sh)
+- [x] `docker compose pull && up -d` auf NAS testen
+- [x] Login-Seite erreichbar
 
 ---
 

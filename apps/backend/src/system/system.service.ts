@@ -57,7 +57,7 @@ export class SystemService {
     const rows = await this.db.execute<{ key: string; value: unknown }>(
       sql`SELECT key, value FROM public.system_settings WHERE key = ${key}`
     );
-    if (rows.length > 0) return rows[0].value;
+    if (rows.length > 0 && rows[0]?.value !== undefined) return rows[0].value;
     return DEFAULT_SETTINGS[key] ?? null;
   }
 

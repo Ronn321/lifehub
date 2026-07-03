@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { api } from '@/lib/api';
@@ -214,7 +215,7 @@ function TipTapEditor({ content, onUpdate, placeholder, debounceMs = 800 }: {
       Placeholder.configure({ placeholder: placeholder ?? 'Text eingeben...' }),
     ],
     content: (content?.json as Record<string, unknown>) ?? { type: 'doc', content: [] },
-    onUpdate: ({ editor: ed }) => {
+    onUpdate: ({ editor: ed }: { editor: Editor }) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         onUpdate({ json: ed.getJSON() });
@@ -1167,8 +1168,8 @@ function RelationsSection({ pageId, allPages, onNavigate }: {
   );
 }
 
-/* ─── Main Page ─── */
-export default function PagesPage() {
+/* ─── Main Page (wrapped in Suspense for useSearchParams) ─── */
+function PagesPageInner() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1259,5 +1260,13 @@ export default function PagesPage() {
         pages={pages ?? []}
       />
     </div>
+  );
+}
+
+export default function PagesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div></div>}>
+      <PagesPageInner />
+    </Suspense>
   );
 }

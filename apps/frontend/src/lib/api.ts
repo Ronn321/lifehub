@@ -94,6 +94,25 @@ export const api = {
   put: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  upload: <T>(path: string, formData: FormData) => {
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        let body: unknown = null;
+        try { body = await res.json(); } catch { /* ignore */ }
+        throw new ApiError(res.status, body);
+      }
+      if (res.status === 204) return undefined as T;
+      return (await res.json()) as T;
+    });
+  },
 };
 
 // Auth-spezifische Schemas (geteilt mit Backend via OpenAPI später)

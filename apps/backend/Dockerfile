@@ -54,8 +54,7 @@ COPY . .
 RUN npm install -g @nestjs/cli@10
 
 # Alle Workspace-Packages bauen (shared + domains), damit Node.js zur Laufzeit
-# die dist/index.js findet. nest build kompiliert zwar inline, aber pnpm
-# symlinks loesen @lifehub/* zur Laufzeit auf die Package-Directories auf.
+# die dist/index.js findet. Verwendet die tsconfig jedes Packages (NodeNext).
 RUN for pkg in shared/db shared/auth shared/permissions shared/audit shared/events shared/storage \
                domains/calendar domains/dashboard domains/documents domains/finance \
                domains/insurance domains/it-inventory domains/jellyfin domains/media \
@@ -64,9 +63,7 @@ RUN for pkg in shared/db shared/auth shared/permissions shared/audit shared/even
       if [ -f "$pkg/src/index.ts" ]; then \
         echo "Building $pkg..." && \
         cd /app/$pkg && \
-        npx tsc --outDir dist --rootDir src --module CommonJS --moduleResolution Node \
-          --target ES2022 --esModuleInterop --skipLibCheck --experimentalDecorators \
-          --emitDecoratorMetadata --declaration false || true && \
+        npx tsc --outDir dist --declaration false --skipLibCheck || true && \
         cd /app; \
       fi; \
     done

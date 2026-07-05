@@ -74,13 +74,14 @@ Jede Domain hat exakt einen Status:
 
 ## System Modules
 
-| Domain | Status |
-|--------|--------|
-| calendar | NOT_STARTED |
-| it_inventory | NOT_STARTED |
-| search | NOT_STARTED |
-| jellyfin | NOT_STARTED |
-| plugins | NOT_STARTED |
+| Domain | Status | Notes |
+|--------|--------|------|
+| calendar | NOT_STARTED | |
+| it_inventory | NOT_STARTED | |
+| search | NOT_STARTED | |
+| jellyfin | IMPLEMENTED | Netflix-style Media UI v1 — Movies, Series, Detailseiten, Player, Search, Collections, Continue Watching |
+| **pages** | **IMPLEMENTED** | **Notion-like Page System: Pages CRUD, Blocks CRUD, Versioning (Page + Block), Relations, Templates, Research Workspace (Sessions, Sources, Collections), Browser Tabs, Page Pins, Web Proxy, Search API, Page Move, Children API, Import/Export (JSON/Markdown), Permission Overrides, Drag & Drop UI, 16 Block Components, TipTap Editor, Media Picker, Tree View. Backend: NestJS (domains/pages/). Frontend: apps/frontend/src/app/(dashboard)/pages/. DB: 10 Tables in shared/db (pages, page_blocks, block_versions, page_versions, page_relations, page_templates, research_sessions, research_sources, research_collections, page_pins, browser_tabs) + 2 new (page_permissions, database_pages).** |
+| plugins | NOT_STARTED | |
 
 ---
 

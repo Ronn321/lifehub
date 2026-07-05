@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { and, eq, isNull, sql, asc, desc } from 'drizzle-orm';
-import { DbService, pages, pageBlocks, blockVersions, pageVersions, pageRelations, pageTemplates, researchSessions, researchSources, researchCollections, type Db } from '@lifehub/db';
+import { DbService, pages, pageBlocks, blockVersions, pageVersions, pageRelations, pageTemplates, researchSessions, researchSources, researchCollections, pagePins, browserTabs, type Db } from '@lifehub/db';
 import type { PageBlock } from '../entities/pages';
 
 export class PagesRepository {
@@ -15,6 +15,7 @@ export class PagesRepository {
   async createPage(data: {
     ownerId: string;
     title: string;
+    slug?: string | null;
     parentId?: string | null;
     icon?: string | null;
     coverMediaId?: string | null;
@@ -26,6 +27,7 @@ export class PagesRepository {
     const [row] = await this.db.insert(pages).values({
       ownerId: data.ownerId,
       title: data.title,
+      slug: data.slug ?? null,
       parentId: data.parentId ?? null,
       icon: data.icon ?? null,
       coverMediaId: data.coverMediaId ?? null,
@@ -37,9 +39,38 @@ export class PagesRepository {
     return row;
   }
 
+  async findPageBySlug(slug: string, ownerId: string) {
+    const [row] = await this.db
+      .select()
+      .from(pages)
+      .where(and(eq(pages.slug, slug), eq(pages.ownerId, ownerId), isNull(pages.deletedAt)))
+      .limit(1);
+    return row ?? null;
+  }
+
+  async slugExists(slug: string, ownerId: string, excludeId?: string): Promise<boolean> {
+    let query = sql`SELECT id FROM pages WHERE slug = ${slug} AND owner_id = ${ownerId} AND deleted_at IS NULL`;
+    if (excludeId) {
+      query = sql`${query} AND id != ${excludeId}`;
+    }
+    query = sql`${query} LIMIT 1`;
+    const [row] = await this.db.execute(query);
+    return !!row;
+  }
+
   async findPagesByOwner(ownerId: string) {
     return this.db.select().from(pages)
       .where(and(eq(pages.ownerId, ownerId), isNull(pages.deletedAt)))
+      .orderBy(asc(pages.sortOrder), asc(pages.createdAt));
+  }
+
+  async findPageChildren(pageId: string, ownerId: string) {
+    return this.db.select().from(pages)
+      .where(and(
+        eq(pages.parentId, pageId),
+        eq(pages.ownerId, ownerId),
+        isNull(pages.deletedAt),
+      ))
       .orderBy(asc(pages.sortOrder), asc(pages.createdAt));
   }
 
@@ -71,6 +102,14 @@ export class PagesRepository {
     await this.db.update(pages)
       .set({ deletedAt: sql`now()` })
       .where(and(eq(pages.id, id), eq(pages.ownerId, ownerId)));
+  }
+
+  async updatePageParent(id: string, ownerId: string, parentId: string | null) {
+    const [row] = await this.db.update(pages)
+      .set({ parentId, updatedAt: sql`now()` })
+      .where(and(eq(pages.id, id), eq(pages.ownerId, ownerId)))
+      .returning();
+    return row ?? null;
   }
 
   // ========== PAGE BLOCKS ==========
@@ -438,5 +477,148 @@ export class PagesRepository {
 
   async deleteResearchCollection(id: string) {
     await this.db.delete(researchCollections).where(eq(researchCollections.id, id));
+  }
+
+  // ========== SEARCH ==========
+
+  async searchPages(ownerId: string, query: string) {
+    const pattern = `%${query}%`;
+    return this.db
+      .select()
+      .from(pages)
+      .where(
+        and(
+          eq(pages.ownerId, ownerId),
+          isNull(pages.deletedAt),
+          sql`(
+            ${pages.title} ILIKE ${pattern}
+            OR EXISTS (
+              SELECT 1 FROM ${pageBlocks}
+              WHERE ${pageBlocks.pageId} = ${pages.id}
+                AND ${pageBlocks.deletedAt} IS NULL
+                AND ${pageBlocks.content}->>'text' ILIKE ${pattern}
+            )
+          )`,
+        ),
+      )
+      .orderBy(asc(pages.sortOrder), asc(pages.createdAt));
+  }
+
+  /**
+   * Recursively find all descendant page IDs to prevent circular references on move.
+   */
+  async findDescendantIds(pageId: string, ownerId: string): Promise<string[]> {
+    const children = await this.db
+      .select({ id: pages.id })
+      .from(pages)
+      .where(and(eq(pages.parentId, pageId), eq(pages.ownerId, ownerId), isNull(pages.deletedAt)));
+    const ids: string[] = [];
+    for (const child of children) {
+      ids.push(child.id);
+      const grandchildIds = await this.findDescendantIds(child.id, ownerId);
+      ids.push(...grandchildIds);
+    }
+    return ids;
+  }
+
+  // ========== PAGE PINS ==========
+
+  async addPagePin(userId: string, pageId: string, sortOrder?: number) {
+    const [row] = await this.db.insert(pagePins).values({
+      userId,
+      pageId,
+      sortOrder: sortOrder ?? 0,
+    }).onConflictDoNothing().returning();
+    return row ?? null;
+  }
+
+  async removePagePin(userId: string, pageId: string) {
+    await this.db.delete(pagePins)
+      .where(and(eq(pagePins.userId, userId), eq(pagePins.pageId, pageId)));
+  }
+
+  async findPinnedPages(userId: string) {
+    return this.db.select({
+      pageId: pagePins.pageId,
+      sortOrder: pagePins.sortOrder,
+      title: pages.title,
+      slug: pages.slug,
+      icon: pages.icon,
+      description: pages.description,
+    }).from(pagePins)
+      .innerJoin(pages, eq(pagePins.pageId, pages.id))
+      .where(and(eq(pagePins.userId, userId), isNull(pages.deletedAt)))
+      .orderBy(asc(pagePins.sortOrder));
+  }
+
+  async isPagePinned(userId: string, pageId: string): Promise<boolean> {
+    const [row] = await this.db.select({ id: pagePins.id }).from(pagePins)
+      .where(and(eq(pagePins.userId, userId), eq(pagePins.pageId, pageId)))
+      .limit(1);
+    return !!row;
+  }
+
+  async reorderPagePins(userId: string, items: Array<{ pageId: string; sortOrder: number }>) {
+    for (const item of items) {
+      await this.db.update(pagePins)
+        .set({ sortOrder: item.sortOrder })
+        .where(and(eq(pagePins.userId, userId), eq(pagePins.pageId, item.pageId)));
+    }
+  }
+
+  // ========== BROWSER TABS ==========
+
+  async createBrowserTab(data: {
+    sessionId: string;
+    url?: string;
+    title?: string;
+    favicon?: string;
+    isActive?: boolean;
+    sortOrder?: number;
+  }) {
+    const [row] = await this.db.insert(browserTabs).values({
+      sessionId: data.sessionId,
+      url: data.url ?? 'about:blank',
+      title: data.title ?? null,
+      favicon: data.favicon ?? null,
+      isActive: data.isActive ?? false,
+      sortOrder: data.sortOrder ?? 0,
+    }).returning();
+    return row;
+  }
+
+  async findBrowserTabsBySession(sessionId: string) {
+    return this.db.select().from(browserTabs)
+      .where(eq(browserTabs.sessionId, sessionId))
+      .orderBy(asc(browserTabs.sortOrder));
+  }
+
+  async updateBrowserTab(id: string, data: Partial<{
+    url: string;
+    title: string;
+    favicon: string;
+    isActive: boolean;
+    sortOrder: number;
+  }>) {
+    const [row] = await this.db.update(browserTabs)
+      .set({ ...data, updatedAt: sql`now()` })
+      .where(eq(browserTabs.id, id))
+      .returning();
+    return row ?? null;
+  }
+
+  async deleteBrowserTab(id: string) {
+    await this.db.delete(browserTabs).where(eq(browserTabs.id, id));
+  }
+
+  async setActiveBrowserTab(sessionId: string, tabId: string) {
+    // Deactivate all tabs in session
+    await this.db.update(browserTabs)
+      .set({ isActive: false })
+      .where(eq(browserTabs.sessionId, sessionId));
+    // Activate the selected tab
+    await this.db.update(browserTabs)
+      .set({ isActive: true })
+      .where(eq(browserTabs.id, tabId));
   }
 }

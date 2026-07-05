@@ -30,11 +30,15 @@ import { LinkBlock } from './components/blocks/LinkBlock';
 import { MapBlock } from './components/blocks/MapBlock';
 import { BlockVersionHistory } from './components/BlockVersionHistory';
 import { PageVersionHistory } from './components/PageVersionHistory';
+import { Breadcrumbs } from './components/Breadcrumbs';
+import { SlashMenu, SlashMenuExtension } from './components/SlashMenu';
+import { SearchBlock } from './components/blocks/SearchBlock';
+import { registerAllBlocks, blockRegistry } from '@/lib/blockRegistry';
 import {
   Plus, Notebook, Loader2, Trash2,
   Heading, Type, Image, Grid3X3, File, Minus, Check,
   ChevronRight, MessageSquare, Quote, Code, Bookmark, Table2, Link2,
-  Calendar, PiggyBank, Server, History,
+  Calendar, PiggyBank, Server, History, Search,
 } from 'lucide-react';
 
 interface Page {
@@ -54,7 +58,9 @@ interface Page {
 
 type BlockTypeUnion = 'heading' | 'text' | 'image' | 'gallery' | 'file-list' | 'divider'
   | 'todo' | 'toggle' | 'callout' | 'quote' | 'code'
-  | 'bookmark' | 'table' | 'page-reference';
+  | 'bookmark' | 'table' | 'page-reference'
+  | 'checklist' | 'timeline' | 'embed' | 'video' | 'file' | 'link' | 'map'
+  | 'research_workspace' | 'search';
 
 interface PageBlock {
   id: string;
@@ -106,6 +112,7 @@ const blockIcon: Record<string, React.ReactNode> = {
   finance_widget: <PiggyBank className="h-4 w-4" />,
   it_inventory_widget: <Server className="h-4 w-4" />,
   jellyfin_player: <Image className="h-4 w-4" />,
+  search: <Search className="h-4 w-4" />,
 };
 
 const blockLabel: Record<string, string> = {
@@ -135,6 +142,7 @@ const blockLabel: Record<string, string> = {
   finance_widget: 'Finanzen',
   it_inventory_widget: 'IT-Inventar',
   jellyfin_player: 'Jellyfin Player',
+  search: 'Suche',
 };
 
 function flattenPages(pages: Page[]): Page[] {
@@ -164,6 +172,7 @@ const BLOCK_DEFAULTS: Record<string, Record<string, unknown>> = {
   bookmark: { url: '' },
   table: { columns: [], rows: [], functions: {} },
   'page-reference': { pageId: '' },
+  search: { scope: 'page', query: '' },
 };
 
 function extractTextFromContent(content: Record<string, unknown>): string {
@@ -205,14 +214,17 @@ function textToTipTapJson(text: string): Record<string, unknown> {
 }
 
 /* ─── TipTap Editor (inline, Notion-style) ─── */
-function TipTapEditor({ content, onUpdate, placeholder, debounceMs = 800 }: {
+function TipTapEditor({ content, onUpdate, placeholder, debounceMs = 800, onBlockTypeChange }: {
   content: Record<string, unknown>; onUpdate: (json: Record<string, unknown>) => void; placeholder?: string; debounceMs?: number;
+  onBlockTypeChange?: (blockType: string) => void;
 }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const slashContainerRef = useRef<HTMLDivElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Placeholder.configure({ placeholder: placeholder ?? 'Text eingeben...' }),
+      SlashMenuExtension,
     ],
     content: (content?.json as Record<string, unknown>) ?? { type: 'doc', content: [] },
     onUpdate: ({ editor: ed }: { editor: Editor }) => {
@@ -232,9 +244,22 @@ function TipTapEditor({ content, onUpdate, placeholder, debounceMs = 800 }: {
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
+  const handleSlashSelect = (blockType: string) => {
+    onBlockTypeChange?.(blockType);
+  };
+
   if (!editor) return <div className="h-6 animate-pulse bg-zinc-100 dark:bg-zinc-800 rounded" />;
 
-  return <EditorContent editor={editor} />;
+  return (
+    <div ref={slashContainerRef} className="relative">
+      <EditorContent editor={editor} />
+      <SlashMenu
+        editor={editor}
+        onSelect={handleSlashSelect}
+        onClose={() => {}}
+      />
+    </div>
+  );
 }
 
 /* ─── Media Picker ─── */
@@ -466,9 +491,9 @@ function CreatePageDialog({ open, onClose, onSuccess, pages }: {
 }
 
 /* ─── Block Editor (inline, Notion-style) ─── */
-function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
-  block: PageBlock; onUpdate: (data: Partial<PageBlock>) => void; pageId: string;
-  allPages: Page[]; onNavigate: (id: string) => void;
+function BlockEditor({ block, onUpdate, onBlockTypeChange, pageId, allPages, onNavigate }: {
+  block: PageBlock; onUpdate: (data: Partial<PageBlock>) => void; onBlockTypeChange?: (blockType: string) => void;
+  pageId: string; allPages: Page[]; onNavigate: (id: string) => void;
 }) {
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
@@ -510,6 +535,7 @@ function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
         content={block.content}
         onUpdate={(json) => onUpdate({ content: json })}
         placeholder="Text eingeben..."
+        onBlockTypeChange={onBlockTypeChange}
       />
     );
   }
@@ -748,6 +774,16 @@ function BlockEditor({ block, onUpdate, pageId, allPages, onNavigate }: {
     );
   }
 
+  if (block.type === 'search') {
+    return (
+      <SearchBlock
+        pageId={pageId}
+        scope={(block.content?.scope as 'page' | 'domain' | 'global') ?? 'page'}
+        onNavigate={onNavigate}
+      />
+    );
+  }
+
   return (
     <div className="text-sm text-fg-muted py-1">
       {blockLabel[block.type]} Block
@@ -909,6 +945,9 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
       case 'bookmark':
         newContent = { url: oldText.startsWith('http') ? oldText : '' };
         break;
+      case 'search':
+        newContent = { scope: 'page', query: '' };
+        break;
       default:
         newContent = BLOCK_DEFAULTS[newType] ?? {};
     }
@@ -942,6 +981,12 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <Breadcrumbs
+        currentPageId={pageId}
+        allPages={allPages}
+        onNavigate={(id) => id ? router.push(`/pages?open=${id}`) : onBack()}
+        className="mb-0"
+      />
       <PageHeader page={page} allPages={allPages} onNavigate={(id) => id ? router.push(`/pages?open=${id}`) : onBack()} />
 
       <div className="flex items-center justify-between">
@@ -993,6 +1038,7 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
                     allPages={allPages}
                     onNavigate={(id) => router.push(`/pages?open=${id}`)}
                     onUpdate={(data) => updateBlockMutation.mutate({ blockId: block.id, data })}
+                    onBlockTypeChange={(newType) => handleBlockTypeChange(block.id, newType as BlockType)}
                   />
                 </div>
               );
@@ -1011,16 +1057,19 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
               autoFocus
             />
             <div className="grid grid-cols-2 gap-1 max-h-[200px] overflow-y-auto">
-              {(['heading', 'text', 'todo', 'toggle', 'image', 'gallery', 'file-list', 'divider', 'callout', 'quote', 'code', 'bookmark', 'table', 'page-reference', 'checklist', 'timeline', 'embed', 'video', 'file', 'link', 'map', 'research_workspace'] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => addBlockMutation.mutate(type)}
-                  disabled={addBlockMutation.isPending}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-surface text-sm text-left transition-colors disabled:opacity-50"
-                >
-                  {blockIcon[type]} {blockLabel[type]}
-                </button>
-              ))}
+              {blockRegistry.getAll().filter(e => e.type !== 'calendar_view' && e.type !== 'finance_widget' && e.type !== 'it_inventory_widget' && e.type !== 'jellyfin_player').map((entry) => {
+                const Icon = entry.icon;
+                return (
+                  <button
+                    key={entry.type}
+                    onClick={() => addBlockMutation.mutate(entry.type)}
+                    disabled={addBlockMutation.isPending}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-surface text-sm text-left transition-colors disabled:opacity-50"
+                  >
+                    <Icon className="h-4 w-4" /> {entry.label}
+                  </button>
+                );
+              })}
             </div>
             <button onClick={() => setAddingBlock(null)} className="w-full mt-2 px-3 py-1.5 rounded-lg text-sm text-fg-muted hover:text-fg hover:bg-bg-surface transition-colors">
               Abbrechen
@@ -1176,6 +1225,9 @@ function PagesPageInner() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(searchParams.get('open'));
+
+  // Register all block types once on mount
+  useEffect(() => { registerAllBlocks(); }, []);
 
   useEffect(() => { if (!accessToken) router.push('/login'); }, [accessToken, router]);
 

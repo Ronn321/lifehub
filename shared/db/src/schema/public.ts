@@ -544,6 +544,7 @@ export const financeAssetPrices = pgTable('finance_asset_prices', {
 export const pages = pgTable('pages', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: text('title').notNull(),
+  slug: text('slug'),
   ownerId: uuid('owner_id').notNull().references(() => users.id),
   parentId: uuid('parent_id'),
   icon: text('icon'),
@@ -561,6 +562,34 @@ export const pages = pgTable('pages', {
   index('pages_owner_idx').on(t.ownerId, t.deletedAt),
   index('pages_parent_idx').on(t.parentId),
   index('pages_status_idx').on(t.ownerId, t.status),
+  index('pages_slug_owner_idx').on(t.ownerId, t.slug),
+]);
+
+// ===================== page_pins =====================
+export const pagePins = pgTable('page_pins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  pageId: uuid('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('page_pins_user_page_uq').on(t.userId, t.pageId),
+  index('page_pins_user_idx').on(t.userId, t.sortOrder),
+]);
+
+// ===================== browser_tabs =====================
+export const browserTabs = pgTable('browser_tabs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sessionId: uuid('session_id').notNull().references(() => researchSessions.id, { onDelete: 'cascade' }),
+  url: text('url').notNull().default('about:blank'),
+  title: text('title'),
+  favicon: text('favicon'),
+  isActive: boolean('is_active').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('browser_tabs_session_idx').on(t.sessionId, t.sortOrder),
 ]);
 
 // ===================== page_blocks =====================
@@ -744,3 +773,27 @@ export const researchCollections = pgTable('research_collections', {
 }, (t) => [
   index('research_collections_session_idx').on(t.sessionId),
 ]);
+
+// ===================== page_permissions =====================
+export const pagePermissions = pgTable('page_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pageId: uuid('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  subjectType: text('subject_type').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  permission: text('permission').notNull(),
+  grantedBy: uuid('granted_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('page_permissions_page_idx').on(t.pageId),
+  uniqueIndex('page_permissions_uq').on(t.pageId, t.subjectType, t.subjectId),
+]);
+
+// ===================== database_pages =====================
+export const databasePages = pgTable('database_pages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pageId: uuid('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }).unique(),
+  schema: jsonb('schema').notNull().default('{}'),
+  viewConfig: jsonb('view_config').notNull().default('{}'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});

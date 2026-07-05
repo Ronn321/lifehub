@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createPageSchema = z.object({
   title: z.string().min(1).max(255),
+  slug: z.string().min(1).max(255).regex(/^[a-z0-9-]+$/).optional(),
   parentId: z.string().uuid().optional(),
   icon: z.string().max(50).optional(),
   coverMediaId: z.string().uuid().optional(),
@@ -14,6 +15,7 @@ export type CreatePageInput = z.infer<typeof createPageSchema>;
 
 export const updatePageSchema = z.object({
   title: z.string().min(1).max(255).optional(),
+  slug: z.string().min(1).max(255).regex(/^[a-z0-9-]+$/).optional(),
   parentId: z.string().uuid().nullable().optional(),
   icon: z.string().max(50).nullable().optional(),
   coverMediaId: z.string().uuid().nullable().optional(),
@@ -24,6 +26,11 @@ export const updatePageSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 export type UpdatePageInput = z.infer<typeof updatePageSchema>;
+
+export const movePageSchema = z.object({
+  newParentId: z.string().uuid().nullable(),
+});
+export type MovePageInput = z.infer<typeof movePageSchema>;
 
 const blockContentSchema: z.ZodType<Record<string, unknown>> = z.record(z.unknown());
 
@@ -140,3 +147,50 @@ export const createResearchCollectionSchema = z.object({
   sourceIds: z.array(z.string().uuid()).optional().default([]),
 });
 export type CreateResearchCollectionInput = z.infer<typeof createResearchCollectionSchema>;
+
+// ========== IMPORT/EXPORT ==========
+
+export const importPageSchema = z.object({
+  title: z.string().min(1).max(255),
+  slug: z.string().min(1).max(255).regex(/^[a-z0-9-]+$/).optional(),
+  icon: z.string().max(50).optional(),
+  coverMediaId: z.string().uuid().optional(),
+  description: z.string().max(1000).optional(),
+  parentId: z.string().uuid().optional(),
+  tags: z.array(z.string()).optional(),
+  sortOrder: z.number().int().optional(),
+  blocks: z.array(z.object({
+    type: z.enum(blockTypes),
+    content: blockContentSchema.optional().default({}),
+    layout: z.record(z.unknown()).optional(),
+    metadata: z.record(z.unknown()).optional(),
+    sortOrder: z.number().int().optional().default(0),
+  })).optional().default([]),
+  relations: z.array(z.object({
+    targetPageId: z.string().uuid(),
+    relationType: z.enum(['reference', 'related', 'dependency', 'embedded', 'parent-child']).default('reference'),
+    label: z.string().max(255).optional(),
+    metadata: z.record(z.unknown()).optional(),
+  })).optional().default([]),
+});
+export type ImportPageInput = z.infer<typeof importPageSchema>;
+
+export const pageFormatSchema = z.enum(['json', 'markdown']).default('json');
+export type PageFormat = z.infer<typeof pageFormatSchema>;
+
+// ========== PAGE PERMISSION OVERRIDES ==========
+
+export const pagePermissionOverrideSchema = z.object({
+  permissions: z.array(z.object({
+    subjectType: z.enum(['user', 'role']),
+    subjectId: z.string().uuid(),
+    permission: z.enum(['read', 'write', 'admin']),
+  })),
+});
+export type PagePermissionOverrideInput = z.infer<typeof pagePermissionOverrideSchema>;
+
+export type PagePermissionOverride = {
+  subjectType: 'user' | 'role';
+  subjectId: string;
+  permission: 'read' | 'write' | 'admin';
+};

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Inject } from '@nestjs/common';
 import { EventsService, createEventType } from '@lifehub/events';
 import { PagesRepository } from '../repositories/pages.repository';
 import type {
@@ -6,6 +6,7 @@ import type {
   CreateRelationInput, CreateTemplateInput, UpdateTemplateInput,
   CreateResearchSessionInput, UpdateResearchSessionInput,
   CreateResearchSourceInput, CreateResearchCollectionInput,
+  PagePermissionOverrideInput,
 } from '../dtos/pages.dto';
 
 export const PageCreated = createEventType<{ pageId: string; title: string }>('page.created');
@@ -31,6 +32,19 @@ export class PagesService {
   async createPage(ownerId: string, input: CreatePageInput) {
     let templateBlocks: Array<{ type: string; content: Record<string, unknown>; sortOrder: number }> | undefined;
 
+    // Auto-generate slug from title if not provided
+    let slug = input.slug;
+    if (!slug) {
+      slug = this.slugify(input.title);
+      let attempt = 0;
+      while (await this.repo.slugExists(slug, ownerId)) {
+        attempt++;
+        slug = `${this.slugify(input.title)}-${attempt}`;
+      }
+    } else if (await this.repo.slugExists(slug, ownerId)) {
+      throw new Error('Dieser Seiten-Name (Slug) wird bereits verwendet');
+    }
+
     if (input.templateId) {
       const template = await this.repo.findTemplateById(input.templateId);
       if (template) {
@@ -38,7 +52,7 @@ export class PagesService {
       }
     }
 
-    const page = await this.repo.createPage({ ...input, ownerId });
+    const page = await this.repo.createPage({ ...input, ownerId, slug });
     if (!page) throw new Error('Seite konnte nicht angelegt werden');
 
     if (templateBlocks) {
@@ -59,6 +73,12 @@ export class PagesService {
   async listPages(ownerId: string) {
     const flatPages = await this.repo.findPagesByOwner(ownerId);
     return this.buildTree(flatPages);
+  }
+
+  async getPageChildren(ownerId: string, id: string) {
+    const page = await this.repo.findPageById(id, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+    return this.repo.findPageChildren(id, ownerId);
   }
 
   async getPageWithBlocks(ownerId: string, id: string) {
@@ -399,5 +419,359 @@ export class PagesService {
     }
 
     return roots;
+  }
+
+  /** Convert a title to an URL-safe slug */
+  private slugify(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[ä]/g, 'ae').replace(/[ö]/g, 'oe').replace(/[ü]/g, 'ue').replace(/[ß]/g, 'ss')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 50) || 'page';
+  }
+
+  // ========== PAGE PINS ==========
+
+  async getPinnedPages(userId: string) {
+    return this.repo.findPinnedPages(userId);
+  }
+
+  async addPin(userId: string, pageId: string) {
+    return this.repo.addPagePin(userId, pageId);
+  }
+
+  async removePin(userId: string, pageId: string) {
+    return this.repo.removePagePin(userId, pageId);
+  }
+
+  async isPinned(userId: string, pageId: string): Promise<boolean> {
+    return this.repo.isPagePinned(userId, pageId);
+  }
+
+  // ========== PAGE BY SLUG ==========
+
+  async getPageBySlug(ownerId: string, slug: string) {
+    const page = await this.repo.findPageBySlug(slug, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+    const blocks = await this.repo.findBlocksByPage(page.id);
+    const relations = await this.repo.findRelationsByPage(page.id);
+    return { ...page, blocks, relations };
+  }
+
+  // ========== SEARCH ==========
+
+  async searchPages(ownerId: string, query: string) {
+    if (!query || query.trim().length === 0) return [];
+    const pages = await this.repo.searchPages(ownerId, query.trim());
+    const results = await Promise.all(
+      pages.map(async (page) => {
+        const blocks = await this.repo.findBlocksByPage(page.id);
+        return { ...page, blocks };
+      }),
+    );
+    return results;
+  }
+
+  // ========== MOVE PAGE ==========
+
+  async movePage(ownerId: string, pageId: string, newParentId: string | null) {
+    const page = await this.repo.findPageById(pageId, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+
+    // If newParentId is set, verify target page exists and belongs to owner
+    if (newParentId) {
+      const target = await this.repo.findPageById(newParentId, ownerId);
+      if (!target) throw new NotFoundException('Ziel-Seite nicht gefunden');
+
+      // Prevent circular reference: page cannot be moved into its own descendant
+      const descendantIds = await this.repo.findDescendantIds(pageId, ownerId);
+      if (descendantIds.includes(newParentId)) {
+        throw new BadRequestException('Seite kann nicht in eine eigene Unterseite verschoben werden');
+      }
+    }
+
+    const updated = await this.repo.updatePageParent(pageId, ownerId, newParentId);
+    await this.events.emit(PageUpdated.create(pageId, { pageId, title: page.title }));
+    return updated;
+  }
+
+  // ========== PAGE PERMISSION OVERRIDES ==========
+
+  async getPagePermissions(ownerId: string, pageId: string) {
+    const page = await this.repo.findPageById(pageId, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+    const metadata = (page.metadata as Record<string, unknown>) ?? {};
+    return (metadata.permissions as Array<Record<string, unknown>>) ?? [];
+  }
+
+  async updatePagePermissions(ownerId: string, pageId: string, overrides: Array<{
+    subjectType: 'user' | 'role';
+    subjectId: string;
+    permission: 'read' | 'write' | 'admin';
+  }>) {
+    const page = await this.repo.findPageById(pageId, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+    const metadata = { ...((page.metadata as Record<string, unknown>) ?? {}), permissions: overrides };
+    await this.repo.updatePage(pageId, ownerId, { metadata });
+    return overrides;
+  }
+
+  // ========== BROWSER TABS ==========
+
+  async getBrowserTabs(sessionId: string) {
+    return this.repo.findBrowserTabsBySession(sessionId);
+  }
+
+  async createBrowserTab(sessionId: string, data: { url?: string; title?: string }) {
+    const tabs = await this.repo.findBrowserTabsBySession(sessionId);
+    // First tab becomes active automatically
+    const isFirst = tabs.length === 0;
+    return this.repo.createBrowserTab({
+      sessionId,
+      url: data.url,
+      title: data.title,
+      isActive: isFirst,
+      sortOrder: tabs.length,
+    });
+  }
+
+  async updateBrowserTab(tabId: string, data: { url?: string; title?: string; isActive?: boolean }) {
+    return this.repo.updateBrowserTab(tabId, data);
+  }
+
+  async deleteBrowserTab(tabId: string) {
+    await this.repo.deleteBrowserTab(tabId);
+  }
+
+  async setActiveBrowserTab(sessionId: string, tabId: string) {
+    await this.repo.setActiveBrowserTab(sessionId, tabId);
+  }
+
+  async findPageBySlug(ownerId: string, slug: string) {
+    return this.repo.findPageBySlug(slug, ownerId);
+  }
+
+  // ========== IMPORT / EXPORT ==========
+
+  /**
+   * Export a page as structured JSON including blocks and relations.
+   */
+  async exportPageJson(ownerId: string, pageId: string) {
+    const page = await this.repo.findPageById(pageId, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+    const blocks = await this.repo.findBlocksByPage(pageId);
+    const relations = await this.repo.findRelationsByPage(pageId);
+    return { page, blocks, relations };
+  }
+
+  /**
+   * Export a page as simplified Markdown.
+   * Iterates blocks, converting text blocks to paragraphs,
+   * headings to # ## ###, etc.
+   */
+  async exportPageMarkdown(ownerId: string, pageId: string): Promise<string> {
+    const page = await this.repo.findPageById(pageId, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+    const blocks = await this.repo.findBlocksByPage(pageId);
+
+    const lines: string[] = [];
+
+    // Title as H1
+    lines.push(`# ${page.title}`);
+    if (page.description) {
+      lines.push('');
+      lines.push(page.description);
+    }
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+
+    for (const block of blocks) {
+      const content = block.content as Record<string, unknown> ?? {};
+      const text = (content.text as string) ?? '';
+
+      switch (block.type) {
+        case 'heading': {
+          const level = (content.level as number) ?? 1;
+          const safeLevel = Math.min(Math.max(level, 1), 6);
+          lines.push(`${'#'.repeat(safeLevel)} ${text}`);
+          break;
+        }
+        case 'text':
+          lines.push(text);
+          lines.push('');
+          break;
+        case 'quote':
+          lines.push(`> ${text.replace(/\n/g, '\n> ')}`);
+          lines.push('');
+          break;
+        case 'code': {
+          const language = (content.language as string) ?? '';
+          lines.push('```' + language);
+          lines.push(text);
+          lines.push('```');
+          break;
+        }
+        case 'todo': {
+          const checked = !!(content.checked ?? false);
+          lines.push(`- [${checked ? 'x' : ' '}] ${text}`);
+          break;
+        }
+        case 'divider':
+          lines.push('---');
+          break;
+        case 'callout':
+          lines.push(`> **${(content.calloutType as string) ?? 'info'}:** ${text}`);
+          lines.push('');
+          break;
+        case 'image': {
+          const src = (content.src as string) ?? '';
+          const alt = (content.alt as string) ?? '';
+          if (src) lines.push(`![${alt}](${src})`);
+          break;
+        }
+        case 'bookmark': {
+          const url = (content.url as string) ?? '';
+          const title = (content.title as string) ?? url;
+          if (url) lines.push(`[${title}](${url})`);
+          break;
+        }
+        case 'link': {
+          const url = (content.url as string) ?? '';
+          lines.push(`[${text}](${url})`);
+          break;
+        }
+        case 'table': {
+          const rows = (content.rows as string[][]) ?? [];
+          for (const row of rows) {
+            lines.push('| ' + row.join(' | ') + ' |');
+          }
+          if (rows.length > 1) {
+            // Add header separator after first row
+            const sep = rows[0]?.map(() => '---').join(' | ');
+            lines.splice(lines.length - rows.length, 0, '| ' + sep + ' |');
+          }
+          break;
+        }
+        case 'checklist': {
+          const items = (content.items as Array<{ text: string; checked: boolean }>) ?? [];
+          for (const item of items) {
+            lines.push(`- [${item.checked ? 'x' : ' '}] ${item.text}`);
+          }
+          break;
+        }
+        case 'file-list':
+        case 'file': {
+          const name = (content.name as string) ?? '';
+          const url = (content.url as string) ?? '';
+          if (name) lines.push(`- 📄 ${name}${url ? ` (${url})` : ''}`);
+          break;
+        }
+        default:
+          // Generic fallback for unknown block types
+          if (text) {
+            lines.push(text);
+            lines.push('');
+          }
+          break;
+      }
+      lines.push('');
+    }
+
+    return lines.join('\n').trim();
+  }
+
+  /**
+   * Import a page from exported JSON data.
+   * Creates a new page with blocks and relations.
+   */
+  async importPage(ownerId: string, data: {
+    title: string;
+    slug?: string;
+    icon?: string;
+    coverMediaId?: string;
+    description?: string;
+    parentId?: string;
+    tags?: string[];
+    sortOrder?: number;
+    blocks?: Array<{
+      type: string;
+      content?: Record<string, unknown>;
+      layout?: Record<string, unknown>;
+      metadata?: Record<string, unknown>;
+      sortOrder?: number;
+    }>;
+    relations?: Array<{
+      targetPageId: string;
+      relationType: string;
+      label?: string;
+      metadata?: Record<string, unknown>;
+    }>;
+  }) {
+    // Auto-generate slug from title if not provided
+    let slug = data.slug;
+    if (!slug) {
+      slug = this.slugify(data.title);
+      let attempt = 0;
+      while (await this.repo.slugExists(slug, ownerId)) {
+        attempt++;
+        slug = `${this.slugify(data.title)}-${attempt}`;
+      }
+    } else if (await this.repo.slugExists(slug, ownerId)) {
+      throw new Error('Dieser Seiten-Name (Slug) wird bereits verwendet');
+    }
+
+    // Create the page
+    const page = await this.repo.createPage({
+      ownerId,
+      title: data.title,
+      slug,
+      parentId: data.parentId ?? null,
+      icon: data.icon ?? null,
+      coverMediaId: data.coverMediaId ?? null,
+      description: data.description ?? null,
+      tags: data.tags ?? [],
+      sortOrder: data.sortOrder ?? 0,
+    });
+    if (!page) throw new Error('Seite konnte nicht angelegt werden');
+
+    // Create blocks
+    const createdBlocks: Array<Record<string, unknown>> = [];
+    for (const block of data.blocks ?? []) {
+      const created = await this.repo.createBlock({
+        pageId: page.id,
+        type: block.type,
+        content: block.content ?? {},
+        layout: block.layout,
+        metadata: block.metadata,
+        sortOrder: block.sortOrder ?? 0,
+      });
+      if (created) createdBlocks.push(created);
+    }
+
+    // Create relations (ignore missing target pages silently)
+    for (const relation of data.relations ?? []) {
+      try {
+        // Verify target page exists for this owner
+        const targetPage = await this.repo.findPageById(relation.targetPageId, ownerId);
+        if (targetPage) {
+          await this.repo.createRelation({
+            sourcePageId: page.id,
+            targetPageId: relation.targetPageId,
+            relationType: relation.relationType,
+            label: relation.label,
+            metadata: relation.metadata as Record<string, unknown> | undefined,
+            createdBy: ownerId,
+          });
+        }
+      } catch {
+        // Silently skip relations to non-existent pages
+      }
+    }
+
+    await this.events.emit(PageCreated.create(page.id, { pageId: page.id, title: page.title }));
+    return { ...page, blocks: createdBlocks };
   }
 }

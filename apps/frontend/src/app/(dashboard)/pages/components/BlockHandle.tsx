@@ -11,7 +11,9 @@ import {
 export type BlockType =
   | 'heading' | 'text' | 'image' | 'gallery' | 'file-list' | 'divider'
   | 'todo' | 'toggle' | 'callout' | 'quote' | 'code'
-  | 'bookmark' | 'table' | 'page-reference';
+  | 'bookmark' | 'table' | 'page-reference'
+  | 'checklist' | 'timeline' | 'embed' | 'video' | 'file' | 'link' | 'map'
+  | 'research_workspace' | 'search';
 
 const BLOCK_TYPE_OPTIONS: Array<{ type: BlockType; label: string; icon: React.ReactNode; category: string }> = [
   { type: 'text', label: 'Text', icon: <Type className="h-4 w-4" />, category: 'Basis' },

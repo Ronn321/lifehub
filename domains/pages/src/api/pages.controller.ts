@@ -1,6 +1,7 @@
 import {
   Body, Controller, Delete, Get, HttpCode, Inject,
-  Param, Post, Put, UseGuards,
+  Param, Post, Put, UseGuards, Query, BadRequestException,
+  Res, Header,
 } from '@nestjs/common';
 import { JwtGuard, CurrentUser, type JwtPayload } from '@lifehub/auth';
 import { RequirePermission, PermissionGuard } from '@lifehub/permissions';
@@ -14,6 +15,10 @@ import {
   createResearchSessionSchema, updateResearchSessionSchema,
   createResearchSourceSchema,
   createResearchCollectionSchema,
+  importPageSchema,
+  pageFormatSchema,
+  movePageSchema,
+  pagePermissionOverrideSchema,
 } from '../dtos/pages.dto';
 
 @UseGuards(JwtGuard, PermissionGuard)
@@ -30,10 +35,74 @@ export class PagesController {
     return this.pages.createPage(user.sub, dto);
   }
 
+  // ========== IMPORT ==========
+  // Static route — must be BEFORE :id wildcard
+
+  @Post('import')
+  @RequirePermission('pages', 'create')
+  async importPage(@Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = importPageSchema.parse(body);
+    return this.pages.importPage(user.sub, dto);
+  }
+
   @Get()
   @RequirePermission('pages', 'read')
   async listPages(@CurrentUser() user: JwtPayload) {
     return this.pages.listPages(user.sub);
+  }
+
+  // ========== PAGE BY SLUG ==========
+  // MUST be before :id to avoid route conflicts
+
+  @Get('by-slug/:slug')
+  @RequirePermission('pages', 'read')
+  async getPageBySlug(@Param('slug') slug: string, @CurrentUser() user: JwtPayload) {
+    return this.pages.getPageBySlug(user.sub, slug);
+  }
+
+  // ========== PAGE PINS ==========
+  // MUST be before :id to avoid route conflicts
+
+  @Get('pin/list')
+  @RequirePermission('pages', 'read')
+  async getPinnedPages(@CurrentUser() user: JwtPayload) {
+    return this.pages.getPinnedPages(user.sub);
+  }
+
+  @Post('pin/add/:pageId')
+  @HttpCode(204)
+  @RequirePermission('pages', 'read')
+  async addPin(@Param('pageId') pageId: string, @CurrentUser() user: JwtPayload) {
+    await this.pages.addPin(user.sub, pageId);
+  }
+
+  @Delete('pin/remove/:pageId')
+  @HttpCode(204)
+  @RequirePermission('pages', 'read')
+  async removePin(@Param('pageId') pageId: string, @CurrentUser() user: JwtPayload) {
+    await this.pages.removePin(user.sub, pageId);
+  }
+
+  @Get('pin/check/:pageId')
+  @RequirePermission('pages', 'read')
+  async isPinned(@Param('pageId') pageId: string, @CurrentUser() user: JwtPayload) {
+    return this.pages.isPinned(user.sub, pageId);
+  }
+
+  // ========== PAGE CHILDREN ==========
+
+  @Get(':id/children')
+  @RequirePermission('pages', 'read')
+  async getPageChildren(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.pages.getPageChildren(user.sub, id);
+  }
+
+  // ========== GET PAGE BY ID ==========
+
+  @Get('search')
+  @RequirePermission('pages', 'read')
+  async searchPages(@Query('q') query: string, @CurrentUser() user: JwtPayload) {
+    return this.pages.searchPages(user.sub, query);
   }
 
   @Get(':id')
@@ -54,6 +123,47 @@ export class PagesController {
   @RequirePermission('pages', 'delete')
   async deletePage(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     await this.pages.deletePage(user.sub, id);
+  }
+
+  // ========== PAGE MOVE ==========
+
+  @Post(':id/move')
+  @HttpCode(200)
+  @RequirePermission('pages', 'update')
+  async movePage(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = movePageSchema.parse(body);
+    return this.pages.movePage(user.sub, id, dto.newParentId);
+  }
+
+  // ========== PAGE EXPORT ==========
+
+  @Get(':id/export')
+  @RequirePermission('pages', 'read')
+  async exportPage(
+    @Param('id') id: string,
+    @Query('format') format: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (format === 'markdown') {
+      const md = await this.pages.exportPageMarkdown(user.sub, id);
+      return { format: 'markdown', content: md };
+    }
+    return this.pages.exportPageJson(user.sub, id);
+  }
+
+  // ========== PAGE PERMISSION OVERRIDES ==========
+
+  @Get(':id/permissions')
+  @RequirePermission('pages', 'admin')
+  async getPagePermissions(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.pages.getPagePermissions(user.sub, id);
+  }
+
+  @Put(':id/permissions')
+  @RequirePermission('pages', 'admin')
+  async updatePagePermissions(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = pagePermissionOverrideSchema.parse(body);
+    return this.pages.updatePagePermissions(user.sub, id, dto.permissions);
   }
 
   // ========== PAGE VERSIONS ==========
@@ -299,5 +409,64 @@ export class PagesController {
   @RequirePermission('pages', 'delete')
   async deleteResearchCollection(@Param('collectionId') collectionId: string, @CurrentUser() user: JwtPayload) {
     await this.pages.deleteResearchCollection(user.sub, collectionId);
+  }
+
+  // ========== BROWSER TABS ==========
+
+  @Get('research-sessions/:sessionId/tabs')
+  @RequirePermission('pages', 'read')
+  async getBrowserTabs(@Param('sessionId') sessionId: string) {
+    return this.pages.getBrowserTabs(sessionId);
+  }
+
+  @Post('research-sessions/:sessionId/tabs')
+  @RequirePermission('pages', 'update')
+  async createBrowserTab(@Param('sessionId') sessionId: string, @Body() body: { url?: string; title?: string }) {
+    return this.pages.createBrowserTab(sessionId, body);
+  }
+
+  @Put('browser-tabs/:tabId')
+  @RequirePermission('pages', 'update')
+  async updateBrowserTab(@Param('tabId') tabId: string, @Body() body: { url?: string; title?: string; isActive?: boolean }) {
+    return this.pages.updateBrowserTab(tabId, body);
+  }
+
+  @Delete('browser-tabs/:tabId')
+  @HttpCode(204)
+  @RequirePermission('pages', 'update')
+  async deleteBrowserTab(@Param('tabId') tabId: string) {
+    await this.pages.deleteBrowserTab(tabId);
+  }
+
+  @Post('research-sessions/:sessionId/tabs/:tabId/activate')
+  @HttpCode(200)
+  @RequirePermission('pages', 'update')
+  async setActiveBrowserTab(@Param('sessionId') sessionId: string, @Param('tabId') tabId: string) {
+    await this.pages.setActiveBrowserTab(sessionId, tabId);
+  }
+
+  // ========== WEB PROXY (for research browser) ==========
+
+  @Get('proxy')
+  @RequirePermission('pages', 'read')
+  async proxyWebPage(@Query('url') url: string) {
+    // Simple proxy to bypass CORS for the research browser iframe
+    if (!url || !url.startsWith('http')) {
+      throw new BadRequestException('Ungültige URL');
+    }
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; LifeHub/1.0)',
+      },
+    });
+    const text = await response.text();
+    // Return HTML with rewritten relative URLs to absolute
+    const base = new URL(url);
+    const proxied = text
+      .replace(/src="\//g, `src="${base.origin}/`)
+      .replace(/href="\//g, `href="${base.origin}/`)
+      .replace(/src='\//g, `src='${base.origin}/`)
+      .replace(/href='\//g, `href='${base.origin}/`);
+    return proxied;
   }
 }

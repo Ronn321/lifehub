@@ -1,0 +1,172 @@
+'use client';
+import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/lib/auth-store';
+import { Monitor, Loader2, ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/cn';
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                             */
+/* ------------------------------------------------------------------ */
+
+interface JellyfinLibrary {
+  id: string;
+  serverId: string;
+  externalId: string | null;
+  name: string;
+  type: string | null;
+  ownerId: string;
+  createdAt: string;
+}
+
+interface JellyfinItem {
+  id: string;
+  libraryId: string;
+  externalId: string | null;
+  name: string;
+  type: string;
+  path: string | null;
+  watched: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                              */
+/* ------------------------------------------------------------------ */
+
+export default function SeriesPage() {
+  const router = useRouter();
+  const accessToken = useAuthStore((s) => s.accessToken);
+
+  /* -------- Libraries -------- */
+
+  const { data: libraries, isLoading: libsLoading } = useQuery<JellyfinLibrary[]>({
+    queryKey: ['jellyfin-libraries'],
+    queryFn: () => api.get<JellyfinLibrary[]>('/jellyfin/libraries'),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  });
+
+  const seriesLibrary = useMemo(() => {
+    if (!libraries) return null;
+    return (
+      libraries.find((lib) => lib.type === 'tvshows') ??
+      libraries.find((lib) => lib.name.toLowerCase().includes('serien')) ??
+      null
+    );
+  }, [libraries]);
+
+  /* -------- Items -------- */
+
+  const {
+    data: items,
+    isLoading: itemsLoading,
+    error,
+  } = useQuery<JellyfinItem[]>({
+    queryKey: ['jellyfin-items', seriesLibrary?.id],
+    queryFn: () => api.get<JellyfinItem[]>(`/jellyfin/items?libraryId=${seriesLibrary!.id}`),
+    enabled: !!seriesLibrary?.id && !!accessToken,
+    staleTime: 60_000,
+  });
+
+  const isLoading = libsLoading || itemsLoading;
+
+  /* -------- Render -------- */
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 py-4">
+      {/* Header with back button */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => router.push('/jellyfin')}
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-fg-muted hover:text-fg transition-colors"
+          aria-label="Zurück zur Übersicht"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div>
+          <div className="flex items-center gap-2">
+            <Monitor className="h-5 w-5 text-purple-400" />
+            <h1 className="text-xl font-bold tracking-tight">Serien</h1>
+          </div>
+          <p className="text-sm text-fg-muted mt-0.5">
+            {seriesLibrary?.name ?? 'Serienbibliothek'}
+            {items ? ` • ${items.length} Serien` : ''}
+          </p>
+        </div>
+      </div>
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-20 text-fg-muted">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          Lade Serien …
+        </div>
+      )}
+
+      {/* Error */}
+      {!isLoading && error && (
+        <div className="rounded-xl border border-danger/20 bg-danger/5 p-8 text-center">
+          <p className="text-danger font-medium">Fehler beim Laden der Serien</p>
+          <p className="text-sm text-fg-muted mt-1">Bitte versuche es später erneut.</p>
+        </div>
+      )}
+
+      {/* No library found */}
+      {!isLoading && !error && !seriesLibrary && (
+        <div className="rounded-xl border-2 border-dashed border-border p-16 text-center">
+          <Monitor className="h-12 w-12 mx-auto mb-3 text-fg-muted opacity-30" />
+          <p className="text-lg font-medium">Keine Serienbibliothek gefunden</p>
+          <p className="text-sm text-fg-muted mt-1">
+            Synchronisiere deinen Jellyfin-Server, um eine Serienbibliothek zu verbinden.
+          </p>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !error && seriesLibrary && items && items.length === 0 && (
+        <div className="rounded-xl border-2 border-dashed border-border p-16 text-center">
+          <Monitor className="h-12 w-12 mx-auto mb-3 text-fg-muted opacity-30" />
+          <p className="text-lg font-medium">Noch keine Serien</p>
+          <p className="text-sm text-fg-muted mt-1">
+            Die Bibliothek &bdquo;{seriesLibrary.name}&ldquo; enthält noch keine Serien.
+          </p>
+        </div>
+      )}
+
+      {/* Item grid */}
+      {!isLoading && !error && items && items.length > 0 && (
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="group rounded-xl border border-border bg-bg-surface p-3 transition-all hover:-translate-y-0.5 hover:border-purple-500/30 hover:shadow-lg"
+            >
+              {/* Thumbnail placeholder */}
+              <div className="aspect-[2/3] rounded-lg bg-purple-500/5 mb-2 flex items-center justify-center overflow-hidden">
+                <Monitor className="h-8 w-8 text-purple-400/30" />
+              </div>
+
+              {/* Name */}
+              <p className="text-sm font-medium truncate" title={item.name}>
+                {item.name}
+              </p>
+
+              {/* Status */}
+              <p className="text-xs text-fg-muted truncate mt-0.5">
+                {item.watched ? (
+                  <span className="text-green-400">Gesehen</span>
+                ) : (
+                  <span>Ungesehen</span>
+                )}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

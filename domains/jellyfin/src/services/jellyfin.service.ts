@@ -17,8 +17,11 @@ export class JellyfinService {
   ) {}
 
   private async findServerOrFallback(serverId: string, ownerId?: string): Promise<JellyfinServer> {
-    const server = await this.repo.findServerById(serverId);
-    if (server && (!ownerId || server.ownerId === ownerId)) return server;
+    // Handle "default" serverId gracefully — skip DB lookup
+    if (serverId !== 'default') {
+      const server = await this.repo.findServerById(serverId);
+      if (server && (!ownerId || server.ownerId === ownerId)) return server;
+    }
     return {
       id: 'default',
       url: this.defaultUrl,
@@ -88,6 +91,9 @@ export class JellyfinService {
       }
     }
 
+    // Touch updated_at on server so frontend sees new sync timestamp
+    await this.repo.touchServer(serverId);
+
     return { libraries: libraries.length, items: totalItems };
   }
 
@@ -112,10 +118,21 @@ export class JellyfinService {
   }
 
   // =================== Items ===================
-  async listItems(ownerId: string, libraryId?: string): Promise<JellyfinItem[]> {
+  async listItems(ownerId: string, libraryId?: string, libraryType?: string): Promise<JellyfinItem[]> {
+    // If libraryId is given, filter by library directly
     if (libraryId) {
       const items = await this.repo.findItemsByLibrary(libraryId);
       return items.filter((i) => i.ownerId === ownerId);
+    }
+    // If libraryType is given, filter items whose parent library has that type
+    if (libraryType) {
+      const libraries = await this.repo.findLibrariesByOwner(ownerId);
+      const matchingLibIds = libraries
+        .filter((l) => l.type?.toLowerCase() === libraryType.toLowerCase())
+        .map((l) => l.id);
+      if (matchingLibIds.length === 0) return [];
+      const allItems = await this.repo.findItemsByOwner(ownerId);
+      return allItems.filter((i) => matchingLibIds.includes(i.libraryId));
     }
     return this.repo.findItemsByOwner(ownerId);
   }
@@ -234,6 +251,69 @@ export class JellyfinService {
   }
 
   // =================== Streaming ===================
+
+  async getExternalItemStream(
+    ownerId: string,
+    serverId: string,
+    externalId: string,
+    rangeHeader?: string,
+  ) {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const baseUrl = server.url.replace(/\/$/, '');
+
+    const authHeaders: Record<string, string> = {
+      'Authorization': `MediaBrowser Token=${server.apiKey}`,
+    };
+    if (rangeHeader) authHeaders['Range'] = rangeHeader;
+
+    // Get playback info first for MediaSourceId
+    const userId = await this.getJellyfinUserId(server);
+    const infoUrl = `${baseUrl}/Items/${externalId}/PlaybackInfo`;
+    const infoRes = await fetch(infoUrl, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ UserId: userId }),
+    });
+    if (!infoRes.ok) {
+      throw new Error(`Jellyfin playback info error: ${infoRes.status} ${infoRes.statusText}`);
+    }
+    const infoData: any = await infoRes.json();
+    const mediaSourceId = infoData?.MediaSources?.[0]?.Id;
+    if (!mediaSourceId) {
+      throw new Error('No MediaSource found for this item');
+    }
+
+    // Direct audio streaming URL — use mp3 container for broad browser support
+    const streamUrl = `${baseUrl}/Audio/${externalId}/stream?static=true&MediaSourceId=${mediaSourceId}&Container=mp3`;
+
+    const fetchHeaders: Record<string, string> = {
+      'Authorization': `MediaBrowser Token=${server.apiKey}`,
+    };
+    if (rangeHeader) fetchHeaders['Range'] = rangeHeader;
+
+    const jellyfinRes = await fetch(streamUrl, { headers: fetchHeaders, redirect: 'follow' });
+
+    if (!jellyfinRes.ok && jellyfinRes.status !== 206) {
+      throw new Error(`Jellyfin stream error: ${jellyfinRes.status} ${jellyfinRes.statusText}`);
+    }
+
+    const mimeType = jellyfinRes.headers.get('content-type') ?? 'audio/mpeg';
+
+    const stream = jellyfinRes.body ? Readable.fromWeb(jellyfinRes.body as any) : null;
+
+    const responseHeaders: Record<string, string> = {};
+    jellyfinRes.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    return {
+      stream,
+      mimeType,
+      statusCode: jellyfinRes.status,
+      headers: responseHeaders,
+    };
+  }
+
   async getItemStream(ownerId: string, itemId: string, rangeHeader?: string) {
     const item = await this.repo.findItemById(itemId);
     if (!item || item.ownerId !== ownerId) throw new NotFoundException('Item nicht gefunden');
@@ -416,7 +496,8 @@ export class JellyfinService {
     const server = await this.findServerOrFallback(serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
-    const imageUrl = `${baseUrl}/Items/${externalId}/Images/Primary?fillHeight=${height}&fillWidth=${width}&quality=90`;
+    const userId = await this.getJellyfinUserId(server);
+    const imageUrl = `${baseUrl}/Items/${externalId}/Images/Primary?width=${width}&height=${height}&quality=90&UserId=${userId}`;
     const res = await fetch(imageUrl, {
       headers: { 'Authorization': `MediaBrowser Token=${server.apiKey}` },
     });
@@ -485,6 +566,133 @@ export class JellyfinService {
       type: item.Type?.toLowerCase() ?? 'unknown',
       path: item.Path ?? null,
     }));
+  }
+
+  // =================== Music v0.2 API Extensions ===================
+
+  async getGenres(ownerId: string, serverId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    // Genres are stored at the Artist level in Jellyfin, not on individual audio tracks.
+    // Query AlbumArtists with Genre field and extract unique genres.
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Artists/AlbumArtists?UserId=${userId}&Fields=Genres&Limit=500`,
+    );
+    const artists: any[] = data.Items ?? [];
+    const genreSet = new Set<string>();
+    for (const artist of artists) {
+      for (const genre of artist.Genres ?? []) {
+        genreSet.add(genre);
+      }
+    }
+    const genres = Array.from(genreSet)
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ Name: name, Id: name }));
+    return genres;
+  }
+
+  async searchMusic(ownerId: string, serverId: string, query: string): Promise<{
+    Artists: any[];
+    Albums: any[];
+    Songs: any[];
+  }> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const searchTerm = encodeURIComponent(query);
+
+    const res = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?searchTerm=${searchTerm}&Recursive=true&IncludeItemTypes=Audio,MusicAlbum,MusicArtist&Fields=BasicSyncs,AudioInfo,PrimaryImageAspectRatio&Limit=30`,
+    );
+    const items: any[] = res.Items ?? [];
+
+    return {
+      Artists: items.filter((i) => i.Type === 'MusicArtist'),
+      Albums: items.filter((i) => i.Type === 'MusicAlbum'),
+      Songs: items.filter((i) => i.Type === 'Audio'),
+    };
+  }
+
+  async getRecentlyPlayed(ownerId: string, serverId: string, limit = 12): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?SortBy=DatePlayed&SortOrder=Descending&IncludeItemTypes=Audio&Limit=${limit}&Recursive=true&Fields=AudioInfo,PrimaryImageAspectRatio`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getFavoriteSongs(ownerId: string, serverId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?Filters=IsFavorite&IncludeItemTypes=Audio&Recursive=true&Fields=AudioInfo,PrimaryImageAspectRatio`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getAllSongs(
+    ownerId: string,
+    serverId: string,
+    params: { sortBy?: string; sortOrder?: string; limit?: number; startIndex?: number },
+  ): Promise<{ items: any[]; totalRecordCount: number }> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const sortBy = params.sortBy ?? 'SortName';
+    const sortOrder = params.sortOrder ?? 'Ascending';
+    const limit = params.limit ?? 100;
+    const startIndex = params.startIndex ?? 0;
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?IncludeItemTypes=Audio&Recursive=true&SortBy=${sortBy}&SortOrder=${sortOrder}&Limit=${limit}&StartIndex=${startIndex}&Fields=AudioInfo,PrimaryImageAspectRatio`,
+    );
+    return {
+      items: data.Items ?? [],
+      totalRecordCount: data.TotalRecordCount ?? 0,
+    };
+  }
+
+  async getRecentAlbums(ownerId: string, serverId: string, limit = 12): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=MusicAlbum&Limit=${limit}&Recursive=true&Fields=PrimaryImageAspectRatio`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getAlbumSongs(ownerId: string, serverId: string, albumId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?ParentId=${albumId}&IncludeItemTypes=Audio&SortBy=IndexNumber&Fields=AudioInfo,PrimaryImageAspectRatio`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getSongsByGenre(ownerId: string, serverId: string, genreId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?IncludeItemTypes=Audio&GenreIds=${genreId}&Recursive=true&SortBy=SortName&SortOrder=Ascending&Fields=AudioInfo,PrimaryImageAspectRatio`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getTopSongs(ownerId: string, serverId: string, artistId: string, limit = 10): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?ArtistIds=${artistId}&IncludeItemTypes=Audio&Recursive=true&SortBy=PlayCount&SortOrder=Descending&Limit=${limit}&Fields=AudioInfo,PrimaryImageAspectRatio`,
+    );
+    return data.Items ?? [];
   }
 
   private cachedUserId: string | null = null;

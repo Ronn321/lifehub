@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+  // Windows builds: disable standalone (EPERM symlink issue).
+  // Linux/Docker builds: re-enable with `output: 'standalone'`.
   experimental: {
     typedRoutes: false,
   },

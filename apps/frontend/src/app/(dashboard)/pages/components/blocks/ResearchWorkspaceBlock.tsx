@@ -68,8 +68,24 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
   const [newSourceTitle, setNewSourceTitle] = useState('');
   const [activeTab, setActiveTab] = useState<TabKind>('sources');
 
+  // Get auth token for proxy
+  const getAuthToken = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('lifehub-auth');
+      if (!raw) return '';
+      const parsed = JSON.parse(raw);
+      return parsed?.state?.accessToken ?? '';
+    } catch { return ''; }
+  }, []);
+
+  // Build proxy URL
+  const getProxyUrl = useCallback((targetUrl: string) => {
+    const token = getAuthToken();
+    return `/api/v1/pages/proxy?url=${encodeURIComponent(targetUrl)}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+  }, [getAuthToken]);
+
   // Browser state
-  const [urlInput, setUrlInput] = useState('');
+  const [urlInput, setUrlInput] = useState('https://lite.duckduckgo.com/lite/');
   const [currentIframeUrl, setCurrentIframeUrl] = useState<string | null>(null);
   const [browserHistory, setBrowserHistory] = useState<string[]>([]);
   const [browserHistoryIndex, setBrowserHistoryIndex] = useState(-1);
@@ -368,7 +384,7 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleGo();
             }}
-            placeholder="URL eingeben..."
+            placeholder='URL oder Suche (z.B. DuckDuckGo Lite)...'
             className="flex-1 px-2.5 py-1 text-sm rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30"
           />
           <button
@@ -530,7 +546,7 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
                   type="url"
                   value={newSourceUrl}
                   onChange={(e) => setNewSourceUrl(e.target.value)}
-                  placeholder="URL eingeben..."
+                  placeholder='URL oder Suche (z.B. DuckDuckGo Lite)...'
                   className="flex-1 px-2 py-1.5 rounded border border-border bg-bg text-sm"
                 />
                 <input

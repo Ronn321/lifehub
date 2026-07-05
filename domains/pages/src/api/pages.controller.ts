@@ -449,16 +449,19 @@ export class PagesController {
 
   @Get('proxy')
   @RequirePermission('pages', 'read')
-  async proxyWebPage(@Query('url') url: string) {
+  async proxyWebPage(@Query('url') url: string, @Query('token') token?: string) {
     // Simple proxy to bypass CORS for the research browser iframe
     if (!url || !url.startsWith('http')) {
       throw new BadRequestException('Ungültige URL');
     }
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; LifeHub/1.0)',
-      },
-    });
+    const headers: Record<string, string> = {
+      'User-Agent': 'Mozilla/5.0 (compatible; LifeHub/1.0)',
+    };
+    // If token is provided (for iframe usage), use it for auth
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(url, { headers });
     const text = await response.text();
     // Return HTML with rewritten relative URLs to absolute
     const base = new URL(url);

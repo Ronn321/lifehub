@@ -3,7 +3,6 @@ node_modules/
 
 # Build outputs (werden im Container neu gebaut)
 dist/
-.next/
 .turbo/
 *.tsbuildinfo
 

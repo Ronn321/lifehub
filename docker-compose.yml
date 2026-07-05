@@ -1,79 +1,85 @@
 services:
-
-  db:
-    image: postgres:16-alpine
-    container_name: lifehub-db
-    restart: always
-    volumes:
-      - lifehub-pgdata:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: lifehub
-      POSTGRES_PASSWORD: l1f3hub_pwd
-      POSTGRES_DB: lifehub
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lifehub"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  cache:
-    image: redis:7-alpine
-    container_name: lifehub-cache
-    restart: always
-    command: redis-server --requirepass lifehub --appendonly yes
-    volumes:
-      - lifehub-redis:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "lifehub", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-
-  search:
-    image: getmeili/meilisearch:v1.8
-    container_name: lifehub-search
-    restart: always
-    environment:
-      MEILI_MASTER_KEY: lifehub_lifehub_32char_key!
-      MEILI_NO_ANALYTICS: "true"
-      MEILI_ENV: production
-    volumes:
-      - lifehub-meili:/meili_data
-
   backend:
-    image: ghcr.io/ronn321/lifehub-backend:v0.1.1
     container_name: lifehub-backend
-    restart: always
-    ports:
-      - "3007:3007"
-    environment:
-      DATABASE_URL: postgresql://lifehub:l1f3hub_pwd@db:5432/lifehub
-      REDIS_URL: redis://:lifehub@cache:6379
-      MEILI_URL: http://search:7700
-      MEILI_MASTER_KEY: lifehub_lifehub_32char_key!
-      STORAGE_BASE_PATH: /data/storage
-      LIFEHUB_DATA_PATH: /data
-      CORS_ORIGINS: "*"
-    volumes:
-      - lifehub-data:/data
     depends_on:
-      db: { condition: service_healthy }
-      cache: { condition: service_healthy }
-      search: { condition: service_started }
-
-  frontend:
-    image: ghcr.io/ronn321/lifehub-frontend:v0.1.1
-    container_name: lifehub-frontend
-    restart: always
+      cache:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      search:
+        condition: service_started
+    environment:
+      CORS_ORIGINS: '*'
+      DATABASE_URL: postgresql://lifehub:l1f3hub_pwd@postgres:5432/lifehub
+      JWT_PRIVATE_KEY_BASE64: ${JWT_PRIVATE_KEY_BASE64}
+      JWT_PUBLIC_KEY_BASE64: ${JWT_PUBLIC_KEY_BASE64}
+      LIFEHUB_DATA_PATH: /data
+      MEILI_MASTER_KEY: lifehub_lifehub_32char_key!
+      MEILI_URL: http://search:7700
+      REDIS_URL: redis://:lifehub@cache:6379
+      STORAGE_BASE_PATH: /data/storage
+    image: ghcr.io/ronn321/lifehub-backend:v0.1.1
     ports:
-      - "3100:3001"
+    - 3007:3007
+    restart: always
+    volumes:
+    - lifehub-data:/data
+  cache:
+    command: redis-server --requirepass lifehub --appendonly yes
+    container_name: lifehub-cache
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD
+      - redis-cli
+      - -a
+      - lifehub
+      - ping
+      timeout: 3s
+    image: redis:7-alpine
+    restart: always
+    volumes:
+    - lifehub-redis:/data
+  frontend:
+    container_name: lifehub-frontend
+    depends_on:
+    - backend
     environment:
       PORT: 3001
-    depends_on:
-      - backend
-
+    image: ghcr.io/ronn321/lifehub-frontend:v0.1.1
+    ports:
+    - 3100:3001
+    restart: always
+  postgres:
+    container_name: lifehub-postgres
+    environment:
+      POSTGRES_DB: lifehub
+      POSTGRES_PASSWORD: l1f3hub_pwd
+      POSTGRES_USER: lifehub
+    healthcheck:
+      interval: 10s
+      retries: 5
+      test:
+      - CMD-SHELL
+      - pg_isready -U lifehub
+      timeout: 5s
+    image: postgres:16-alpine
+    restart: always
+    volumes:
+    - lifehub-pgdata:/var/lib/postgresql/data
+  search:
+    container_name: lifehub-search
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: lifehub_lifehub_32char_key!
+      MEILI_NO_ANALYTICS: 'true'
+    image: getmeili/meilisearch:v1.8
+    restart: always
+    volumes:
+    - lifehub-meili:/meili_data
 volumes:
-  lifehub-pgdata:
-  lifehub-redis:
-  lifehub-meili:
-  lifehub-data:
+  lifehub-data: null
+  lifehub-meili: null
+  lifehub-pgdata: null
+  lifehub-redis: null

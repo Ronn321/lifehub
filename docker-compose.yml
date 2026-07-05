@@ -18,12 +18,16 @@ services:
       MEILI_URL: http://search:7700
       REDIS_URL: redis://:lifehub@cache:6379
       STORAGE_BASE_PATH: /data/storage
-    image: ghcr.io/ronn321/lifehub-backend:v0.1.1
+    image: lifehub-backend:local
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
     ports:
     - 3007:3007
     restart: always
     volumes:
     - lifehub-data:/data
+    - C:\Users\Robert_D_AZ_1\Pictures:/data/pictures:ro
   cache:
     command: redis-server --requirepass lifehub --appendonly yes
     container_name: lifehub-cache
@@ -47,7 +51,7 @@ services:
     - backend
     environment:
       PORT: 3001
-    image: ghcr.io/ronn321/lifehub-frontend:v0.2.0
+    image: lifehub-frontend:local
     ports:
     - 3100:3001
     restart: always

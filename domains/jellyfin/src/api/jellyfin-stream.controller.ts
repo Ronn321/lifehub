@@ -7,12 +7,15 @@ import { JellyfinService } from '../services/jellyfin.service';
 import type { Request, Response } from 'express';
 import type { OutgoingHttpHeaders } from 'http';
 
-function corsHeaders(origin?: string): OutgoingHttpHeaders {
-  const allowed = origin ?? 'http://localhost:3001';
+function corsHeaders(origin?: string, referer?: string): OutgoingHttpHeaders {
+  // Try Origin header first, then Referer, fallback to '*'
+  const allowed = origin ?? (referer ? new URL(referer).origin : '*');
+  // When allowed is '*', we cannot use credentials
+  const useWildcard = allowed === '*';
   return {
     'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Credentials': useWildcard ? undefined : 'true' as any,
+    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
     'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization',
     'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length',
     'Cross-Origin-Resource-Policy': 'cross-origin',
@@ -43,6 +46,12 @@ export class JellyfinStreamController {
 
   @Options('servers/:serverId/items/:externalId/subtitles/:subtitleIndex')
   handleSubtitlePreflight(@Req() req: Request, @Res() res: Response) {
+    const headers = corsHeaders(req.headers.origin);
+    res.status(204).set(headers).end();
+  }
+
+  @Options('servers/:serverId/items/:externalId/image')
+  handleImagePreflight(@Req() req: Request, @Res() res: Response) {
     const headers = corsHeaders(req.headers.origin);
     res.status(204).set(headers).end();
   }
@@ -163,6 +172,19 @@ export class JellyfinStreamController {
     const mediaType: 'Audio' | 'Video' = ['Episode', 'Movie', 'Video'].includes(type) ? 'Video' : 'Audio';
 
     try {
+      // For Audio, proxy the stream directly (browsers need a direct audio URL, not HLS)
+      if (mediaType === 'Audio') {
+        const result = await this.jellyfin.getExternalItemStream(sub, serverId, externalId, req.headers.range as string);
+        res.status(result.statusCode ?? 200).set({
+          ...result.headers as any,
+          ...corsHeaders(req.headers.origin),
+        });
+        if (result.stream) result.stream.pipe(res);
+        else res.end();
+        return;
+      }
+
+      // For Video (or unknown), use HLS
       const audioIdx = audioStreamIndex ? Number(audioStreamIndex) : undefined;
       const subtitleIdx = subtitleStreamIndex ? Number(subtitleStreamIndex) : undefined;
       const playlist = await this.jellyfin.getHlsPlaylist(sub, serverId, externalId, mediaType, audioIdx, subtitleIdx);

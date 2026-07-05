@@ -60,9 +60,13 @@ export class JellyfinController {
 
   @Get('items')
   @RequirePermission('jellyfin', 'read')
-  @ApiOperation({ summary: 'Medienelemente auflisten' })
-  async listItems(@CurrentUser() user: JwtPayload, @Query('libraryId') libraryId?: string) {
-    return this.jellyfin.listItems(user.sub, libraryId);
+  @ApiOperation({ summary: 'Medienelemente auflisten (optional nach libraryId oder libraryType filtern)' })
+  async listItems(
+    @CurrentUser() user: JwtPayload,
+    @Query('libraryId') libraryId?: string,
+    @Query('libraryType') libraryType?: string,
+  ) {
+    return this.jellyfin.listItems(user.sub, libraryId, libraryType);
   }
 
   @Post('items/:id/toggle-watched')
@@ -106,5 +110,107 @@ export class JellyfinController {
     @Query('artistId') artistId: string,
   ) {
     return this.jellyfin.getAlbums(user.sub, serverId, artistId);
+  }
+
+  // =================== Music v0.2 API Endpoints ===================
+
+  @Get('servers/:serverId/genres')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Musik-Genres aus Jellyfin abrufen' })
+  async getGenres(@CurrentUser() user: JwtPayload, @Param('serverId') serverId: string) {
+    return this.jellyfin.getGenres(user.sub, serverId);
+  }
+
+  @Get('servers/:serverId/genres/:genreId/songs')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Songs eines Genres abrufen' })
+  async getGenreSongs(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('genreId') genreId: string,
+  ) {
+    return this.jellyfin.getSongsByGenre(user.sub, serverId, genreId);
+  }
+
+  @Get('servers/:serverId/search')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Musik-Suche (Artists, Albums, Songs kategorisiert)' })
+  async searchMusic(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('q') query: string,
+  ) {
+    return this.jellyfin.searchMusic(user.sub, serverId, query);
+  }
+
+  @Get('servers/:serverId/recent')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Zuletzt gespielte Songs' })
+  async getRecentlyPlayed(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.getRecentlyPlayed(user.sub, serverId, limit ? parseInt(limit, 10) : 12);
+  }
+
+  @Get('servers/:serverId/favorites')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Lieblingssongs (Favoriten)' })
+  async getFavoriteSongs(@CurrentUser() user: JwtPayload, @Param('serverId') serverId: string) {
+    return this.jellyfin.getFavoriteSongs(user.sub, serverId);
+  }
+
+  @Get('servers/:serverId/songs')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Alle Songs (paginiert, sortierbar)' })
+  async getAllSongs(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
+    @Query('limit') limit?: string,
+    @Query('startIndex') startIndex?: string,
+  ) {
+    return this.jellyfin.getAllSongs(user.sub, serverId, {
+      sortBy,
+      sortOrder,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      startIndex: startIndex ? parseInt(startIndex, 10) : undefined,
+    });
+  }
+
+  @Get('servers/:serverId/albums/recent')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Neu hinzugefügte Alben' })
+  async getRecentAlbums(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.getRecentAlbums(user.sub, serverId, limit ? parseInt(limit, 10) : 12);
+  }
+
+  @Get('servers/:serverId/albums/:albumId/songs')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Songs eines Albums' })
+  async getAlbumSongs(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('albumId') albumId: string,
+  ) {
+    return this.jellyfin.getAlbumSongs(user.sub, serverId, albumId);
+  }
+
+  @Get('servers/:serverId/artists/:artistId/top-songs')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Top-Songs eines Künstlers' })
+  async getTopSongs(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('artistId') artistId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.getTopSongs(user.sub, serverId, artistId, limit ? parseInt(limit, 10) : 10);
   }
 }

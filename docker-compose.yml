@@ -113,12 +113,6 @@ services:
     restart: always
     volumes:
     - ./infrastructure/searxng/settings.yml:/etc/searxng/settings.yml:ro
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
 volumes:
   lifehub-data: null
   lifehub-meili: null

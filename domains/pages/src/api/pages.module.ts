@@ -3,10 +3,11 @@ import { PagesService } from '../services/pages.service';
 import { PagesRepository } from '../repositories/pages.repository';
 import { PagesController } from './pages.controller';
 import { ProxyController } from './proxy.controller';
+import { BrowserController } from './browser.controller';
 
 @Module({
   providers: [PagesRepository, PagesService],
-  controllers: [PagesController, ProxyController],
+  controllers: [PagesController, ProxyController, BrowserController],
   exports: [PagesService],
 })
 export class PagesModule {}

@@ -4,8 +4,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Globe, ChevronLeft, ChevronRight, RotateCw, ExternalLink, Loader2 } from 'lucide-react';
 
 const PROXY_BASE = typeof window !== 'undefined'
-  ? `http://${window.location.hostname}:3007/api/v1/proxy`
-  : '/api/v1/proxy';
+  ? `http://${window.location.hostname}:3007/api/v1/browser/proxy`
+  : '/api/v1/browser/proxy';
 
 export default function BrowserPage() {
   const [urlInput, setUrlInput] = useState('https://lite.duckduckgo.com/lite/');

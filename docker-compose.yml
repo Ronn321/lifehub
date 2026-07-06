@@ -103,6 +103,22 @@ services:
       timeout: 10s
       retries: 10
       start_period: 60s
+
+  # Self-hosted meta-search engine (SearXNG)
+  searxng:
+    container_name: lifehub-searxng
+    image: searxng/searxng:latest
+    ports:
+    - 3121:8080
+    restart: always
+    volumes:
+    - ./infrastructure/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
 volumes:
   lifehub-data: null
   lifehub-meili: null

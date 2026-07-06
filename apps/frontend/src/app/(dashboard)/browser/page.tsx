@@ -8,7 +8,7 @@ const PROXY_BASE = typeof window !== 'undefined'
   : '/api/v1/browser/proxy';
 
 export default function BrowserPage() {
-  const [urlInput, setUrlInput] = useState('https://lite.duckduckgo.com/lite/');
+  const [urlInput, setUrlInput] = useState('http://100.124.4.24:3121');
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
@@ -136,7 +136,7 @@ export default function BrowserPage() {
         </button>
         {currentUrl && (
           <a
-            href={getProxyUrl(currentUrl)}
+            href={currentUrl.includes(':3121') ? currentUrl : getProxyUrl(currentUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 rounded text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
@@ -166,7 +166,7 @@ export default function BrowserPage() {
             <iframe
               ref={iframeRef}
               key={currentUrl}
-              src={getProxyUrl(currentUrl)}
+              src={currentUrl && currentUrl.includes(':3121') ? currentUrl : (currentUrl ? getProxyUrl(currentUrl) : '')}
               className="w-full h-full border-none"
               sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
               title="Browser"

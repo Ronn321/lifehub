@@ -1,0 +1,30 @@
+# SearXNG Konfiguration — Allow iframe embedding
+# Siehe https://docs.searxng.org/admin/settings/
+
+use_default_settings: true
+
+general:
+  instance_name: "LifeHub Search"
+  debug: false
+  privacypolicy_url: false
+  contact_url: false
+  enable_metrics: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "de-DE"
+  formats:
+    - html
+    - json
+
+server:
+  secret_key: "lifehub_searxng_secret_change_me"
+  bind_address: "0.0.0.0"
+  port: 8080
+  limiter: false
+  image_proxy: true
+  # Allow embedding in iframes on any page
+  default_http_headers:
+    X-Frame-Options: ""
+    Content-Security-Policy: "frame-ancestors *;"

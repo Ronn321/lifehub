@@ -168,7 +168,7 @@ export default function BrowserPage() {
               key={currentUrl}
               src={getProxyUrl(currentUrl)}
               className="w-full h-full border-none"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
               title="Browser"
               onLoad={() => setIsLoading(false)}
               onError={() => {

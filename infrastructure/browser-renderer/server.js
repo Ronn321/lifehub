@@ -47,9 +47,50 @@ async function getPageContent(url, method = 'GET', postData = null) {
       Object.defineProperty(navigator, 'webdriver', { get: () => false });
     });
     await page.evaluateOnNewDocument(() => {
-      // Overwrite the navigator properties
       window.chrome = { runtime: {} };
       Object.defineProperty(navigator, 'languages', { get: () => ['de-DE', 'de', 'en-US', 'en'] });
+    });
+
+    // Intercept navigations to redirect through proxy
+    await page.evaluateOnNewDocument(() => {
+      const proxyBase = '/api/v1/browser/proxy?url=';
+      const origPushState = history.pushState;
+      const origReplaceState = history.replaceState;
+      
+      // Intercept location.href assignment
+      let _href = window.location.href;
+      Object.defineProperty(window, 'location', {
+        get() { return window.location; },
+        set(url) {
+          if (typeof url === 'string' && url.startsWith('http')) {
+            window.location.href = proxyBase + encodeURIComponent(url);
+          }
+        },
+        configurable: true,
+      });
+      
+      // Intercept form submissions via capture phase
+      document.addEventListener('submit', (e) => {
+        const form = e.target;
+        const action = form.action || form.getAttribute('action');
+        if (action && (action.startsWith('http:') || action.startsWith('https:'))) {
+          e.preventDefault();
+          window.location.href = proxyBase + encodeURIComponent(action) + '&' + new URLSearchParams(new FormData(form)).toString();
+        }
+      }, true);
+
+      // Intercept link clicks
+      document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.href && !link.href.startsWith(proxyBase) && !link.href.startsWith('javascript:')) {
+          const href = link.getAttribute('href');
+          if (href && (href.startsWith('http:') || href.startsWith('https:') || href.startsWith('//'))) {
+            e.preventDefault();
+            const target = href.startsWith('//') ? 'https:' + href : href;
+            window.location.href = proxyBase + encodeURIComponent(target);
+          }
+        }
+      }, true);
     });
 
     if (method === 'POST' && postData) {

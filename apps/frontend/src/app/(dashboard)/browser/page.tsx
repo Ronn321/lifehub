@@ -43,20 +43,8 @@ export default function BrowserPage() {
   }, [normalizeUrl, historyIndex]);
 
   const handleGo = useCallback(() => {
-    const normalized = normalizeUrl(urlInput);
-    if (!normalized) return;
-    
-    // Check if this is a direct-iframe-safe URL (SearXNG)
-    const isDirectUrl = normalized.includes(':3121') || normalized.includes('localhost:3121');
-    
-    if (isDirectUrl) {
-      // Load in iframe
-      navigate(urlInput);
-    } else {
-      // Open in new tab for all other sites (avoids iframe/X-Frame-Options issues)
-      window.open(normalized, '_blank', 'noopener');
-    }
-  }, [urlInput, navigate, normalizeUrl]);
+    navigate(urlInput);
+  }, [urlInput, navigate]);
 
   // Auto-navigate to SearXNG on page load
   useEffect(() => {

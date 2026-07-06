@@ -445,31 +445,4 @@ export class PagesController {
     await this.pages.setActiveBrowserTab(sessionId, tabId);
   }
 
-  // ========== WEB PROXY (for research browser) ==========
-
-  @Get('proxy')
-  @RequirePermission('pages', 'read')
-  async proxyWebPage(@Query('url') url: string, @Query('token') token?: string) {
-    // Simple proxy to bypass CORS for the research browser iframe
-    if (!url || !url.startsWith('http')) {
-      throw new BadRequestException('Ungültige URL');
-    }
-    const headers: Record<string, string> = {
-      'User-Agent': 'Mozilla/5.0 (compatible; LifeHub/1.0)',
-    };
-    // If token is provided (for iframe usage), use it for auth
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const response = await fetch(url, { headers });
-    const text = await response.text();
-    // Return HTML with rewritten relative URLs to absolute
-    const base = new URL(url);
-    const proxied = text
-      .replace(/src="\//g, `src="${base.origin}/`)
-      .replace(/href="\//g, `href="${base.origin}/`)
-      .replace(/src='\//g, `src='${base.origin}/`)
-      .replace(/href='\//g, `href='${base.origin}/`);
-    return proxied;
-  }
 }

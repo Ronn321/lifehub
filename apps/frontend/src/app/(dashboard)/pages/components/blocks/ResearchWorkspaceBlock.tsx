@@ -68,21 +68,10 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
   const [newSourceTitle, setNewSourceTitle] = useState('');
   const [activeTab, setActiveTab] = useState<TabKind>('sources');
 
-  // Get auth token for proxy
-  const getAuthToken = useCallback(() => {
-    try {
-      const raw = localStorage.getItem('lifehub-auth');
-      if (!raw) return '';
-      const parsed = JSON.parse(raw);
-      return parsed?.state?.accessToken ?? '';
-    } catch { return ''; }
-  }, []);
-
-  // Build proxy URL
+  // Build proxy URL (no auth needed - unprotected endpoint)
   const getProxyUrl = useCallback((targetUrl: string) => {
-    const token = getAuthToken();
-    return `/api/v1/pages/proxy?url=${encodeURIComponent(targetUrl)}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
-  }, [getAuthToken]);
+    return `/api/v1/proxy?url=${encodeURIComponent(targetUrl)}`;
+  }, []);
 
   // Browser state
   const [urlInput, setUrlInput] = useState('https://lite.duckduckgo.com/lite/');

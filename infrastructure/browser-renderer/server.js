@@ -7,13 +7,19 @@ let browser;
 async function getBrowser() {
   if (!browser || !browser.connected) {
     browser = await puppeteer.launch({
-      headless: true,
+      headless: 'new',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--single-process',
+        '--disable-blink-features=AutomationControlled',
+        '--no-first-run',
+        '--no-default-browser-check',
+        '--disable-infobars',
+        '--window-size=1280,720',
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36',
       ],
     });
   }
@@ -25,15 +31,25 @@ async function getPageContent(url, method = 'GET', postData = null) {
   const page = await browser.newPage();
 
   try {
-    // Block resource-heavy types for speed
+    // Only block heavy media, allow CSS/JS for proper rendering
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const type = req.resourceType();
-      if (['image', 'media', 'font', 'stylesheet'].includes(type)) {
+      if (['image', 'media', 'font'].includes(type)) {
         req.abort();
       } else {
         req.continue();
       }
+    });
+
+    // Hide automation from websites
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    });
+    await page.evaluateOnNewDocument(() => {
+      // Overwrite the navigator properties
+      window.chrome = { runtime: {} };
+      Object.defineProperty(navigator, 'languages', { get: () => ['de-DE', 'de', 'en-US', 'en'] });
     });
 
     if (method === 'POST' && postData) {

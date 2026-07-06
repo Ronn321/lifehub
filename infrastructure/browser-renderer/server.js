@@ -35,7 +35,7 @@ async function getPageContent(url, method = 'GET', postData = null) {
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const type = req.resourceType();
-      if (['image', 'media', 'font'].includes(type)) {
+      if (['media', 'font'].includes(type)) {
         req.abort();
       } else {
         req.continue();

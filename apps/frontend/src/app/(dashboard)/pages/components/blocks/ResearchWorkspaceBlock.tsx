@@ -68,9 +68,10 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
   const [newSourceTitle, setNewSourceTitle] = useState('');
   const [activeTab, setActiveTab] = useState<TabKind>('sources');
 
-  // Build proxy URL (no auth needed - unprotected endpoint)
+  // Build proxy URL (no auth needed - points directly to backend)
   const getProxyUrl = useCallback((targetUrl: string) => {
-    return `/api/v1/proxy?url=${encodeURIComponent(targetUrl)}`;
+    const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    return `http://${host}:3007/api/v1/proxy?url=${encodeURIComponent(targetUrl)}`;
   }, []);
 
   // Browser state
@@ -223,13 +224,21 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
   const handleGo = useCallback(() => {
     const normalized = normalizeUrl(urlInput);
     if (!normalized) return;
-    navigateToUrl(normalized);
+    // Navigate FIRST (synchronous state update)
+    setUrlInput(normalized);
+    setCurrentIframeUrl(normalized);
+    setBrowserHistory((prev) => {
+      const newHistory = prev.slice(0, browserHistoryIndex + 1);
+      newHistory.push(normalized);
+      return newHistory;
+    });
+    setBrowserHistoryIndex((prev) => prev + 1);
 
-    // Create a browser tab on the backend
+    // Then create backend tab (fire-and-forget)
     if (activeSessionId) {
       createTabMutation.mutate({ url: normalized, title: normalized });
     }
-  }, [urlInput, normalizeUrl, navigateToUrl, activeSessionId, createTabMutation]);
+  }, [urlInput, normalizeUrl, browserHistoryIndex, activeSessionId, createTabMutation]);
 
   const handleBack = useCallback(() => {
     if (browserHistoryIndex <= 0) return;
@@ -391,12 +400,11 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
             <>
               <iframe
                 key={currentIframeUrl}
-                src={currentIframeUrl}
+                src={getProxyUrl(currentIframeUrl)}
                 className="w-full h-full border-none"
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
                 title="Browser"
               />
-              {/* Pin as Source overlay button */}
               <button
                 onClick={handlePinAsSource}
                 disabled={pinSourceMutation.isPending}
@@ -406,11 +414,21 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
                 <Pin className="h-3 w-3" />
                 <span>Als Quelle pinnen</span>
               </button>
+              <a
+                href={getProxyUrl(currentIframeUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1.5 text-xs rounded bg-zinc-700/80 hover:bg-zinc-600 text-white shadow-lg backdrop-blur-sm transition-colors"
+                title="In neuem Tab öffnen"
+              >
+                <ExternalLink className="h-3 w-3" />
+                <span>Neuer Tab</span>
+              </a>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-fg-muted gap-2">
               <Globe className="h-10 w-10 opacity-30" />
-              <p className="text-sm">Geben Sie eine URL ein und klicken Sie auf Go</p>
+              <p className="text-sm">URL eingeben und Go klicken, oder Enter drücken</p>
             </div>
           )}
         </div>

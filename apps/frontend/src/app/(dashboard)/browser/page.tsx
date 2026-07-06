@@ -146,7 +146,7 @@ export default function BrowserPage() {
         </button>
         {currentUrl && (
           <a
-            href={currentUrl.includes(':3121') ? currentUrl : getProxyUrl(currentUrl)}
+            href={getProxyUrl(currentUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 rounded text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
@@ -176,7 +176,7 @@ export default function BrowserPage() {
             <iframe
               ref={iframeRef}
               key={currentUrl}
-              src={currentUrl && currentUrl.includes(':3121') ? currentUrl : (currentUrl ? getProxyUrl(currentUrl) : '')}
+              src={currentUrl ? getProxyUrl(currentUrl) : ''}
               className="w-full h-full border-none"
               sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
               title="Browser"

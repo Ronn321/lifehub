@@ -73,9 +73,13 @@ async function getPageContent(url, method = 'GET', postData = null) {
       document.addEventListener('submit', (e) => {
         const form = e.target;
         const action = form.action || form.getAttribute('action');
-        if (action && (action.startsWith('http:') || action.startsWith('https:'))) {
+        if (action) {
+          // Handle both absolute and relative actions
+          const fullUrl = (action.startsWith('http:') || action.startsWith('https:')) 
+            ? action 
+            : new URL(action, window.location.href).href;
           e.preventDefault();
-          window.location.href = proxyBase + encodeURIComponent(action) + '&' + new URLSearchParams(new FormData(form)).toString();
+          window.location.href = proxyBase + encodeURIComponent(fullUrl) + '&' + new URLSearchParams(new FormData(form)).toString();
         }
       }, true);
 

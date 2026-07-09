@@ -48,11 +48,11 @@ export function MusicAppShell({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex min-w-0">
+      <div className="flex-1 flex min-w-0 overflow-hidden">
         <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
           {topBar && (
             <header
-              className="flex items-center gap-3 px-6 flex-shrink-0"
+              className="flex items-center gap-3 px-6 flex-shrink-0 sticky top-0 z-[2]"
               style={{ height: 'var(--music-topbar-height)', background: 'var(--music-bg-base)' }}
             >
               {topBar}
@@ -60,11 +60,13 @@ export function MusicAppShell({
           )}
           {children}
         </div>
+
+        {/* Right Sidebar */}
         {hasRightSidebar && (
           <aside
-            className="flex-shrink-0 overflow-y-auto"
+            className="flex-shrink-0 overflow-y-auto border-l border-[rgba(255,255,255,0.08)]"
             style={{
-              width: 'var(--music-right-sidebar-width, 320px)',
+              width: 'var(--music-right-sidebar-width, 360px)',
               background: 'var(--music-bg-elevated)',
             }}
           >

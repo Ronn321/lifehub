@@ -11,13 +11,14 @@ const common_1 = require("@nestjs/common");
 const users_service_js_1 = require("../services/users.service.js");
 const users_repository_js_1 = require("../repositories/users.repository.js");
 const users_controller_js_1 = require("./users.controller.js");
+const roles_controller_js_1 = require("./roles.controller.js");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
         providers: [users_repository_js_1.UsersRepository, users_service_js_1.UsersService],
-        controllers: [users_controller_js_1.AuthController, users_controller_js_1.UsersController],
+        controllers: [users_controller_js_1.AuthController, users_controller_js_1.UsersController, roles_controller_js_1.RolesController],
         exports: [users_service_js_1.UsersService],
     })
 ], UsersModule);

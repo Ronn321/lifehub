@@ -23,5 +23,7 @@ Object.defineProperty(exports, "DB_TOKEN", { enumerable: true, get: function () 
 var client_js_1 = require("./client.js");
 Object.defineProperty(exports, "getDb", { enumerable: true, get: function () { return client_js_1.getDb; } });
 Object.defineProperty(exports, "closeDb", { enumerable: true, get: function () { return client_js_1.closeDb; } });
-__exportStar(require("./schema/public.js"), exports);
+var public_js_1 = require("./schema/public.js");
+Object.defineProperty(exports, "dishes", { enumerable: true, get: function () { return public_js_1.dishes; } });
+__exportStar(public_js_1, exports);
 //# sourceMappingURL=index.js.map

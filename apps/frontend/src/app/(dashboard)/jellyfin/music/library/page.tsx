@@ -24,7 +24,7 @@ import {
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import type { MusicTrack } from '@/lib/music-player-store';
 import type { JellyfinApiItem } from '@/lib/music-api';
-import { MusicAppShell } from '@/components/music/layout/MusicAppShell';
+import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { SongRow, MusicEmptyState } from '@/components/music/shared/SongRow';
 import { MusicCard, MusicCardGrid, MusicLoader } from '@/components/music/shared/MusicCard';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
@@ -239,7 +239,7 @@ export default function MusicLibraryPage() {
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
       <div className="flex-1 overflow-y-auto music-scroll">
-        <MusicAppShell
+        <MusicPageShell
           sidebarProps={{
             playlists: [],
             activePlaylistId: null,
@@ -424,7 +424,7 @@ export default function MusicLibraryPage() {
           />
         )}
           </div>
-        </MusicAppShell>
+        </MusicPageShell>
       </div>
       <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
         <MusicPlayerWrapper />

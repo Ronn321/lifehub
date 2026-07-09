@@ -9,7 +9,7 @@ exports.hasPermission = hasPermission;
 exports.ALL_DOMAINS = [
     'users', 'media', 'travel', 'projects', 'recipes', 'shopping',
     'finance', 'insurance', 'vault', 'documents', 'calendar',
-    'it_inventory', 'jellyfin', 'search', 'dashboard', 'plugins',
+    'it_inventory', 'jellyfin', 'search', 'dashboard', 'plugins', 'pages',
 ];
 exports.ALL_ACTIONS = ['read', 'create', 'update', 'delete', 'share', 'admin'];
 /**

@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { and, eq, isNull, sql, desc, asc } from 'drizzle-orm';
-import { DbService, recipes, ingredients, steps, recipeTags, tags, type Db } from '@lifehub/db';
+import { DbService, recipes, ingredients, steps, recipeTags, tags, dishes, type Db } from '@lifehub/db';
 
 export class RecipesRepository {
   constructor(@Inject(DbService) private readonly dbService: DbService) {}
@@ -12,14 +12,23 @@ export class RecipesRepository {
   // ========== RECIPES ==========
 
   async createRecipe(data: {
-    ownerId: string; title: string; description?: string;
+    ownerId: string; title: string; titleEn?: string;
+    description?: string; dishId?: string | null;
+    containsFlags?: string[]; attributes?: string[];
+    variantLabel?: string; effortLevel?: string;
     sourceType?: string; sourceUrl?: string | null;
     servings?: number; prepTime?: number | null; cookTime?: number | null;
     totalTime?: number | null; calories?: number | null; imageMediaId?: string | null;
   }) {
     const [row] = await this.db.insert(recipes).values({
       ownerId: data.ownerId, title: data.title,
+      titleEn: data.titleEn ?? null,
       description: data.description ?? null,
+      dishId: data.dishId ?? null,
+      containsFlags: data.containsFlags ?? null,
+      attributes: data.attributes ?? null,
+      variantLabel: data.variantLabel ?? null,
+      effortLevel: data.effortLevel ?? null,
       sourceType: data.sourceType ?? 'manual',
       sourceUrl: data.sourceUrl ?? null,
       servings: data.servings ?? 4,
@@ -36,7 +45,14 @@ export class RecipesRepository {
     return this.db.select({
       id: recipes.id,
       title: recipes.title,
+      titleEn: recipes.titleEn,
       description: recipes.description,
+      dishId: recipes.dishId,
+      dishTitle: sql<string>`COALESCE(${dishes.title}, '')`,
+      containsFlags: recipes.containsFlags,
+      attributes: recipes.attributes,
+      variantLabel: recipes.variantLabel,
+      effortLevel: recipes.effortLevel,
       sourceType: recipes.sourceType,
       sourceUrl: recipes.sourceUrl,
       servings: recipes.servings,
@@ -56,6 +72,7 @@ export class RecipesRepository {
         SELECT count(*)::int FROM ${steps} WHERE ${steps.recipeId} = ${recipes.id}
       )`,
     }).from(recipes)
+      .leftJoin(dishes, eq(recipes.dishId, dishes.id))
       .where(and(eq(recipes.ownerId, ownerId), isNull(recipes.deletedAt)))
       .orderBy(desc(recipes.createdAt));
   }

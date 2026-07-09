@@ -11,7 +11,7 @@ exports.EventsService = void 0;
 const common_1 = require("@nestjs/common");
 const bullmq_1 = require("bullmq");
 const ioredis_1 = require("ioredis");
-const QUEUE_NAME = 'lifehub:domain-events';
+const QUEUE_NAME = 'lifehub-domain-events';
 let EventsService = EventsService_1 = class EventsService {
     logger = new common_1.Logger(EventsService_1.name);
     _redis = null;

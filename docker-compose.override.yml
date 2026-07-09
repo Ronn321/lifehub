@@ -1,0 +1,11 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    image: lifehub-frontend:local
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    image: lifehub-backend:local

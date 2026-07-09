@@ -351,11 +351,35 @@ export const projectLinks = pgTable('project_links', {
   index('project_links_project_idx').on(t.projectId),
 ]);
 
+// ===================== dishes =====================
+export const dishes = pgTable('dishes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  titleEn: text('title_en'),
+  description: text('description'),
+  caption: text('caption'),
+  heroText: text('hero_text'),
+  primaryColor: text('primary_color'),
+  imageMediaId: uuid('image_media_id'),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('dishes_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
 // ===================== recipes =====================
 export const recipes = pgTable('recipes', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: text('title').notNull(),
+  titleEn: text('title_en'),
   description: text('description'),
+  dishId: uuid('dish_id').references(() => dishes.id),
+  containsFlags: text('contains_flags').array(),
+  attributes: text('attributes').array(),
+  variantLabel: text('variant_label'),
+  effortLevel: text('effort_level'),
   sourceType: text('source_type').notNull().default('manual'),
   sourceUrl: text('source_url'),
   servings: integer('servings').notNull().default(4),

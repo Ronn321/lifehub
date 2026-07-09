@@ -20,6 +20,7 @@ const auth_1 = require("@lifehub/auth");
 const permissions_1 = require("@lifehub/permissions");
 const auth_dto_js_1 = require("../dtos/auth.dto.js");
 const users_service_js_1 = require("../services/users.service.js");
+const users_repository_js_1 = require("../repositories/users.repository.js");
 let AuthController = class AuthController {
     users;
     constructor(users) {
@@ -98,9 +99,12 @@ exports.AuthController = AuthController = __decorate([
 ], AuthController);
 let UsersController = class UsersController {
     users;
-    constructor(users) {
+    repo;
+    constructor(users, repo) {
         this.users = users;
+        this.repo = repo;
     }
+    // ---------- Self-Service ----------
     async me(user) {
         return this.users.getProfile(user.sub);
     }
@@ -111,6 +115,28 @@ let UsersController = class UsersController {
     async changePassword(user, body) {
         const dto = auth_dto_js_1.changePasswordSchema.parse(body);
         await this.users.changePassword(user.sub, dto);
+    }
+    // ---------- Admin ----------
+    async listAll() {
+        return this.repo.listAll();
+    }
+    async getById(id) {
+        const user = await this.repo.findById(id);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        return user;
+    }
+    async disableUser(id) {
+        await this.repo.setActive(id, false);
+    }
+    async enableUser(id) {
+        await this.repo.setActive(id, true);
+    }
+    async adminUpdateUser(id, body) {
+        return this.users.adminUpdateUser(id, body);
+    }
+    async adminDeleteUser(id) {
+        await this.users.adminDeleteUser(id);
     }
 };
 exports.UsersController = UsersController;
@@ -144,12 +170,71 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "changePassword", null);
+__decorate([
+    (0, common_1.Get)(),
+    (0, permissions_1.RequirePermission)('users', 'admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'List all users (admin only)' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "listAll", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, permissions_1.RequirePermission)('users', 'admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get user by ID (admin only)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getById", null);
+__decorate([
+    (0, common_1.Post)(':id/disable'),
+    (0, common_1.HttpCode)(204),
+    (0, permissions_1.RequirePermission)('users', 'admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Disable a user (admin only)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "disableUser", null);
+__decorate([
+    (0, common_1.Post)(':id/enable'),
+    (0, common_1.HttpCode)(204),
+    (0, permissions_1.RequirePermission)('users', 'admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Enable a user (admin only)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "enableUser", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    (0, permissions_1.RequirePermission)('users', 'admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update user profile (admin only)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "adminUpdateUser", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.HttpCode)(204),
+    (0, permissions_1.RequirePermission)('users', 'admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Soft-delete a user (admin only)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "adminDeleteUser", null);
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('users'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(auth_1.JwtGuard, permissions_1.PermissionGuard),
     (0, common_1.Controller)('users'),
     __param(0, (0, common_1.Inject)(users_service_js_1.UsersService)),
-    __metadata("design:paramtypes", [users_service_js_1.UsersService])
+    __param(1, (0, common_1.Inject)(users_repository_js_1.UsersRepository)),
+    __metadata("design:paramtypes", [users_service_js_1.UsersService,
+        users_repository_js_1.UsersRepository])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

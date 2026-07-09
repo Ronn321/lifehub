@@ -60,13 +60,14 @@ export class JellyfinController {
 
   @Get('items')
   @RequirePermission('jellyfin', 'read')
-  @ApiOperation({ summary: 'Medienelemente auflisten (optional nach libraryId oder libraryType filtern)' })
+  @ApiOperation({ summary: 'Medienelemente auflisten (optional mit refresh=true für Live-Daten von Jellyfin)' })
   async listItems(
     @CurrentUser() user: JwtPayload,
     @Query('libraryId') libraryId?: string,
     @Query('libraryType') libraryType?: string,
+    @Query('refresh') refresh?: string,
   ) {
-    return this.jellyfin.listItems(user.sub, libraryId, libraryType);
+    return this.jellyfin.listItems(user.sub, libraryId, libraryType, refresh === 'true');
   }
 
   @Post('items/:id/toggle-watched')
@@ -212,5 +213,75 @@ export class JellyfinController {
     @Query('limit') limit?: string,
   ) {
     return this.jellyfin.getTopSongs(user.sub, serverId, artistId, limit ? parseInt(limit, 10) : 10);
+  }
+
+  // =================== Media v0.3 API Endpoints (Netflix-style) ===================
+
+  @Get('servers/:serverId/items/:externalId/detail')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Detail-Informationen zu einem Film/Serie aus Jellyfin abrufen' })
+  async getItemDetail(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('externalId') externalId: string,
+  ) {
+    return this.jellyfin.getItemDetail(user.sub, serverId, externalId);
+  }
+
+  @Get('servers/:serverId/continue-watching')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Weiterschauen-Liste (unfertige Medien)' })
+  async getContinueWatching(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.getContinueWatching(user.sub, serverId, limit ? parseInt(limit, 10) : 20);
+  }
+
+  @Get('servers/:serverId/items/:externalId/similar')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Ähnliche Filme/Serien empfehlen' })
+  async getSimilarItems(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('externalId') externalId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.getSimilarItems(user.sub, serverId, externalId, 'Movie,Series', limit ? parseInt(limit, 10) : 12);
+  }
+
+  @Get('servers/:serverId/items/:externalId/people')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Cast & Crew eines Films/Serie abrufen' })
+  async getItemPeople(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('externalId') externalId: string,
+  ) {
+    return this.jellyfin.getItemPeople(user.sub, serverId, externalId);
+  }
+
+  @Get('servers/:serverId/search')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Filme/Serien/Episoden durchsuchen' })
+  async searchMedia(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('q') query: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.searchMedia(user.sub, serverId, query, limit ? parseInt(limit, 10) : 30);
+  }
+
+  @Post('servers/:serverId/items/:externalId/favorite')
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Favoriten-Status umschalten (Jellyfin)' })
+  async toggleFavorite(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('externalId') externalId: string,
+  ) {
+    return this.jellyfin.toggleFavorite(user.sub, serverId, externalId);
   }
 }

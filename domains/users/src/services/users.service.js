@@ -92,7 +92,7 @@ let UsersService = class UsersService {
     async register(input) {
         const existing = await this.repo.findByEmail(input.email);
         if (existing)
-            throw new common_1.BadRequestException('Email already in use');
+            throw new common_1.BadRequestException('Die E-Mail-Adresse wird bereits verwendet');
         const passwordHash = await (0, auth_1.hashPassword)(input.password);
         const user = await this.repo.create({
             email: input.email,
@@ -126,6 +126,45 @@ let UsersService = class UsersService {
             throw new common_1.UnauthorizedException('Current password is incorrect');
         const passwordHash = await (0, auth_1.hashPassword)(input.newPassword);
         await this.repo.updatePasswordHash(userId, passwordHash);
+    }
+    // --- Admin Operations ---
+    async adminCreateUser(input, grantedBy) {
+        const existing = await this.repo.findByEmail(input.email);
+        if (existing)
+            throw new common_1.BadRequestException('Email already in use');
+        const passwordHash = await (0, auth_1.hashPassword)(input.password);
+        const user = await this.repo.create({
+            email: input.email,
+            displayName: input.displayName,
+            passwordHash,
+        });
+        await this.events.emit(exports.UserCreated.create(user.id, { userId: user.id, email: user.email }));
+        // Assign roles if provided
+        if (input.roleIds && input.roleIds.length > 0) {
+            for (const roleId of input.roleIds) {
+                await this.repo.assignRoleToUser(user.id, roleId, grantedBy);
+            }
+        }
+        return (0, user_js_1.toPublicUser)(user);
+    }
+    async adminUpdateUser(userId, input) {
+        if (input.email) {
+            const existing = await this.repo.findByEmail(input.email);
+            if (existing && existing.id !== userId)
+                throw new common_1.BadRequestException('Die E-Mail-Adresse wird bereits verwendet');
+        }
+        const user = await this.repo.adminUpdateUser(userId, input);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        return (0, user_js_1.toPublicUser)(user);
+    }
+    async adminDeleteUser(userId) {
+        const user = await this.repo.findById(userId);
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        if (user.isSystem)
+            throw new common_1.BadRequestException('Cannot delete system users');
+        await this.repo.adminDeleteUser(userId);
     }
 };
 exports.UsersService = UsersService;

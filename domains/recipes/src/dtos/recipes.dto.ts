@@ -4,7 +4,13 @@ export const sourceTypeEnum = z.enum(['manual', 'url', 'youtube', 'pdf', 'book']
 
 export const createRecipeSchema = z.object({
   title: z.string().min(1).max(255),
+  titleEn: z.string().optional(),
   description: z.string().optional(),
+  dishId: z.string().uuid().nullable().optional(),
+  containsFlags: z.array(z.string()).optional(),
+  attributes: z.array(z.string()).optional(),
+  variantLabel: z.string().optional(),
+  effortLevel: z.string().optional(),
   sourceType: sourceTypeEnum.optional().default('manual'),
   sourceUrl: z.string().url().nullable().optional(),
   servings: z.number().int().min(1).max(50).optional().default(4),
@@ -18,7 +24,13 @@ export type CreateRecipeInput = z.infer<typeof createRecipeSchema>;
 
 export const updateRecipeSchema = z.object({
   title: z.string().min(1).max(255).optional(),
+  titleEn: z.string().optional(),
   description: z.string().optional(),
+  dishId: z.string().uuid().nullable().optional(),
+  containsFlags: z.array(z.string()).optional(),
+  attributes: z.array(z.string()).optional(),
+  variantLabel: z.string().optional(),
+  effortLevel: z.string().optional(),
   sourceType: sourceTypeEnum.optional(),
   sourceUrl: z.string().url().nullable().optional(),
   servings: z.number().int().min(1).max(50).optional(),
@@ -29,6 +41,11 @@ export const updateRecipeSchema = z.object({
   imageMediaId: z.string().uuid().nullable().optional(),
 });
 export type UpdateRecipeInput = z.infer<typeof updateRecipeSchema>;
+
+export const createRecipeWithDishSchema = createRecipeSchema.extend({
+  dishTitle: z.string().min(1).optional(),
+});
+export type CreateRecipeWithDishInput = z.infer<typeof createRecipeWithDishSchema>;
 
 export const createIngredientSchema = z.object({
   name: z.string().min(1).max(255),

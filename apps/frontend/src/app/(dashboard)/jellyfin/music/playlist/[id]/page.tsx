@@ -4,7 +4,7 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import { ListMusic, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { MusicAppShell } from '@/components/music/layout/MusicAppShell';
+import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
 
 /* ------------------------------------------------------------------ */
@@ -18,7 +18,7 @@ export default function PlaylistDetailPage() {
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
       <div className="flex-1 overflow-y-auto music-scroll">
-        <MusicAppShell
+        <MusicPageShell
           sidebarProps={{ activeTab: 'playlists' }}
           topBar={
             <Link
@@ -75,7 +75,7 @@ export default function PlaylistDetailPage() {
           </p>
         </div>
           </div>
-        </MusicAppShell>
+        </MusicPageShell>
       </div>
       <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
         <MusicPlayerWrapper />

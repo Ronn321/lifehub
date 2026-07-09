@@ -13,7 +13,7 @@ import {
   usePlayTracks,
 } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
-import { MusicAppShell } from '@/components/music/layout/MusicAppShell';
+import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { SongRow, TracklistHeader } from '@/components/music/shared/SongRow';
 import { MusicImage, MusicLoader } from '@/components/music/shared/MusicCard';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
@@ -38,9 +38,9 @@ export default function AlbumDetailPage() {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
         <div className="flex-1 overflow-y-auto music-scroll">
-          <MusicAppShell sidebarProps={{ activeTab: 'albums' }}>
+          <MusicPageShell sidebarProps={{ activeTab: 'albums' }}>
             <MusicLoader />
-          </MusicAppShell>
+          </MusicPageShell>
         </div>
         <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
           <MusicPlayerWrapper />
@@ -53,9 +53,9 @@ export default function AlbumDetailPage() {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
         <div className="flex-1 overflow-y-auto music-scroll">
-          <MusicAppShell sidebarProps={{ activeTab: 'albums' }}>
+          <MusicPageShell sidebarProps={{ activeTab: 'albums' }}>
             <MusicLoader />
-          </MusicAppShell>
+          </MusicPageShell>
         </div>
         <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
           <MusicPlayerWrapper />
@@ -84,7 +84,7 @@ export default function AlbumDetailPage() {
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
       <div className="flex-1 overflow-y-auto music-scroll">
-        <MusicAppShell
+        <MusicPageShell
           sidebarProps={{ activeTab: 'albums' }}
           topBar={
             <Link
@@ -195,7 +195,7 @@ export default function AlbumDetailPage() {
           )}
         </div>
           </div>
-        </MusicAppShell>
+        </MusicPageShell>
       </div>
       <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
         <MusicPlayerWrapper />

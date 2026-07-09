@@ -13,7 +13,7 @@ import {
   usePlayTracks,
   getCoverUrl,
 } from '@/lib/music-api';
-import { MusicAppShell } from '@/components/music/layout/MusicAppShell';
+import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { MusicCard, MusicScrollRow, MusicSection, MusicSkeleton } from '@/components/music/shared/MusicCard';
 import { MusicEmptyState } from '@/components/music/shared/SongRow';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
@@ -108,8 +108,8 @@ export default function MusicPage() {
 
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-      <div className="flex-1 overflow-y-auto music-scroll">
-        <MusicAppShell sidebarProps={{}}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden music-scroll">
+        <MusicPageShell sidebarProps={{}}>
           <div className="space-y-6">
             <h1 className="text-[28px] font-bold leading-tight" style={{ color: 'var(--music-text-primary)' }}>
             {greeting}, {displayName}
@@ -163,7 +163,7 @@ export default function MusicPage() {
             </MusicSection>
           </section>
         </div>
-      </MusicAppShell>
+      </MusicPageShell>
       </div>
       <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
         <MusicPlayerWrapper />

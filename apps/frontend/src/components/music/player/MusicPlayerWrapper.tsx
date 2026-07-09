@@ -5,6 +5,8 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useJellyfinServer, getStreamUrl } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { MusicPlayerBar } from '@/components/music/player/MusicPlayerBar';
+import { MiniPlayer } from '@/components/music/player/MiniPlayer';
+import { LyricsOverlay } from '@/components/music/player/LyricsOverlay';
 
 /* ------------------------------------------------------------------ */
 /*  Singleton audio ref — survives App Router page transitions          */
@@ -12,7 +14,6 @@ import { MusicPlayerBar } from '@/components/music/player/MusicPlayerBar';
 /* ------------------------------------------------------------------ */
 
 const audioRef: { current: HTMLAudioElement | null } = { current: null };
-let audioInitialized = false;
 
 function getAudio(): HTMLAudioElement {
   if (!audioRef.current && typeof Audio !== 'undefined') {
@@ -26,6 +27,12 @@ function getAudio(): HTMLAudioElement {
 /*  MusicPlayerWrapper                                                */
 /*  Manages audio ↔ Zustand store synchronisation and renders the     */
 /*  MusicPlayerBar with the singleton audio ref.                      */
+/*                                                                     */
+/*  State machine (simplified):                                        */
+/*    idle → loading → playing ↔ paused                                */
+/*                    ↓↗ buffering (recovery → playing/paused)          */
+/*                    ↘ seeking (recovery → playing/paused)             */
+/*    playing → finished → next (or idle if queue empty)               */
 /* ------------------------------------------------------------------ */
 
 export function MusicPlayerWrapper() {
@@ -41,19 +48,43 @@ export function MusicPlayerWrapper() {
   const volume = useMusicPlayerStore((s) => s.volume);
   const isMuted = useMusicPlayerStore((s) => s.isMuted);
   const queue = useMusicPlayerStore((s) => s.queue);
+  const errorMessage = useMusicPlayerStore((s) => s.errorMessage);
+  const retryTrigger = useMusicPlayerStore((s) => s.retryTrigger);
 
   /* ── Store actions ── */
   const setStatus = useMusicPlayerStore((s) => s.setStatus);
   const setPosition = useMusicPlayerStore((s) => s.setPosition);
   const setDuration = useMusicPlayerStore((s) => s.setDuration);
   const next = useMusicPlayerStore((s) => s.next);
+  const togglePlay = useMusicPlayerStore((s) => s.togglePlay);
+  const setError = useMusicPlayerStore((s) => s.setError);
+  const retry = useMusicPlayerStore((s) => s.retry);
+
+  /* ── UI state from store ── */
+  const isExpanded = useMusicPlayerStore((s) => s.isExpanded);
+  const toggleExpanded = useMusicPlayerStore((s) => s.toggleExpanded);
+  const isMiniPlayer = useMusicPlayerStore((s) => s.isMiniPlayer);
 
   /* ── Local UI state for the player bar ── */
   const [isLiked, setIsLiked] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLyricsVisible, setIsLyricsVisible] = useState(false);
+
+  /* ── Ref: intended status (playing/paused) for buffering/seeking recovery ── */
+  const intendedStatusRef = useRef<'playing' | 'paused'>('paused');
+
+  /* ── Ref: finished → next delay timer ── */
+  const finishedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Keep intendedStatusRef in sync with store status when not buffering/seeking */
+  useEffect(() => {
+    if (status === 'playing' || status === 'paused') {
+      intendedStatusRef.current = status;
+    }
+  }, [status]);
 
   /* ════════════════════════════════════════════════════════════════ */
   /*  1. Source sync — update audio src when currentTrack changes   */
+  /*  Sets status to 'loading' while the new src is being fetched   */
   /* ════════════════════════════════════════════════════════════════ */
 
   useEffect(() => {
@@ -70,6 +101,7 @@ export function MusicPlayerWrapper() {
 
     if (audio.src !== url) {
       audio.src = url;
+      setStatus('loading');
       audio.load();
     }
 
@@ -77,14 +109,18 @@ export function MusicPlayerWrapper() {
     // This covers both initial play and next/prev track changes.
     if (status === 'playing') {
       audio.play().catch((err) => {
+        const errMsg =
+          err instanceof Error ? err.message : 'Playback fehlgeschlagen';
         console.warn('Audio playback failed:', err);
         setStatus('error');
+        setError(errMsg);
       });
     }
-  }, [currentTrack?.id]);
+  }, [currentTrack?.id, retryTrigger]);
 
   /* ════════════════════════════════════════════════════════════════ */
   /*  2. Play / pause sync — react to store status changes          */
+  /*  Ignores transient statuses (buffering, seeking, finished)      */
   /* ════════════════════════════════════════════════════════════════ */
 
   useEffect(() => {
@@ -95,10 +131,12 @@ export function MusicPlayerWrapper() {
       audio.play().catch(() => {});
     } else if (status === 'paused' && !audio.paused) {
       audio.pause();
-    } else if (status === 'idle') {
+    } else if ((status as string) === 'idle') {
+      // Reached when store transitions to idle while currentTrack still set
       audio.pause();
       audio.removeAttribute('src');
     }
+    // buffering / seeking / finished: do not touch audio element
   }, [status]);
 
   /* ════════════════════════════════════════════════════════════════ */
@@ -112,33 +150,156 @@ export function MusicPlayerWrapper() {
 
   /* ════════════════════════════════════════════════════════════════ */
   /*  4. Audio event listeners                                       */
-  /*     timeupdate → store position                                 */
-  /*     durationchange → store duration                              */
-  /*     ended → auto-next                                           */
-  /*     error → store error status                                  */
+  /*     State transitions:                                          */
+  /*       loadstart → loading                                       */
+  /*       canplay → recover from loading → [playing|paused]          */
+  /*       waiting → buffering (if intended = playing)                */
+  /*       playing → recover from buffering                           */
+  /*       seeking  → store: 'seeking'                                */
+  /*       seeked   → recover from seeking                            */
+  /*       ended → finished (then next() after brief delay)           */
+  /*       error → error status                                      */
+  /*       timeupdate → store position                                */
+  /*       durationchange → store duration                            */
   /* ════════════════════════════════════════════════════════════════ */
 
   useEffect(() => {
+    /* ── Position & Duration ── */
+
     const handleTimeUpdate = () => setPosition(audio.currentTime);
+
     const handleDurationChange = () => {
       if (isFinite(audio.duration)) setDuration(audio.duration);
     };
-    const handleEnded = () => next();
-    const handleError = () => {
-      console.error('Audio playback error:', audio.error);
-      setStatus('error');
+
+    /* ── Loading → Can play ── */
+
+    const handleLoadStart = () => {
+      // Only set loading if we're not already playing/paused (track change)
+      const s = useMusicPlayerStore.getState().status;
+      if (s !== 'buffering' && s !== 'seeking' && s !== 'finished') {
+        setStatus('loading');
+      }
     };
+
+    const handleCanPlay = () => {
+      const s = useMusicPlayerStore.getState().status;
+      if (s === 'loading') {
+        // Restore to intended status (playing or paused)
+        setStatus(intendedStatusRef.current);
+        // If should be playing, ensure audio plays
+        if (intendedStatusRef.current === 'playing' && audio.paused) {
+          audio.play().catch(() => {});
+        }
+      }
+    };
+
+    /* ── Buffering detection (waiting / playing) ── */
+
+    const handleWaiting = () => {
+      const s = useMusicPlayerStore.getState().status;
+      // Only transition to buffering if we were actively playing
+      if (s === 'playing') {
+        setStatus('buffering');
+      }
+    };
+
+    const handlePlaying = () => {
+      const s = useMusicPlayerStore.getState().status;
+      // Recover from buffering to intended status
+      if (s === 'buffering') {
+        setStatus(intendedStatusRef.current);
+      }
+    };
+
+    /* ── Seeking detection (seeking / seeked) ── */
+
+    const handleSeeking = () => {
+      const s = useMusicPlayerStore.getState().status;
+      if (s === 'playing' || s === 'paused') {
+        // Remember intended status before seeking
+        intendedStatusRef.current = s;
+        setStatus('seeking');
+      }
+    };
+
+    const handleSeeked = () => {
+      const s = useMusicPlayerStore.getState().status;
+      if (s === 'seeking') {
+        setStatus(intendedStatusRef.current);
+      }
+    };
+
+    /* ── Track ended → finished → next ── */
+
+    const handleEnded = () => {
+      // Clear any pending finished→next timer
+      if (finishedTimerRef.current) {
+        clearTimeout(finishedTimerRef.current);
+      }
+
+      setStatus('finished');
+
+      // Brief delay so UI shows 'finished' before transitioning
+      finishedTimerRef.current = setTimeout(() => {
+        const store = useMusicPlayerStore.getState();
+        // If repeat-one, next() resets to same track
+        // If nothing left in queue, next() sets status to 'idle'
+        store.next();
+      }, 600);
+    };
+
+    /* ── Error ── */
+
+    const handleError = () => {
+      const errMsg =
+        audio.error?.message ??
+        (audio.error?.code
+          ? `Audio error code: ${audio.error.code}`
+          : 'Wiedergabefehler');
+      console.error('Audio playback error:', errMsg, audio.error);
+      setStatus('error');
+      useMusicPlayerStore.getState().setError(errMsg);
+    };
+
+    /* ── Register all listeners ── */
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('durationchange', handleDurationChange);
+
+    audio.addEventListener('loadstart', handleLoadStart);
+    audio.addEventListener('canplay', handleCanPlay);
+
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('playing', handlePlaying);
+
+    audio.addEventListener('seeking', handleSeeking);
+    audio.addEventListener('seeked', handleSeeked);
+
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
+
+    /* ── Cleanup ── */
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('durationchange', handleDurationChange);
+
+      audio.removeEventListener('loadstart', handleLoadStart);
+      audio.removeEventListener('canplay', handleCanPlay);
+
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('playing', handlePlaying);
+
+      audio.removeEventListener('seeking', handleSeeking);
+      audio.removeEventListener('seeked', handleSeeked);
+
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
+
+      if (finishedTimerRef.current) {
+        clearTimeout(finishedTimerRef.current);
+      }
     };
   }, []);
 
@@ -152,26 +313,72 @@ export function MusicPlayerWrapper() {
   }, []);
 
   const handleExpandToggle = useCallback(() => {
-    setIsExpanded((prev) => !prev);
-  }, []);
+    toggleExpanded();
+  }, [toggleExpanded]);
 
   const handleQueueToggle = useCallback(() => {
     // TODO: Open queue/now-playing panel
   }, []);
+
+  const handleLyricsToggle = useCallback(() => {
+    setIsLyricsVisible((prev) => !prev);
+  }, []);
+
+  const handleDeviceSelect = useCallback(
+    (_deviceId: string) => {
+      // TODO: Wire up to actual device management API
+      // For now, this is a placeholder that logs which device was selected
+      console.log('Device selected:', _deviceId);
+    },
+    [],
+  );
+
+  const handleRetry = useCallback(() => {
+    retry();
+    // The source sync effect will re-run due to retryTrigger change
+    if (currentTrack && accessToken && server) {
+      const url =
+        currentTrack.streamUrl ??
+        getStreamUrl(accessToken, server.id, currentTrack.id);
+      if (audio.src) {
+        audio.src = url;
+        audio.load();
+        if (status === 'playing' || intendedStatusRef.current === 'playing') {
+          audio.play().catch(() => {});
+        }
+      }
+    }
+  }, [retry, currentTrack, accessToken, server, audio, status]);
 
   /* ════════════════════════════════════════════════════════════════ */
   /*  6. Render                                                      */
   /* ════════════════════════════════════════════════════════════════ */
 
   return (
-    <MusicPlayerBar
-      audioRef={audioRef as React.RefObject<HTMLAudioElement | null>}
-      onExpandToggle={handleExpandToggle}
-      isExpanded={isExpanded}
-      onLikeToggle={handleLikeToggle}
-      isLiked={isLiked}
-      onQueueToggle={handleQueueToggle}
-      queueCount={queue.length}
-    />
+    <>
+      {isMiniPlayer ? (
+        <MiniPlayer />
+      ) : (
+        <MusicPlayerBar
+          audioRef={audioRef as React.RefObject<HTMLAudioElement | null>}
+          onExpandToggle={handleExpandToggle}
+          isExpanded={isExpanded}
+          onLikeToggle={handleLikeToggle}
+          isLiked={isLiked}
+          onQueueToggle={handleQueueToggle}
+          queueCount={queue.length}
+          onLyricsToggle={handleLyricsToggle}
+          isLyricsVisible={isLyricsVisible}
+          onDeviceSelect={handleDeviceSelect}
+          onRetry={handleRetry}
+          errorMessage={errorMessage}
+        />
+      )}
+
+      <LyricsOverlay
+        isVisible={isLyricsVisible}
+        onClose={handleLyricsToggle}
+      />
+    </>
   );
 }

@@ -15,7 +15,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import type { JellyfinApiItem } from '@/lib/music-api';
 import { MusicCard, MusicCardGrid, MusicLoader } from '@/components/music/shared/MusicCard';
 import { SongRow, TracklistHeader, MusicEmptyState } from '@/components/music/shared/SongRow';
-import { MusicAppShell } from '@/components/music/layout/MusicAppShell';
+import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
 
@@ -103,7 +103,7 @@ export default function MusicSearchPage() {
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
       <div className="flex-1 overflow-y-auto music-scroll">
-        <MusicAppShell sidebarProps={{}} className="music-fade-in">
+        <MusicPageShell sidebarProps={{}} className="music-fade-in">
           <div className="mx-auto max-w-7xl space-y-8">
             {/* ================================================================ */}
             {/*  Search Input                                                    */}
@@ -318,7 +318,7 @@ export default function MusicSearchPage() {
               </>
             )}
           </div>
-        </MusicAppShell>
+        </MusicPageShell>
       </div>
       <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
         <MusicPlayerWrapper />

@@ -14,7 +14,7 @@ import {
   usePlayTracks,
 } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
-import { MusicAppShell } from '@/components/music/layout/MusicAppShell';
+import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { SongRow, TracklistHeader } from '@/components/music/shared/SongRow';
 import { MusicLoader } from '@/components/music/shared/MusicCard';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
@@ -75,9 +75,9 @@ export default function GenreDetailPage() {
 
   if (!accessToken || !server) {
     return (
-      <MusicAppShell sidebarProps={{ activeTab: 'albums' }}>
+      <MusicPageShell sidebarProps={{ activeTab: 'albums' }}>
         <MusicLoader />
-      </MusicAppShell>
+      </MusicPageShell>
     );
   }
 
@@ -85,9 +85,9 @@ export default function GenreDetailPage() {
 
   if (isLoading) {
     return (
-      <MusicAppShell sidebarProps={{ activeTab: 'albums' }}>
+      <MusicPageShell sidebarProps={{ activeTab: 'albums' }}>
         <MusicLoader />
-      </MusicAppShell>
+      </MusicPageShell>
     );
   }
 
@@ -102,7 +102,7 @@ export default function GenreDetailPage() {
   };
 
   return (
-    <MusicAppShell
+    <MusicPageShell
       sidebarProps={{ activeTab: 'albums' }}
       topBar={
         <Link
@@ -204,6 +204,6 @@ export default function GenreDetailPage() {
           )}
         </div>
       </div>
-    </MusicAppShell>
+    </MusicPageShell>
   );
 }

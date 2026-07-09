@@ -4,13 +4,20 @@ import { MediaService } from '../services/media.service';
 import type { Request, Response } from 'express';
 import * as fs from 'fs';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': 'http://localhost:3001',
+const corsOrigins = (process.env.CORS_ORIGINS ?? '').replace(/'/g, '');
+function resolveOrigin(reqOrigin: string | undefined): string {
+  if (corsOrigins === '*') return '*';
+  const configured = corsOrigins.split(',')[0]?.trim();
+  return configured || reqOrigin || 'http://localhost:3001';
+}
+
+const CORS_HEADERS = (req: Request) => ({
+  'Access-Control-Allow-Origin': resolveOrigin(req.headers.origin),
   'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Range, Authorization, Content-Type',
   'Cross-Origin-Resource-Policy': 'cross-origin',
-};
+});
 
 /**
  * Unguarded controller for media streaming.
@@ -49,7 +56,7 @@ export class MediaStreamController {
 
       const stream = fs.createReadStream(filePath, { start, end });
       res.writeHead(206, {
-        ...CORS_HEADERS,
+        ...CORS_HEADERS(req),
         'Content-Range': 'bytes ' + start + '-' + end + '/' + fileSize,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunkSize,
@@ -60,7 +67,7 @@ export class MediaStreamController {
     } else {
       const stream = fs.createReadStream(filePath);
       res.writeHead(200, {
-        ...CORS_HEADERS,
+        ...CORS_HEADERS(req),
         'Content-Type': mimeType,
         'Content-Disposition': 'inline; filename="' + filename + '"',
         'Accept-Ranges': 'bytes',

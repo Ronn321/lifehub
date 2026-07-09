@@ -6,17 +6,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DbModule = exports.closeDb = exports.getDb = exports.DB_TOKEN = exports.DbService = void 0;
+exports.DbModule = exports.DbService = exports.closeDb = exports.getDb = exports.DB_TOKEN = void 0;
 const common_1 = require("@nestjs/common");
 const db_service_js_1 = require("./db.service.js");
 const client_js_1 = require("./client.js");
-var db_service_js_2 = require("./db.service.js");
-Object.defineProperty(exports, "DbService", { enumerable: true, get: function () { return db_service_js_2.DbService; } });
 var client_js_2 = require("./client.js");
 Object.defineProperty(exports, "DB_TOKEN", { enumerable: true, get: function () { return client_js_2.DB_TOKEN; } });
 var client_js_3 = require("./client.js");
 Object.defineProperty(exports, "getDb", { enumerable: true, get: function () { return client_js_3.getDb; } });
 Object.defineProperty(exports, "closeDb", { enumerable: true, get: function () { return client_js_3.closeDb; } });
+var db_service_js_2 = require("./db.service.js");
+Object.defineProperty(exports, "DbService", { enumerable: true, get: function () { return db_service_js_2.DbService; } });
 // Factory-Provider, der DbService ohne @Injectable instantiiert.
 class DbServiceFactory {
     instance = null;

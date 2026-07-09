@@ -40,6 +40,13 @@ export class JellyfinRepository {
     await this.db.delete(jellyfinServers).where(eq(jellyfinServers.id, id));
   }
 
+  async touchServer(id: string): Promise<void> {
+    await this.db
+      .update(jellyfinServers)
+      .set({ updatedAt: new Date() })
+      .where(eq(jellyfinServers.id, id));
+  }
+
   // =================== Libraries ===================
   async findLibrariesByServer(serverId: string): Promise<JellyfinLibrary[]> {
     return this.db

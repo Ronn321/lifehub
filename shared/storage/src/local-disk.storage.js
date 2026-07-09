@@ -15,19 +15,20 @@ const promises_1 = require("node:stream/promises");
 const node_crypto_1 = require("node:crypto");
 /**
  * LocalDisk-Storage-Adapter.
- * Basis-Verzeichnis aus STORAGE_BASE_PATH (Default: ./storage).
+ * Basis-Verzeichnis aus STORAGE_BASE_PATH oder System-Settings.
  * In Production wird das NAS-Mount in diesen Pfad gemountet.
  */
 let LocalDiskStorage = LocalDiskStorage_1 = class LocalDiskStorage {
     logger = new common_1.Logger(LocalDiskStorage_1.name);
-    base = (0, node_path_1.resolve)(process.env.STORAGE_BASE_PATH ?? './storage');
     signingSecret = process.env.STORAGE_SIGNING_SECRET ?? 'dev-only-change-me';
+    getBase() {
+        return (0, node_path_1.resolve)(process.env.STORAGE_BASE_PATH ?? './storage');
+    }
     resolveKey(domain, key) {
-        // verhindert path-traversal: keine "..", keine absoluten Keys
         if (key.includes('..') || key.startsWith('/')) {
             throw new Error(`Invalid key: ${key}`);
         }
-        return (0, node_path_1.join)(this.base, domain, key);
+        return (0, node_path_1.join)(this.getBase(), domain, key);
     }
     async put(domain, key, data) {
         const full = this.resolveKey(domain, key);

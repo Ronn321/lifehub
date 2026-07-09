@@ -297,10 +297,10 @@ export class MediaService {
             width = metadata.width;
             height = metadata.height;
 
-            // Thumbnail as base64 data URL (Phase 1)
+            // Thumbnail as base64 data URL — maximum quality, Retina-ready
             const thumbBuf = await sharp(filePath)
-              .resize(200, null, { withoutEnlargement: true, fit: 'inside' })
-              .jpeg({ quality: 70 })
+              .resize(1920, null, { withoutEnlargement: true, fit: 'inside' })
+              .jpeg({ quality: 100 })
               .toBuffer();
             thumbnailPath = `data:image/jpeg;base64,${thumbBuf.toString('base64')}`;
           } catch {

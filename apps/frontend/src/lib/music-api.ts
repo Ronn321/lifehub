@@ -26,8 +26,46 @@ export interface JellyfinApiItem {
   RunTimeTicks?: number;
   IndexNumber?: number;
   ParentIndexNumber?: number;
-  UserData?: { PlayCount?: number; IsFavorite?: boolean; PlayCountTxt?: string };
+  UserData?: { PlayCount?: number; IsFavorite?: boolean; PlayCountTxt?: string; Rating?: number };
   ImageTags?: { Primary?: string };
+
+  // Extended metadata fields
+  Genres?: string[];
+  CommunityRating?: number;
+  DateCreated?: string;       // ISO date when item was added
+  PremiereDate?: string;     // ISO date for original release
+  MediaType?: string;
+  MediaSources?: Array<{
+    Id?: string;
+    Container?: string;
+    Bitrate?: number;
+    Path?: string;
+    Protocol?: string;
+  }>;
+  LastPlayedDate?: string;   // ISO date
+  Played?: boolean;
+  ProviderIds?: Record<string, string>;
+  Width?: number;
+  Height?: number;
+  Container?: string;
+}
+
+export interface JellyfinPlaylist {
+  Id: string;
+  Name: string;
+  Type: string;
+  Overview?: string;
+  Owner?: string;
+  UserId?: string;
+  RunTimeTicks?: number;
+  ProductionYear?: number;
+  ImageTags?: { Primary?: string };
+  ChildCount?: number;
+  IsFavorite?: boolean;
+  Genres?: string[];
+  Artists?: string[];
+  Items?: JellyfinApiItem[];
+  CumulativeRunTimeTicks?: number;
 }
 
 export interface JellyfinServer {
@@ -95,6 +133,24 @@ export function jellyfinItemToTrack(
   accessToken: string,
   serverId: string,
 ): MusicTrack {
+  // Determine quality from container/source info
+  const container = item.Container ?? item.MediaSources?.[0]?.Container;
+  const bitrate = item.MediaSources?.[0]?.Bitrate;
+  let quality: string | undefined;
+  if (container) {
+    const c = container.toLowerCase();
+    if (c.includes('flac')) quality = 'FLAC';
+    else if (c.includes('alac')) quality = 'ALAC';
+    else if (c.includes('aac')) quality = 'AAC';
+    else if (c.includes('mp3')) quality = 'MP3';
+    else if (c.includes('ogg') || c.includes('vorbis')) quality = 'OGG';
+    else if (c.includes('wav')) quality = 'WAV';
+    else if (c.includes('opus')) quality = 'Opus';
+    else if (c.includes('wma')) quality = 'WMA';
+    else if (c.includes('dsf') || c.includes('dff')) quality = 'DSD';
+    else quality = container.toUpperCase();
+  }
+
   return {
     id: item.Id,
     title: item.Name,
@@ -108,6 +164,17 @@ export function jellyfinItemToTrack(
     discNumber: item.ParentIndexNumber,
     coverUrl: getCoverUrl(accessToken, serverId, item.AlbumId ?? item.Id, 300, 300),
     streamUrl: getStreamUrl(accessToken, serverId, item.Id),
+
+    // Extended metadata
+    genre: item.Genres?.[0],
+    genreId: undefined,
+    year: item.ProductionYear,
+    rating: item.CommunityRating,
+    isFavorite: item.UserData?.IsFavorite ?? false,
+    quality,
+    bitrate,
+    dateAdded: item.DateCreated,
+    lastPlayed: item.LastPlayedDate,
   };
 }
 
@@ -253,6 +320,83 @@ export function useTopSongs(serverId?: string, artistId?: string | null, limit =
     enabled: !!serverId && !!artistId,
     staleTime: 60_000,
   });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Playlist Hooks                                                      */
+/* ------------------------------------------------------------------ */
+
+/** All playlists */
+export function usePlaylists(serverId?: string) {
+  return useQuery<JellyfinPlaylist[]>({
+    queryKey: ['music-playlists', serverId],
+    queryFn: () =>
+      api.get<JellyfinPlaylist[]>(`/jellyfin/servers/${serverId}/playlists`),
+    enabled: !!serverId,
+    staleTime: 60_000,
+  });
+}
+
+/** Single playlist */
+export function usePlaylist(serverId?: string, playlistId?: string | null) {
+  return useQuery<JellyfinPlaylist>({
+    queryKey: ['music-playlist', serverId, playlistId],
+    queryFn: () =>
+      api.get<JellyfinPlaylist>(`/jellyfin/servers/${serverId}/playlists/${playlistId}`),
+    enabled: !!serverId && !!playlistId,
+    staleTime: 60_000,
+  });
+}
+
+/** Playlist items (songs) */
+export function usePlaylistItems(serverId?: string, playlistId?: string | null) {
+  return useQuery<JellyfinApiItem[]>({
+    queryKey: ['music-playlist-items', serverId, playlistId],
+    queryFn: () =>
+      api.get<JellyfinApiItem[]>(`/jellyfin/servers/${serverId}/playlists/${playlistId}/items`),
+    enabled: !!serverId && !!playlistId,
+    staleTime: 60_000,
+  });
+}
+
+/** Get cover URL for a playlist (uses playlist's own image) */
+export function getPlaylistCoverUrl(
+  accessToken: string,
+  serverId: string,
+  playlistId: string | undefined,
+  width = 232,
+  height = 232,
+): string | undefined {
+  if (!playlistId || !accessToken) return undefined;
+  const baseUrl = getStreamBaseUrl();
+  return `${baseUrl}/api/v1/jellyfin/servers/${serverId}/items/${playlistId}/image?w=${width}&h=${height}&token=${encodeURIComponent(accessToken)}`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Favorites API Hooks                                                */
+/* ------------------------------------------------------------------ */
+
+/** Fetch favorite songs from Jellyfin */
+export function useFavoriteSongs(serverId?: string) {
+  return useQuery<JellyfinApiItem[]>({
+    queryKey: ['music-favorites', serverId],
+    queryFn: () =>
+      api.get<JellyfinApiItem[]>(`/jellyfin/servers/${serverId}/favorites`),
+    enabled: !!serverId,
+    staleTime: 60_000,
+  });
+}
+
+/** Toggle favorite status for a track on Jellyfin */
+export function useToggleFavorite() {
+  return useCallback(
+    async (serverId: string, externalId: string): Promise<{ isFavorite: boolean }> => {
+      return api.post<{ isFavorite: boolean }>(
+        `/jellyfin/servers/${serverId}/items/${externalId}/favorite`,
+      );
+    },
+    [],
+  );
 }
 
 /* ------------------------------------------------------------------ */

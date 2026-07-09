@@ -3,7 +3,13 @@ export type SourceType = 'manual' | 'url' | 'youtube' | 'pdf' | 'book';
 export interface Recipe {
   id: string;
   title: string;
+  titleEn: string | null;
   description: string | null;
+  dishId: string | null;
+  containsFlags: string[] | null;
+  attributes: string[] | null;
+  variantLabel: string | null;
+  effortLevel: string | null;
   sourceType: SourceType;
   sourceUrl: string | null;
   servings: number;

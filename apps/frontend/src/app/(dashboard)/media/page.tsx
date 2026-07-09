@@ -694,18 +694,14 @@ function AlbumDetailView({
                     key={file.id}
                     className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
                   >
-                    {/* Thumbnail */}
-                    {file.thumbnailPath ? (
+                    {/* Thumbnail — original via stream for 100% quality */}
+                    {isImage(file.mimeType) || isVideo(file.mimeType) ? (
                       <img
-                        src={file.thumbnailPath}
+                        src={getStreamUrl(file.id)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
                         loading="lazy"
                       />
-                    ) : isVideo(file.mimeType) ? (
-                      <div className="flex h-full items-center justify-center bg-bg-raised">
-                        <Video className="h-10 w-10 opacity-30" />
-                      </div>
                     ) : (
                       <div className="flex h-full items-center justify-center bg-bg-raised">
                         <FileText className="h-10 w-10 opacity-30" />
@@ -990,11 +986,11 @@ function GalleryTab() {
                 {groupKey === '0000-00' ? 'Ohne Datum' : formatDateGroup(groupFiles[0]?.takenAt)}
                 <span className="text-xs ml-2 text-fg-subtle">{groupFiles.length} Dateien</span>
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {groupFiles.map((file) => (
                   <div
                     key={file.id}
-                    className={`group relative aspect-square rounded-lg overflow-hidden border transition-colors cursor-pointer ${
+                    className={`group relative aspect-[4/3] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
                       selectMode && selectedIds.has(file.id)
                         ? 'border-brand-500 ring-2 ring-brand-500/30'
                         : selectMode
@@ -1011,18 +1007,15 @@ function GalleryTab() {
                         </div>
                       </div>
                     )}
-                    {/* Thumbnail */}
-                    {file.thumbnailPath ? (
+                    {/* Thumbnail — original via stream for 100% quality */}
+                    {isImage(file.mimeType) || isVideo(file.mimeType) ? (
                       <img
-                        src={file.thumbnailPath}
+                        src={getStreamUrl(file.id)}
                         alt={file.filename}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain bg-bg-raised"
                         loading="lazy"
+                        style={{ imageRendering: 'crisp-edges' }}
                       />
-                    ) : isVideo(file.mimeType) ? (
-                      <div className="flex h-full items-center justify-center bg-bg-raised">
-                        <Video className="h-10 w-10 opacity-30" />
-                      </div>
                     ) : (
                       <div className="flex h-full items-center justify-center bg-bg-raised">
                         <FileText className="h-10 w-10 opacity-30" />
@@ -1149,6 +1142,14 @@ function AddSelectedToAlbum({ mediaIds, onClose }: { mediaIds: string[]; onClose
 /*  Lightbox Component                                                */
 /* ------------------------------------------------------------------ */
 
+function getStreamUrl(fileId: string): string {
+  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  const token = typeof window !== 'undefined'
+    ? (JSON.parse(localStorage.getItem('lifehub-auth') || '{}')?.state?.accessToken ?? '')
+    : '';
+  return `http://${host}:3007/api/v1/media/files/${fileId}/stream?token=${token}`;
+}
+
 function Lightbox({
   file,
   onClose,
@@ -1201,32 +1202,33 @@ function Lightbox({
 
       {/* Image / Video */}
       <div
-        className="relative max-h-[90vh] max-w-[90vw]"
+        className="relative max-h-[90vh] max-w-[90vw] group"
         onClick={(e) => e.stopPropagation()}
       >
         {isVideo(file.mimeType) ? (
           <video
-            src={`${typeof window !== 'undefined' ? `http://${window.location.hostname}:3007` : 'http://localhost:3007'}/api/v1/media/files/${file.id}/stream?token=${typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('lifehub-auth') || '{}')?.state?.accessToken ?? '') : ''}`}
+            src={getStreamUrl(file.id)}
             controls
             autoPlay
             className="max-h-[85vh] max-w-[85vw] rounded-lg"
           >
             Your browser does not support the video tag.
           </video>
-        ) : file.thumbnailPath ? (
+        ) : (
           <img
-            src={file.thumbnailPath}
+            src={getStreamUrl(file.id)}
             alt={file.filename}
             className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg"
           />
-        ) : (
-          <div className="flex h-64 w-64 items-center justify-center rounded-lg bg-bg-surface">
-            <FileText className="h-16 w-16 opacity-40" />
-          </div>
         )}
 
-        {/* Info bar */}
-        <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-gradient-to-t from-black/80 to-transparent p-4">
+        {/* Info bar — opaque on hover for video, always visible for images */}
+        <div className={cn(
+          'absolute left-0 right-0 rounded-b-lg bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity',
+          isVideo(file.mimeType)
+            ? 'bottom-0 opacity-0 group-hover:opacity-100 pointer-events-none'
+            : 'bottom-0',
+        )}>
           <div className="flex items-center justify-between">
             <div className="text-sm text-white">
               <p className="font-medium truncate">{file.filename}</p>
@@ -1249,7 +1251,7 @@ function Lightbox({
             <button
               onClick={(e) => { e.stopPropagation(); onFavoriteToggle(); }}
               className={cn(
-                'rounded-full p-2 transition-colors',
+                'rounded-full p-2 transition-colors pointer-events-auto',
                 file.isFavorite ? 'text-red-400' : 'text-white/70 hover:text-red-300',
               )}
             >

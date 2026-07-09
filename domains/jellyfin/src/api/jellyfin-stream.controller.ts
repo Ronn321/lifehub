@@ -223,6 +223,7 @@ export class JellyfinStreamController {
     @Param('externalId') externalId: string,
     @Query('w') width: string,
     @Query('h') height: string,
+    @Query('type') imageType: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -236,6 +237,7 @@ export class JellyfinStreamController {
       const result = await this.jellyfin.proxyImage(
         sub, serverId, externalId,
         Number(width) || 300, Number(height) || 300,
+        imageType || 'Primary',
       );
       res.status(result.statusCode).set({
         ...result.headers as any,

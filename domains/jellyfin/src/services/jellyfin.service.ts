@@ -118,7 +118,14 @@ export class JellyfinService {
   }
 
   // =================== Items ===================
-  async listItems(ownerId: string, libraryId?: string, libraryType?: string): Promise<JellyfinItem[]> {
+  async listItems(ownerId: string, libraryId?: string, libraryType?: string, refresh?: boolean): Promise<JellyfinItem[] | any[]> {
+    // If refresh=true, fetch from Jellyfin directly with rich metadata
+    if (refresh && libraryId) {
+      const library = await this.repo.findLibraryById(libraryId);
+      if (!library) throw new NotFoundException('Bibliothek nicht gefunden');
+      const server = await this.findServerOrFallback(library.serverId, ownerId);
+      return this.browseJellyfinLibrary(server, library.externalId!, ownerId, library.type);
+    }
     // If libraryId is given, filter by library directly
     if (libraryId) {
       const items = await this.repo.findItemsByLibrary(libraryId);
@@ -492,12 +499,13 @@ export class JellyfinService {
     externalId: string,
     width: number,
     height: number,
+    imageType: string = 'Primary',
   ) {
     const server = await this.findServerOrFallback(serverId, ownerId);
 
     const baseUrl = server.url.replace(/\/$/, '');
     const userId = await this.getJellyfinUserId(server);
-    const imageUrl = `${baseUrl}/Items/${externalId}/Images/Primary?width=${width}&height=${height}&quality=90&UserId=${userId}`;
+    const imageUrl = `${baseUrl}/Items/${externalId}/Images/${imageType}?width=${width}&height=${height}&quality=90&UserId=${userId}`;
     const res = await fetch(imageUrl, {
       headers: { 'Authorization': `MediaBrowser Token=${server.apiKey}` },
     });
@@ -693,6 +701,103 @@ export class JellyfinService {
       `/Users/${userId}/Items?ArtistIds=${artistId}&IncludeItemTypes=Audio&Recursive=true&SortBy=PlayCount&SortOrder=Descending&Limit=${limit}&Fields=AudioInfo,PrimaryImageAspectRatio`,
     );
     return data.Items ?? [];
+  }
+
+  // =================== Media v0.3 API Extensions (Netflix-style Movies & Series) ===================
+
+  async getItemDetail(ownerId: string, serverId: string, externalId: string): Promise<any> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    return this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items/${externalId}?Fields=Path,Overview,ProductionYear,Genres,People,Studios,ProviderIds,CommunityRating,VoteCount,RunTimeTicks,OfficialRating,ProductionLocations,Tags,MediaSources,MediaStreams,ParentId,DateCreated,Chapters,CriticRating`,
+    );
+  }
+
+  async getContinueWatching(ownerId: string, serverId: string, limit = 20): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?ResumeItem=resume&Limit=${limit}&Recursive=true&Fields=PrimaryImageAspectRatio,Overview,Path,ProductionYear,RunTimeTicks&ImageTypeLimit=1&IncludeItemTypes=Movie,Series,Episode`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getSimilarItems(ownerId: string, serverId: string, externalId: string, includeTypes = 'Movie,Series', limit = 12): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Items/${externalId}/Similar?UserId=${await this.getJellyfinUserId(server)}&Limit=${limit}&Fields=PrimaryImageAspectRatio,Overview,ProductionYear,RunTimeTicks&IncludeItemTypes=${includeTypes}`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getItemPeople(ownerId: string, serverId: string, externalId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Items/${externalId}/People`,
+    );
+    return data.Items ?? [];
+  }
+
+  async searchMedia(ownerId: string, serverId: string, query: string, limit = 30): Promise<{ Movies: any[]; Series: any[]; Episodes: any[]; Collections: any[] }> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const searchTerm = encodeURIComponent(query);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?searchTerm=${searchTerm}&Recursive=true&IncludeItemTypes=Movie,Series,Episode,BoxSet&Fields=PrimaryImageAspectRatio,Overview,ProductionYear,RunTimeTicks&Limit=${limit}`,
+    );
+    const items: any[] = data.Items ?? [];
+    return {
+      Movies: items.filter((i) => i.Type === 'Movie'),
+      Series: items.filter((i) => i.Type === 'Series'),
+      Episodes: items.filter((i) => i.Type === 'Episode'),
+      Collections: items.filter((i) => i.Type === 'BoxSet'),
+    };
+  }
+
+  // =================== Library Browse (live from Jellyfin with rich fields) ===================
+
+  private async browseJellyfinLibrary(server: JellyfinServer, libraryExternalId: string, ownerId: string, libraryType?: string | null): Promise<any[]> {
+    const userId = await this.getJellyfinUserId(server);
+    const includeTypes = libraryType === 'movies' ? 'Movie' : libraryType === 'tvshows' ? 'Series' : 'Movie,Series';
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?ParentId=${libraryExternalId}&Recursive=true&IncludeItemTypes=${includeTypes}&Fields=PrimaryImageAspectRatio,Overview,ProductionYear,Genres,Path,RunTimeTicks,CommunityRating,OfficialRating&SortBy=SortName&SortOrder=Ascending`,
+    );
+    return data.Items ?? [];
+  }
+
+  async toggleFavorite(ownerId: string, serverId: string, externalId: string): Promise<{ isFavorite: boolean }> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
+
+    // Check current favorite state
+    const currentItem = await this.fetchFromJellyfin(server, `/Users/${userId}/Items/${externalId}?Fields=UserData`);
+    const isCurrentlyFavorite = currentItem?.UserData?.IsFavorite ?? false;
+
+    if (isCurrentlyFavorite) {
+      // Remove favorite
+      const res = await fetch(`${baseUrl}/Users/${userId}/FavoriteItems/${externalId}`, {
+        method: 'DELETE',
+        headers: authHeaders,
+      });
+      if (!res.ok) throw new Error(`Favorite removal failed: ${res.status}`);
+      return { isFavorite: false };
+    } else {
+      // Add favorite
+      const res = await fetch(`${baseUrl}/Users/${userId}/FavoriteItems/${externalId}`, {
+        method: 'POST',
+        headers: authHeaders,
+      });
+      if (!res.ok) throw new Error(`Favorite add failed: ${res.status}`);
+      return { isFavorite: true };
+    }
   }
 
   private cachedUserId: string | null = null;

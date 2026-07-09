@@ -80,10 +80,10 @@ POST /indexes/music/search
 
 ```json
 {
-  "searchableAttributes": ["title", "artist", "album", "composer", "tags"],
-  "rankingRules": ["words", "typo", "proximity", "attribute", "sort", "exactness"],
-  "filterableAttributes": ["genre", "year", "artist", "album", "composer", "favorite", "tag"],
-  "sortableAttributes": ["title", "artist", "album", "playCount", "dateAdded"]
+ "searchableAttributes": ["title", "artist", "album", "composer", "tags"],
+ "rankingRules": ["words", "typo", "proximity", "attribute", "sort", "exactness"],
+ "filterableAttributes": ["genre", "year", "artist", "album", "composer", "favorite", "tag"],
+ "sortableAttributes": ["title", "artist", "album", "playCount", "dateAdded"]
 }
 ```
 
@@ -130,14 +130,14 @@ Ein "Alle anzeigen"-Link öffnet die vollständige Liste pro Kategorie.
 
 ## Ergebnis-Limits
 
-| Kategorie | Maximal sichtbar | "Alle anzeigen"-Link |
-|-----------|-----------------|---------------------|
-| Top Ergebnis | 1 | – |
-| Songs | 4 | ✓ |
-| Künstler | 4 | ✓ |
-| Alben | 4 | ✓ |
-| Playlists | 4 | ✓ |
-| Genres | 4 | ✓ |
+Kategorie | Maximal sichtbar | "Alle anzeigen"-Link |
+-----------|-----------------|---------------------|
+Top Ergebnis | 1 | – |
+Songs | 4 | ✓ |
+Künstler | 4 | ✓ |
+Alben | 4 | ✓ |
+Playlists | 4 | ✓ |
+Genres | 4 | ✓ |
 
 ---
 

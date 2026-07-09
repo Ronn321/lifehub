@@ -186,7 +186,7 @@ app/(dashboard)/jellyfin/music/music-theme.css  ← Spotify CSS Custom Propertie
 
 ---
 
-## V190rification
+## Verification
 
 ```bash
 pnpm --filter @lifehub/frontend typecheck   # ✅ 0 errors

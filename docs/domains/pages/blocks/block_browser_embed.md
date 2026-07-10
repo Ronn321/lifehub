@@ -22,15 +22,21 @@ Users may pin useful websites directly into Pages.
 {
     "type": "browser_embed",
     "content": {
-        "url": "",
-        "title": ""
+        "startUrl": "",
+        "title": "",
+        "sessionId": null
     },
-    "props": {
-        "height": 700,
-        "allow_navigation": true
+    "layout": {
+        "height": 600,
+        "minHeight": 300,
+        "resizable": true
     }
 }
 ```
+
+> **`sessionId`** wird beim ersten Render automatisch erstellt via `POST /api/v1/browser/:blockId/session` und im Block-Content gespeichert. Jeder BrowserBlock hat genau eine Session mit isolierten Tabs, History, Cookies, Bookmarks und Settings.
+
+> Vollständige Architektur: `docs/01_Architecture/BROWSER_BLOCK_ARCHITECTURE.md`
 
 ---
 

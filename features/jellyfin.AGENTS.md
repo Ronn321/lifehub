@@ -11,14 +11,17 @@ Parent: `../AGENTS.md` → `../../AGENTS.md`
 
 Jellyfin-Integration als primäre Mediathek-Backend (Filme, Serien, Doku, Musik). Netflix-/Plex-/Jellyfin-ähnliche UI: Poster, Staffeln, Folgen, Watchstate-Sync, Watchlist, Trailer. **Phase 5.**
 
+Musik-Subdomain (v0.3 aktiv): Spotify-inspirierter Desktop-Musikplayer mit Jellyfin als Backend. Eigene 13-Datei-Spezifikation unter `docs/domains/jellyfin/music/`. Siehe `docs/reviews/music_domain_review.md` für aktuellen Review-Status.
+
 ## 2. Scope
 
 - Schema `jellyfin`: `jellyfin_servers`, `jellyfin_libraries`, `jellyfin_items`, `jellyfin_watchstate`
-- Jellyfin-API-Adapter (`/Users`, `/Items`, `/Sessions`)
+- Jellyfin-API-Adapter (`/Users`, `/Items`, `/Sessions`, `/Audio`, `/Playlists`)
 - Library-Sync (initial full, danach inkrementell via `LastModified`)
 - Watchstate bidirektional (User pausiert in Jellyfin → LifeHub sieht Resume-Marker)
 - Trailer via YouTube-Embed (gleiche Sanitisierung wie `projects`)
 - Fallback: direkter NAS-Scan (Plex-kompatible Struktur), falls kein Jellyfin
+- **Musik-Subdomain:** Audio-Streaming (`/Audio/{id}/stream`), Playback-Reporting (`/Sessions/Playing`), Playlisten, Genres, Favoriten, Search — eigene Spec unter `docs/domains/jellyfin/music/`
 
 ## 3. Dependencies
 

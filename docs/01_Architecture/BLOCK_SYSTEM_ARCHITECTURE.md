@@ -79,13 +79,24 @@ Jeder Block besitzt:
 
 ---
 
-## 4.3 Future / Plugin Blocks
+## 4.3 Advanced / Widget Blocks
 
+- browser_embed
 - research_workspace
+- search_block
+
+## 4.4 Future / Plugin Blocks
+
 - ai_summary
 - knowledge_graph
 - automation
 - external_api_view
+- downloads_widget
+- annotation_layer
+
+> **Hinweis:** `browser_embed` ist ein eigenständiger Block-Typ mit eigener Session,
+> Tabs, History, Cookies, Bookmarks und Settings pro Block.
+> Siehe `BROWSER_BLOCK_ARCHITECTURE.md` für die vollständige Spezifikation.
 
 ---
 
@@ -169,10 +180,13 @@ Block = Content Unit
 
 ---
 
-# 13. Nicht Bestandteil
+# 13. Nicht Bestandteil des Block-System-Kerns
 
-- Pages Domain
-- Research Workspace Logic
-- Browser Implementation
+- Pages Domain (siehe `PAGE_ARCHITECTURE.md`)
+- Research Workspace Logic (siehe `RESEARCH_WORKSPACE_ARCHITECTURE.md`)
 - Storage Layer
 - Templates
+
+> **Browser Implementation:** Der Browser (`browser_embed`) ist ein vollwertiger
+> Block-Typ und Teil des Block-Systems. Die detaillierte Architektur liegt in
+> `BROWSER_BLOCK_ARCHITECTURE.md`.

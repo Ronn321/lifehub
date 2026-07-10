@@ -15,7 +15,12 @@ A Page is a container that can hold:
 - Text content
 - Media
 - Structured data (tables/databases)
-- Embedded systems (maps, browser, jellyfin)
+- Embedded systems (maps, browser_embed, jellyfin)
+
+> **Browser:** Der Browser ist ein eigenständiger Block-Typ (`browser_embed`) mit
+> vollständiger Session-Isolation. Architektur-Spec:
+> `docs/01_Architecture/BROWSER_BLOCK_ARCHITECTURE.md`.
+> Review: `docs/reviews/browser_block_review.md`.
 - Nested pages (hierarchy)
 
 Each Page is composed of Blocks.

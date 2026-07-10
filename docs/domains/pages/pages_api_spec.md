@@ -119,7 +119,51 @@ Returns:
 
 ---
 
+## Browser & Research (implemented, not yet spec'd)
+
+### Research Sessions
+```
+POST   /pages/:id/research-sessions
+GET    /pages/:id/research-sessions
+PUT    /pages/research-sessions/:sessionId
+DELETE /pages/research-sessions/:sessionId
+```
+
+### Research Sources
+```
+POST   /pages/research-sessions/:sessionId/sources
+GET    /pages/research-sessions/:sessionId/sources
+DELETE /pages/research-sources/:sourceId
+PUT    /pages/research-sources/:sourceId/pin
+```
+
+### Browser Tabs (current — bound to research sessions)
+```
+GET    /pages/research-sessions/:sessionId/tabs
+POST   /pages/research-sessions/:sessionId/tabs
+PUT    /pages/browser-tabs/:tabId
+DELETE /pages/browser-tabs/:tabId
+POST   /pages/research-sessions/:sessionId/tabs/:tabId/activate
+```
+
+### Browser Proxy & Rendering (⚠️ currently without auth guards)
+```
+GET    /browser/proxy?url=xxx        (Chrome/Puppeteer render)
+POST   /browser/proxy?url=xxx
+GET    /browser/screenshot?url=xxx
+GET    /proxy?url=xxx                (direct fetch, no Chrome)
+POST   /proxy?url=xxx
+```
+
+> **Note:** These endpoints exist in code but are not yet documented as
+> production-ready. See `BROWSER_BLOCK_ARCHITECTURE.md` for the target API spec
+> and `docs/reviews/browser_block_review.md` for the full review.
+> The proxy/browser endpoints currently LACK authentication — see Review §K-01.
+
+---
+
 ## Notes
 - All endpoints require authentication
 - All modifications are audited
+- ⚠️ Browser/Proxy endpoints currently lack auth (see Review)
 - All responses include permission metadata

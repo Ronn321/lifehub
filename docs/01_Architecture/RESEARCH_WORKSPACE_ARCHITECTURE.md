@@ -46,15 +46,20 @@ Page → Blocks → ResearchWorkspaceBlock
 
 Enthält:
 
-- offene Tabs
-- Tab-Reihenfolge
+- Quellen (Webseiten, Medien, Dokumente, Repositories)
+- Quellen-Reihenfolge
 - aktive Quelle
 - Suchhistorie
-- angepinnte Seiten
+- angepinnte Quellen
 - Notizen
-- Downloads
+- Collections (Gruppierte Quellen)
 - Tags
 - Verknüpfungen zu Pages
+- **Browser-Referenz** (optional: ein BrowserBlock auf derselben Page)
+
+> **Hinweis:** Browser-Tabs, History, Cookies und Bookmarks werden NICHT in der
+> Research Session gespeichert, sondern in der Browser-Session des referenzierten
+> BrowserBlocks. Siehe `BROWSER_BLOCK_ARCHITECTURE.md`.
 
 ---
 
@@ -113,11 +118,13 @@ Gruppierte Wissenseinheiten:
 
 # 8. Browser Integration
 
-Der Browser ist nur eine UI-Komponente.
+Der Research Workspace kann den Browser nutzen, **referenziert aber den eigenständigen BrowserBlock** (`browser_embed`), anstatt eine eigene Browser-Implementierung zu enthalten.
 
-Er ist nicht Teil der Architektur.
+Der Browser ist ein **vollwertiger Block-Typ** mit eigener Architektur.
 
-Er ist austauschbar.
+Siehe: `BROWSER_BLOCK_ARCHITECTURE.md`
+
+Der Research Workspace nutzt die wiederverwendbare `BrowserCore`-Komponente und teilt keine Session mit anderen Browser-Blöcken.
 
 ---
 
@@ -182,10 +189,13 @@ Page → ResearchWorkspaceBlock → Sessions → Sources → Notes → Collectio
 
 Nicht:
 
-- Webbrowser
 - Suchmaschine
 - Medienserver
 - Datei-Manager
+
+> **Korrektur:** Der Research Workspace kann einen Browser referenzieren
+> (via `browser_embed` Block). Der Browser selbst ist aber ein eigenständiger
+> Block-Typ — siehe `BROWSER_BLOCK_ARCHITECTURE.md`.
 
 Nur: strukturierte Rechercheumgebung
 

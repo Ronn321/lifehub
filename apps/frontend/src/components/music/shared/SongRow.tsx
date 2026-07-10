@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useRef, useCallback } from 'react';
 import { Play, Pause, Heart, MoreHorizontal, Clock } from 'lucide-react';
 import { MusicImage } from './MusicCard';
 import { formatTime } from '@/lib/music-api';
@@ -16,6 +16,8 @@ interface SongRowProps {
   track: MusicTrack;
   isPlaying: boolean;
   onPlay: () => void;
+  isSelected?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
   coverUrl?: string;
   showAlbum?: boolean;
   showCover?: boolean;
@@ -26,21 +28,53 @@ function SongRowImpl({
   track,
   isPlaying,
   onPlay,
+  isSelected = false,
+  onClick,
   coverUrl,
   showAlbum = true,
   showCover = true,
 }: SongRowProps) {
   const [hovered, setHovered] = useState(false);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Delay single-click action to distinguish from double-click
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
+      clickTimerRef.current = setTimeout(() => {
+        onClick?.(e);
+        clickTimerRef.current = null;
+      }, 200);
+    },
+    [onClick],
+  );
+
+  const handleDoubleClick = useCallback(() => {
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+    onPlay();
+  }, [onPlay]);
 
   return (
     <div
       role="row"
       data-testid={`song-row-${track.id}`}
-      className="group flex items-center gap-3 rounded-md px-4 transition-colors hover:bg-[var(--music-bg-hover)]"
-      style={{ height: '56px' }}
+      className={
+        'group flex items-center gap-3 rounded-md px-4 transition-colors hover:bg-[var(--music-bg-hover)] ' +
+        (isSelected ? 'bg-[var(--music-bg-hover)]' : '')
+      }
+      style={{
+        height: '56px',
+        borderLeft: isSelected ? '3px solid var(--music-accent)' : '3px solid transparent',
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onDoubleClick={onPlay}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Index / Play button */}
       <div className="flex w-8 shrink-0 items-center justify-center">

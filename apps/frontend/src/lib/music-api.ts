@@ -400,6 +400,50 @@ export function useToggleFavorite() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Playback Reporting Hooks                                           */
+/* ------------------------------------------------------------------ */
+
+/** Report playback start to Jellyfin */
+export function useReportPlaybackStart() {
+  return useCallback(
+    async (serverId: string, itemId: string, positionTicks: number): Promise<void> => {
+      await api.post(`/jellyfin/servers/${serverId}/sessions/playing`, {
+        itemId,
+        positionTicks,
+      });
+    },
+    [],
+  );
+}
+
+/** Report playback progress to Jellyfin */
+export function useReportPlaybackProgress() {
+  return useCallback(
+    async (serverId: string, itemId: string, positionTicks: number, isPaused: boolean): Promise<void> => {
+      await api.post(`/jellyfin/servers/${serverId}/sessions/progress`, {
+        itemId,
+        positionTicks,
+        isPaused,
+      });
+    },
+    [],
+  );
+}
+
+/** Report playback stop to Jellyfin */
+export function useReportPlaybackStop() {
+  return useCallback(
+    async (serverId: string, itemId: string, positionTicks: number): Promise<void> => {
+      await api.post(`/jellyfin/servers/${serverId}/sessions/stopped`, {
+        itemId,
+        positionTicks,
+      });
+    },
+    [],
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Play helper                                                        */
 /* ------------------------------------------------------------------ */
 

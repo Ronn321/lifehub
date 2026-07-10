@@ -63,7 +63,7 @@ export function MusicCard({
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col gap-2 rounded-lg p-3 text-left transition-all hover:bg-[var(--music-bg-card)] w-full"
+      className="group flex flex-col gap-2 rounded-lg p-3 text-left transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-[var(--music-bg-card)] w-full"
       data-testid="music-card"
     >
       <div className="relative aspect-square w-full overflow-hidden">
@@ -102,7 +102,7 @@ export function MusicCard({
 export function MusicCardGrid({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="grid gap-2"
+      className="grid gap-4"
       style={{
         gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
       }}
@@ -195,7 +195,7 @@ export function MusicSection({
 export function MusicSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div
-      className="grid gap-2"
+      className="grid gap-4"
       style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}
     >
       {Array.from({ length: count }).map((_, i) => (

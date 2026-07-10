@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, Clock, Mic2, Disc3, ListMusic, Shuffle } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
@@ -25,48 +25,56 @@ function getGreeting(): string {
   return 'Guten Abend';
 }
 
+/* ------------------------------------------------------------------ */
+/*  Quick Access — horizontal cover cards                              */
+/* ------------------------------------------------------------------ */
+
 interface QuickAccessCardData {
   label: string;
+  meta: string;
   icon: React.ReactNode;
-  color: string;
   onClick: () => void;
 }
 
-function QuickAccessCard({ label, icon, color, onClick }: QuickAccessCardData) {
+function QuickAccessCard({ label, meta, icon, onClick }: QuickAccessCardData) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-4 overflow-hidden rounded-lg p-4 transition-all hover:brightness-110 active:brightness-90"
-      style={{ background: color }}
+      className="flex items-center gap-3 rounded-lg p-3 transition-all hover:bg-[var(--music-bg-hover)]"
+      style={{ background: 'var(--music-bg-elevated)', width: '300px' }}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/20">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[var(--music-bg-card)]">
         {icon}
       </div>
-      <span className="text-sm font-bold leading-tight text-white">{label}</span>
+      <div className="min-w-0 text-left">
+        <p className="truncate text-sm font-bold text-[var(--music-text-primary)]">{label}</p>
+        <p className="truncate text-xs text-[var(--music-text-secondary)]">{meta}</p>
+      </div>
     </button>
   );
 }
 
 const QUICK_ACCESS_ICONS: Record<string, React.ReactNode> = {
-  Lieblingssongs: <Heart className="h-6 w-6 text-white" />,
-  'Zuletzt gehört': <Clock className="h-6 w-6 text-white" />,
-  Künstler: <Mic2 className="h-6 w-6 text-white" />,
-  Alben: <Disc3 className="h-6 w-6 text-white" />,
-  Playlists: <ListMusic className="h-6 w-6 text-white" />,
-  Zufallswiedergabe: <Shuffle className="h-6 w-6 text-white" />,
+  Lieblingssongs: <Heart className="h-6 w-6 text-[var(--music-accent)]" />,
+  'Zuletzt gehört': <Clock className="h-6 w-6 text-[var(--music-accent)]" />,
+  Künstler: <Mic2 className="h-6 w-6 text-[var(--music-accent)]" />,
+  Alben: <Disc3 className="h-6 w-6 text-[var(--music-accent)]" />,
+  Genres: <ListMusic className="h-6 w-6 text-[var(--music-accent)]" />,
+  Zufallswiedergabe: <Shuffle className="h-6 w-6 text-[var(--music-accent)]" />,
 };
-const QUICK_ACCESS_COLORS: Record<string, string> = {
-  Lieblingssongs: '#e11d48', 'Zuletzt gehört': '#059669', Künstler: '#8b5cf6',
-  Alben: '#d97706', Playlists: '#2563eb', Zufallswiedergabe: '#7c3aed',
-};
+
 const QUICK_ACCESS_CARDS = [
-  { label: 'Lieblingssongs', icon: QUICK_ACCESS_ICONS['Lieblingssongs'], color: QUICK_ACCESS_COLORS['Lieblingssongs'] },
-  { label: 'Zuletzt gehört', icon: QUICK_ACCESS_ICONS['Zuletzt gehört'], color: QUICK_ACCESS_COLORS['Zuletzt gehört'] },
-  { label: 'Künstler', icon: QUICK_ACCESS_ICONS['Künstler'], color: QUICK_ACCESS_COLORS['Künstler'] },
-  { label: 'Alben', icon: QUICK_ACCESS_ICONS['Alben'], color: QUICK_ACCESS_COLORS['Alben'] },
-  { label: 'Playlists', icon: QUICK_ACCESS_ICONS['Playlists'], color: QUICK_ACCESS_COLORS['Playlists'] },
-  { label: 'Zufallswiedergabe', icon: QUICK_ACCESS_ICONS['Zufallswiedergabe'], color: QUICK_ACCESS_COLORS['Zufallswiedergabe'] },
+  { label: 'Lieblingssongs', icon: QUICK_ACCESS_ICONS['Lieblingssongs'], meta: 'Deine Favoriten' },
+  { label: 'Zuletzt gehört', icon: QUICK_ACCESS_ICONS['Zuletzt gehört'], meta: 'Kürzlich gehört' },
+  { label: 'Künstler', icon: QUICK_ACCESS_ICONS['Künstler'], meta: 'Alle Künstler' },
+  { label: 'Alben', icon: QUICK_ACCESS_ICONS['Alben'], meta: 'Alle Alben' },
+  { label: 'Genres', icon: QUICK_ACCESS_ICONS['Genres'], meta: 'Alle Genres' },
+  { label: 'Zufallswiedergabe', icon: QUICK_ACCESS_ICONS['Zufallswiedergabe'], meta: 'Überraschung' },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
 
 export default function MusicPage() {
   const router = useRouter();
@@ -76,6 +84,7 @@ export default function MusicPage() {
   const { data: recentTracks, isLoading: recentLoading, error: recentError } = useRecentlyPlayed(server?.id, 12);
   const { data: newAlbums, isLoading: albumsLoading, error: albumsError } = useRecentAlbums(server?.id, 12);
   const { data: artists, isLoading: artistsLoading, error: artistsError } = useArtists(server?.id);
+  const { data: favoriteAlbums, isLoading: favAlbumsLoading, error: favAlbumsError } = useRecentAlbums(server?.id, 12);
   const playTracks = usePlayTracks();
   const displayName = user?.displayName ?? 'Robert';
   const greeting = getGreeting();
@@ -89,13 +98,13 @@ export default function MusicPage() {
   };
 
   const buildCards = () =>
-    (QUICK_ACCESS_CARDS as any[]).map((card) => {
+    QUICK_ACCESS_CARDS.map((card) => {
       const onClickMap: Record<string, () => void> = {
         Lieblingssongs: () => router.push('/jellyfin/music/tracks'),
         'Zuletzt gehört': () => scrollToSection('section-recent'),
         Künstler: () => router.push('/jellyfin/music/artists'),
         Alben: () => router.push('/jellyfin/music/albums'),
-        Playlists: () => router.push('/jellyfin/music/playlists'),
+        Genres: () => router.push('/jellyfin/music/genres'),
         Zufallswiedergabe: () => {
           if (server && recentTracks && recentTracks.length > 0) {
             const randomIdx = Math.floor(Math.random() * recentTracks.length);
@@ -114,11 +123,19 @@ export default function MusicPage() {
             <h1 className="text-[28px] font-bold leading-tight" style={{ color: 'var(--music-text-primary)' }}>
             {greeting}, {displayName}
           </h1>
-          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            {buildCards().map((card) => (
-              <QuickAccessCard key={card.label} {...card} />
-            ))}
-          </div>
+
+          {/* Quick Access — horizontal scroll row */}
+          <MusicSection title="Schnellzugriff">
+            <MusicScrollRow>
+              {buildCards().map((card) => (
+                <div key={card.label} className="w-[300px] shrink-0">
+                  <QuickAccessCard {...card} />
+                </div>
+              ))}
+            </MusicScrollRow>
+          </MusicSection>
+
+          {/* Zuletzt gehört */}
           <section id="section-recent">
             <MusicSection title="Zuletzt gehört" showAllHref="/jellyfin/music/tracks">
               {recentLoading ? <MusicSkeleton count={6} />
@@ -134,6 +151,8 @@ export default function MusicPage() {
                 ))}</MusicScrollRow>}
             </MusicSection>
           </section>
+
+          {/* Neu in deiner Bibliothek */}
           <section>
             <MusicSection title="Neu in deiner Bibliothek" showAllHref="/jellyfin/music/albums">
               {albumsLoading ? <MusicSkeleton count={6} />
@@ -148,6 +167,40 @@ export default function MusicPage() {
                 ))}</MusicScrollRow>}
             </MusicSection>
           </section>
+
+          {/* Lieblingsalben */}
+          <section>
+            <MusicSection title="Lieblingsalben" showAllHref="/jellyfin/music/albums">
+              {favAlbumsLoading ? <MusicSkeleton count={6} />
+              : favAlbumsError ? <MusicEmptyState title="Fehler beim Laden" description="Die Alben konnten nicht geladen werden." />
+              : !favoriteAlbums || favoriteAlbums.length === 0 ? <MusicEmptyState title="Keine Alben" description="Sobald deine Mediathek Alben enthält, erscheinen sie hier." />
+              : <MusicScrollRow>{favoriteAlbums.map((item: any) => (
+                  <div key={item.Id} className="w-44 shrink-0">
+                    <MusicCard title={item.Name} subtitle={item.AlbumArtist}
+                      coverUrl={getCoverUrl(accessToken!, server!.id, item.Id, 160, 160)}
+                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
+                  </div>
+                ))}</MusicScrollRow>}
+            </MusicSection>
+          </section>
+
+          {/* Entdecken */}
+          <section>
+            <MusicSection title="Entdecken" showAllHref="/jellyfin/music/albums">
+              {favAlbumsLoading ? <MusicSkeleton count={6} />
+              : favAlbumsError ? <MusicEmptyState title="Fehler beim Laden" description="Die Alben konnten nicht geladen werden." />
+              : !favoriteAlbums || favoriteAlbums.length === 0 ? <MusicEmptyState title="Nichts zu entdecken" description="Sobald deine Mediathek Alben enthält, erscheinen sie hier." />
+              : <MusicScrollRow>{favoriteAlbums.map((item: any) => (
+                  <div key={item.Id} className="w-44 shrink-0">
+                    <MusicCard title={item.Name} subtitle={item.AlbumArtist}
+                      coverUrl={getCoverUrl(accessToken!, server!.id, item.Id, 160, 160)}
+                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
+                  </div>
+                ))}</MusicScrollRow>}
+            </MusicSection>
+          </section>
+
+          {/* Künstler durchstöbern */}
           <section>
             <MusicSection title="Künstler durchstöbern" showAllHref="/jellyfin/music/artists">
               {artistsLoading ? <MusicSkeleton count={6} />

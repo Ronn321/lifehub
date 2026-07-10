@@ -1,13 +1,16 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
   Clock,
+  Play,
+  ListMusic,
+  X,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import {
@@ -23,6 +26,7 @@ import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { SongRow, MusicEmptyState } from '@/components/music/shared/SongRow';
 import { MusicLoader } from '@/components/music/shared/MusicCard';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
+import { useSelection } from '@/components/music/shared/useSelection';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -172,6 +176,57 @@ export default function MusicTracksPage() {
     [songsQuery.data, server?.id, playTracks],
   );
 
+  // ── Selection ──
+
+  const selection = useSelection();
+  const allTrackIds = useMemo(() => tracks.map((t) => t.id), [tracks]);
+  const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
+
+  const handleRowClick = useCallback(
+    (e: React.MouseEvent, trackId: string) => {
+      e.stopPropagation();
+      if (e.shiftKey) {
+        selection.selectRange(trackId, allTrackIds);
+      } else if (e.ctrlKey || e.metaKey) {
+        selection.toggleOne(trackId);
+      } else {
+        selection.selectOne(trackId);
+      }
+    },
+    [selection, allTrackIds],
+  );
+
+  // Ctrl+A to select all visible tracks
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        const active = document.activeElement;
+        if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return;
+        e.preventDefault();
+        selection.selectAll(allTrackIds);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selection, allTrackIds]);
+
+  // Bulk actions
+  const handlePlaySelected = useCallback(() => {
+    if (!songsQuery.data?.items || !server?.id) return;
+    const selectedItems = songsQuery.data.items.filter((item) =>
+      selection.selectedIds.has(item.Id),
+    );
+    if (selectedItems.length > 0) {
+      playTracks(selectedItems, 0, server.id);
+    }
+  }, [songsQuery.data, server?.id, playTracks, selection.selectedIds]);
+
+  const handleQueueSelected = useCallback(() => {
+    const selectedTracks = tracks.filter((t) => selection.selectedIds.has(t.id));
+    selectedTracks.forEach((t) => addToQueue(t));
+    selection.clear();
+  }, [tracks, selection, addToQueue]);
+
   // ── Virtualizer ──
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -213,11 +268,49 @@ export default function MusicTracksPage() {
                 description="Füge Musik zu deiner Jellyfin-Bibliothek hinzu."
               />
             ) : (
-              <div
-                ref={parentRef}
-                className="flex-1 overflow-auto music-scroll rounded-md"
-                style={{ background: 'var(--music-bg-elevated)' }}
-              >
+              <>
+                {selection.selectedCount > 0 && (
+                  <div
+                    className="sticky top-0 z-10 flex items-center gap-3 rounded-md px-4 py-2"
+                    style={{
+                      background: 'var(--music-bg-elevated)',
+                      borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    <span className="text-sm font-medium text-[var(--music-text-primary)]">
+                      {selection.selectedCount} ausgewählt
+                    </span>
+                    <div className="flex items-center gap-2 ml-4">
+                      <button
+                        onClick={handlePlaySelected}
+                        className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--music-bg-hover)] text-[var(--music-text-primary)]"
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                        Ausgewählte abspielen
+                      </button>
+                      <button
+                        onClick={handleQueueSelected}
+                        className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--music-bg-hover)] text-[var(--music-text-primary)]"
+                      >
+                        <ListMusic className="h-3.5 w-3.5" />
+                        Zur Queue hinzufügen
+                      </button>
+                      <button
+                        onClick={selection.clear}
+                        className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--music-bg-hover)] text-[var(--music-text-secondary)] ml-auto"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Auswahl aufheben
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div
+                  ref={parentRef}
+                  className="flex-1 overflow-auto music-scroll rounded-md"
+                  style={{ background: 'var(--music-bg-elevated)' }}
+                  onClick={selection.clear}
+                >
                 <div
                   style={{
                     height: virtualizer.getTotalSize(),
@@ -241,12 +334,15 @@ export default function MusicTracksPage() {
                         isPlaying={
                           currentTrack?.id === tracks[vItem.index]!.id
                         }
+                        isSelected={selection.isSelected(tracks[vItem.index]!.id)}
+                        onClick={(e) => handleRowClick(e, tracks[vItem.index]!.id)}
                         onPlay={() => handlePlaySong(vItem.index)}
                       />
                     </div>
                   ))}
                 </div>
               </div>
+            </>
             )}
 
             {/* Pagination */}

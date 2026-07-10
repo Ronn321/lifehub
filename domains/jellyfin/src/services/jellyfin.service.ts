@@ -800,6 +800,63 @@ export class JellyfinService {
     }
   }
 
+  // =================== Playback Reporting ===================
+
+  async reportPlaybackStart(
+    ownerId: string,
+    serverId: string,
+    itemId: string,
+    positionTicks: number,
+  ): Promise<void> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
+
+    const res = await fetch(`${baseUrl}/Sessions/Playing`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ItemId: itemId, PositionTicks: positionTicks }),
+    });
+    if (!res.ok) throw new Error(`Playback start report failed: ${res.status}`);
+  }
+
+  async reportPlaybackProgress(
+    ownerId: string,
+    serverId: string,
+    itemId: string,
+    positionTicks: number,
+    isPaused: boolean,
+  ): Promise<void> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
+
+    const res = await fetch(`${baseUrl}/Sessions/Playing/Progress`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ItemId: itemId, PositionTicks: positionTicks, IsPaused: isPaused }),
+    });
+    if (!res.ok) throw new Error(`Playback progress report failed: ${res.status}`);
+  }
+
+  async reportPlaybackStop(
+    ownerId: string,
+    serverId: string,
+    itemId: string,
+    positionTicks: number,
+  ): Promise<void> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
+
+    const res = await fetch(`${baseUrl}/Sessions/Playing/Stopped`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ItemId: itemId, PositionTicks: positionTicks }),
+    });
+    if (!res.ok) throw new Error(`Playback stop report failed: ${res.status}`);
+  }
+
   private cachedUserId: string | null = null;
   private async getJellyfinUserId(server: JellyfinServer): Promise<string> {
     if (this.cachedUserId) return this.cachedUserId;

@@ -284,4 +284,39 @@ export class JellyfinController {
   ) {
     return this.jellyfin.toggleFavorite(user.sub, serverId, externalId);
   }
+
+  // =================== Playback Reporting ===================
+
+  @Post('servers/:serverId/sessions/playing')
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Playback-Start an Jellyfin melden' })
+  async reportPlaybackStart(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Body() body: { itemId: string; positionTicks: number },
+  ) {
+    await this.jellyfin.reportPlaybackStart(user.sub, serverId, body.itemId, body.positionTicks);
+  }
+
+  @Post('servers/:serverId/sessions/progress')
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Playback-Fortschritt an Jellyfin melden' })
+  async reportPlaybackProgress(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Body() body: { itemId: string; positionTicks: number; isPaused: boolean },
+  ) {
+    await this.jellyfin.reportPlaybackProgress(user.sub, serverId, body.itemId, body.positionTicks, body.isPaused);
+  }
+
+  @Post('servers/:serverId/sessions/stopped')
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Playback-Stopp an Jellyfin melden' })
+  async reportPlaybackStop(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Body() body: { itemId: string; positionTicks: number },
+  ) {
+    await this.jellyfin.reportPlaybackStop(user.sub, serverId, body.itemId, body.positionTicks);
+  }
 }

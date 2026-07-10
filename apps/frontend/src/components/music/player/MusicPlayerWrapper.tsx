@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
-import { useJellyfinServer, getStreamUrl } from '@/lib/music-api';
+import { useJellyfinServer, getStreamUrl, useReportPlaybackStart, useReportPlaybackProgress, useReportPlaybackStop } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { MusicPlayerBar } from '@/components/music/player/MusicPlayerBar';
 import { MiniPlayer } from '@/components/music/player/MiniPlayer';
@@ -147,6 +147,56 @@ export function MusicPlayerWrapper() {
     audio.volume = volume;
     audio.muted = isMuted;
   }, [volume, isMuted]);
+
+  /* ════════════════════════════════════════════════════════════════ */
+  /*  3b. Playback Reporting — start, progress (every 10s), stop    */
+  /* ════════════════════════════════════════════════════════════════ */
+
+  const reportPlaybackStart = useReportPlaybackStart();
+  const reportPlaybackProgress = useReportPlaybackProgress();
+  const reportPlaybackStop = useReportPlaybackStop();
+
+  // Track the current item to detect skips and avoid redundant stops
+  const prevItemIdRef = useRef<string | null>(null);
+  const hasReportedStopRef = useRef(true);
+
+  // On track load → report playback start
+  useEffect(() => {
+    if (!currentTrack || !server) return;
+    const itemId = currentTrack.id;
+
+    // If we changed from a previous track that hasn't been stopped yet, stop it first
+    if (prevItemIdRef.current && prevItemIdRef.current !== itemId && !hasReportedStopRef.current) {
+      reportPlaybackStop(server.id, prevItemIdRef.current, Math.floor(audio.currentTime * 10_000_000)).catch(() => {});
+    }
+
+    prevItemIdRef.current = itemId;
+    hasReportedStopRef.current = false;
+
+    reportPlaybackStart(server.id, itemId, 0).catch(() => {});
+  }, [currentTrack?.id, server?.id]);
+
+  // Every 10s during playback → report progress
+  useEffect(() => {
+    if (status !== 'playing' || !currentTrack || !server) return;
+
+    const interval = setInterval(() => {
+      const ticks = Math.floor(audio.currentTime * 10_000_000);
+      reportPlaybackProgress(server.id, currentTrack.id, ticks, false).catch(() => {});
+    }, 10_000);
+
+    return () => clearInterval(interval);
+  }, [status, currentTrack?.id, server?.id]);
+
+  // On track end/stop → report playback stop
+  useEffect(() => {
+    if (!server || !prevItemIdRef.current || hasReportedStopRef.current) return;
+
+    if (status === 'finished' || status === 'stopped') {
+      reportPlaybackStop(server.id, prevItemIdRef.current, Math.floor(audio.currentTime * 10_000_000)).catch(() => {});
+      hasReportedStopRef.current = true;
+    }
+  }, [status, server?.id]);
 
   /* ════════════════════════════════════════════════════════════════ */
   /*  4. Audio event listeners                                       */

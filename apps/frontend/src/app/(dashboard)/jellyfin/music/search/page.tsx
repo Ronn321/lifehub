@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search as SearchIcon, X } from 'lucide-react';
+import { Search as SearchIcon, X, Clock } from 'lucide-react';
 import {
   useJellyfinServer,
   useMusicSearch,
@@ -18,6 +18,7 @@ import { SongRow, TracklistHeader, MusicEmptyState } from '@/components/music/sh
 import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
+import { useSearchHistory } from '@/components/music/search/useSearchHistory';
 
 /* ------------------------------------------------------------------ */
 /*  Genre Card Hue Helper                                             */
@@ -53,11 +54,25 @@ export default function MusicSearchPage() {
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showAllArtists, setShowAllArtists] = useState(false);
+  const [showAllAlbums, setShowAllAlbums] = useState(false);
+  const [showAllSongs, setShowAllSongs] = useState(false);
+
+  /* ── Search History ── */
+
+  const { getHistory, addEntry, removeEntry, clearHistory } = useSearchHistory();
+  const history = getHistory();
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query), 300);
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+      if (query.trim().length > 1) {
+        addEntry(query.trim());
+      }
+    }, 300);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, addEntry]);
 
   /* ── Queries ── */
 
@@ -117,7 +132,14 @@ export default function MusicSearchPage() {
               <input
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShowAllArtists(false);
+                  setShowAllAlbums(false);
+                  setShowAllSongs(false);
+                }}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
                 placeholder="Was möchtest du wiedergeben?"
                 autoFocus
                 className="w-full rounded-full border-none py-3 pl-12 pr-12 text-sm font-medium outline-none transition-all placeholder:text-[var(--music-text-tertiary)]"
@@ -142,6 +164,72 @@ export default function MusicSearchPage() {
             {/* ================================================================ */}
 
             {searchLoading && <MusicLoader />}
+
+            {/* ================================================================ */}
+            {/*  Search History — shown when input focused and empty             */}
+            {/* ================================================================ */}
+
+            {isInputFocused && !query && history.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: 'var(--music-text-primary)' }}
+                  >
+                    Zuletzt gesucht
+                  </h2>
+                  <button
+                    onClick={() => {
+                      clearHistory();
+                      setIsInputFocused(false);
+                    }}
+                    className="text-xs font-bold uppercase tracking-wide transition-colors hover:underline"
+                    style={{ color: 'var(--music-accent)' }}
+                  >
+                    Verlauf löschen
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  {history.map((entry) => (
+                    <div
+                      key={`${entry.query}-${entry.timestamp}`}
+                      className="group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-[var(--music-bg-card)]"
+                    >
+                      <Clock
+                        className="h-4 w-4 flex-shrink-0"
+                        style={{ color: 'var(--music-text-secondary)' }}
+                      />
+                      <button
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setQuery(entry.query);
+                          setDebouncedQuery(entry.query);
+                          setIsInputFocused(false);
+                        }}
+                        className="flex-1 truncate text-left text-sm font-medium transition-colors"
+                        style={{ color: 'var(--music-text-primary)' }}
+                      >
+                        {entry.query}
+                      </button>
+                      <button
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removeEntry(entry.query);
+                        }}
+                        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full opacity-0 transition-all hover:bg-[var(--music-bg-hover)] group-hover:opacity-100"
+                        aria-label={`„${entry.query}“ aus Verlauf entfernen`}
+                      >
+                        <X
+                          className="h-3 w-3"
+                          style={{ color: 'var(--music-text-secondary)' }}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* ================================================================ */}
             {/*  Empty State — Browse Genres                                    */}
@@ -225,14 +313,25 @@ export default function MusicSearchPage() {
                 {/* ─── Artists ─── */}
                 {searchResults.Artists && searchResults.Artists.length > 0 && (
                   <section className="space-y-3">
-                    <h2
-                      className="text-xl font-bold"
-                      style={{ color: 'var(--music-text-primary)' }}
-                    >
-                      Künstler
-                    </h2>
+                    <div className="flex items-center justify-between">
+                      <h2
+                        className="text-xl font-bold"
+                        style={{ color: 'var(--music-text-primary)' }}
+                      >
+                        Künstler
+                      </h2>
+                      {searchResults.Artists.length > 4 && (
+                        <button
+                          onClick={() => setShowAllArtists(!showAllArtists)}
+                          className="text-xs font-bold uppercase tracking-wide transition-colors hover:underline"
+                          style={{ color: 'var(--music-accent)' }}
+                        >
+                          {showAllArtists ? 'Weniger anzeigen' : 'Alle anzeigen'}
+                        </button>
+                      )}
+                    </div>
                     <MusicCardGrid>
-                      {searchResults.Artists.slice(0, 10).map((artist) => (
+                      {searchResults.Artists.slice(0, showAllArtists ? undefined : 4).map((artist) => (
                         <MusicCard
                           key={artist.Id}
                           title={artist.Name}
@@ -248,14 +347,25 @@ export default function MusicSearchPage() {
                 {/* ─── Albums ─── */}
                 {searchResults.Albums && searchResults.Albums.length > 0 && (
                   <section className="space-y-3">
-                    <h2
-                      className="text-xl font-bold"
-                      style={{ color: 'var(--music-text-primary)' }}
-                    >
-                      Alben
-                    </h2>
+                    <div className="flex items-center justify-between">
+                      <h2
+                        className="text-xl font-bold"
+                        style={{ color: 'var(--music-text-primary)' }}
+                      >
+                        Alben
+                      </h2>
+                      {searchResults.Albums.length > 4 && (
+                        <button
+                          onClick={() => setShowAllAlbums(!showAllAlbums)}
+                          className="text-xs font-bold uppercase tracking-wide transition-colors hover:underline"
+                          style={{ color: 'var(--music-accent)' }}
+                        >
+                          {showAllAlbums ? 'Weniger anzeigen' : 'Alle anzeigen'}
+                        </button>
+                      )}
+                    </div>
                     <MusicCardGrid>
-                      {searchResults.Albums.slice(0, 10).map((album) => (
+                      {searchResults.Albums.slice(0, showAllAlbums ? undefined : 4).map((album) => (
                         <MusicCard
                           key={album.Id}
                           title={album.Name}
@@ -277,21 +387,32 @@ export default function MusicSearchPage() {
                       >
                         Songs
                       </h2>
-                      <button
-                        onClick={playAllSongs}
-                        className="rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wide transition-all hover:opacity-80"
-                        style={{
-                          background: 'var(--music-accent)',
-                          color: '#000',
-                        }}
-                      >
-                        Alle abspielen
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {searchResults.Songs.length > 4 && (
+                          <button
+                            onClick={() => setShowAllSongs(!showAllSongs)}
+                            className="text-xs font-bold uppercase tracking-wide transition-colors hover:underline"
+                            style={{ color: 'var(--music-accent)' }}
+                          >
+                            {showAllSongs ? 'Weniger anzeigen' : 'Alle anzeigen'}
+                          </button>
+                        )}
+                        <button
+                          onClick={playAllSongs}
+                          className="rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wide transition-all hover:opacity-80"
+                          style={{
+                            background: 'var(--music-accent)',
+                            color: '#000',
+                          }}
+                        >
+                          Alle abspielen
+                        </button>
+                      </div>
                     </div>
 
                     <TracklistHeader showAlbum />
 
-                    {searchResults.Songs.slice(0, 50).map((item, idx) => {
+                    {searchResults.Songs.slice(0, showAllSongs ? undefined : 4).map((item, idx) => {
                       const track = jellyfinItemToTrack(item, accessToken ?? '', server?.id ?? '');
                       const isPlaying = currentTrack?.id === item.Id;
                       return (

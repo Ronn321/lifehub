@@ -115,12 +115,13 @@ export default function AlbumDetailPage() {
     tempImg.src = coverUrl;
   }, [coverUrl]);
 
-  return (
-    <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-      <div className="flex-1 overflow-y-auto music-scroll">
-        <MusicPageShell
-          sidebarProps={{ activeTab: 'albums' }}
-          topBar={
+  if (!accessToken || !server) {
+    return (
+      <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
+        <div className="flex-1 overflow-y-auto music-scroll">
+          <MusicPageShell
+            sidebarProps={{ activeTab: 'albums' }}
+            topBar={
               <Link
                 href="/jellyfin/music"
                 className="flex items-center gap-2 text-sm text-[var(--music-text-secondary)] hover:text-[var(--music-text-primary)] transition-colors"
@@ -267,7 +268,7 @@ export default function AlbumDetailPage() {
             </div>
           )}
         </div>
-        </div>
+          </div>
         </MusicPageShell>
       </div>
       <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>

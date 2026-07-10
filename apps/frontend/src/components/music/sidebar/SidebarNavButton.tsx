@@ -38,8 +38,8 @@ export function SidebarNavButton({
         'flex items-center gap-3 rounded-md px-2 text-sm font-medium transition-colors',
         collapsed ? 'justify-center h-10 w-full' : 'h-12',
         active
-          ? 'bg-[var(--music-bg-card)] text-[var(--music-text-primary)]'
-          : 'text-[var(--music-text-secondary)] hover:text-[var(--music-text-primary)]',
+          ? 'bg-[var(--music-sidebar-active)] text-[var(--music-text-primary)]'
+          : 'text-[var(--music-text-secondary)] hover:bg-[var(--music-sidebar-hover)] hover:text-[var(--music-text-primary)]',
       )}
       title={collapsed ? label : undefined}
     >

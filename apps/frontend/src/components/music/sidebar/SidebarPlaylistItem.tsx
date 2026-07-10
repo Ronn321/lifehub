@@ -43,8 +43,8 @@ export function SidebarPlaylistItem({
         'flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm transition-colors',
         collapsed ? 'justify-center h-10' : 'h-10',
         active
-          ? 'bg-[var(--music-bg-card)] text-[var(--music-text-primary)]'
-          : 'text-[var(--music-text-secondary)] hover:bg-[var(--music-bg-card)] hover:text-[var(--music-text-primary)]',
+          ? 'bg-[var(--music-sidebar-active)] text-[var(--music-text-primary)]'
+          : 'text-[var(--music-text-secondary)] hover:bg-[var(--music-sidebar-hover)] hover:text-[var(--music-text-primary)]',
       )}
       title={`${name} — ${songCount} Titel`}
     >
@@ -66,9 +66,9 @@ export function SidebarPlaylistItem({
           {/* Name */}
           <span className="flex-1 truncate">{name}</span>
 
-          {/* Song count — visible on hover */}
-          <span className="hidden text-xs text-[var(--music-text-tertiary)] group-hover:inline tabular-nums">
-            {songCount}
+          {/* Song count — always visible */}
+          <span className="text-xs text-[var(--music-text-tertiary)] tabular-nums">
+            Playlist • {songCount} Songs
           </span>
         </>
       )}

@@ -443,7 +443,7 @@ export class JellyfinService {
 
   async getArtists(ownerId: string, serverId: string): Promise<any[]> {
     const server = await this.findServerOrFallback(serverId, ownerId);
-    const data = await this.fetchFromJellyfin(server, '/Artists/AlbumArtists');
+    const data = await this.fetchFromJellyfin(server, '/Artists/AlbumArtists?Fields=Overview,PrimaryImageAspectRatio');
     return data.Items ?? [];
   }
 

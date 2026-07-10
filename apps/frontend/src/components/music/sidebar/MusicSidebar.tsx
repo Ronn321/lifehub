@@ -92,7 +92,7 @@ export function MusicSidebar({
   return (
     <aside
       className={cn(
-        'flex h-full flex-col overflow-hidden transition-[width] duration-200 ease-in-out',
+        'flex h-full flex-col overflow-hidden transition-[width] duration-[250ms] ease-in-out',
       )}
       style={{
         width: collapsed
@@ -165,6 +165,25 @@ export function MusicSidebar({
               </button>
             ))}
           </div>
+
+          {/* Search field (L-008) */}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--music-text-tertiary)]" />
+            <input
+              placeholder="Filtern..."
+              className="w-full rounded-md bg-[var(--music-bg-card)] py-1.5 pl-7 pr-3 text-xs text-[var(--music-text-primary)] placeholder-[var(--music-text-tertiary)] outline-none border-none"
+            />
+          </div>
+
+          {/* Sort dropdown (L-007) */}
+          <select
+            className="w-full rounded-md bg-[var(--music-bg-card)] py-1.5 px-2 text-xs text-[var(--music-text-secondary)] outline-none border-none"
+            defaultValue="Zuletzt"
+          >
+            <option value="Zuletzt">Zuletzt</option>
+            <option value="Alphabetisch">Alphabetisch</option>
+            <option value="Kürzlich gespielt">Kürzlich gespielt</option>
+          </select>
         </div>
       )}
 
@@ -285,8 +304,8 @@ export function MusicSidebar({
         )}
       </div>
 
-      {/* ── Create Playlist Button (only on playlists tab) ── */}
-      {effectiveTab === 'playlists' && onCreatePlaylist && (
+      {/* ── Create Playlist Button (always visible) ── */}
+      {onCreatePlaylist && (
         <SidebarCreateButton onClick={onCreatePlaylist} collapsed={collapsed} />
       )}
     </aside>

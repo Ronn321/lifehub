@@ -347,9 +347,9 @@ export function MusicPlayerBar({
         className="w-full relative"
         style={{
           height: 'var(--music-player-bar-height, 90px)',
-          background: 'var(--music-bg-elevated)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: 'rgba(18,18,18,0.95)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         }}
       >
@@ -406,11 +406,12 @@ export function MusicPlayerBar({
         {/* ── Error Overlay ── */}
         {status === 'error' && errorMessage && (
           <div
-            className="absolute inset-0 flex items-center justify-center gap-3 px-4 z-10"
+            className="absolute inset-0 flex items-center justify-center gap-3 px-4"
             style={{
               background: 'rgba(0, 0, 0, 0.85)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
+              zIndex: 'var(--music-z-content)',
             }}
           >
             <div className="flex items-center gap-3 max-w-2xl w-full">

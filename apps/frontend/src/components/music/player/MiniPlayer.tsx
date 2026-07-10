@@ -128,7 +128,7 @@ export function MiniPlayer() {
     <div
       ref={panelRef}
       className={cn(
-        'fixed z-[9999] overflow-hidden rounded-lg border shadow-lg select-none',
+        'fixed z-[var(--music-z-toast)] overflow-hidden rounded-lg border shadow-lg select-none',
         isDragging ? 'opacity-70 transition-opacity duration-75' : 'opacity-100',
       )}
       style={{

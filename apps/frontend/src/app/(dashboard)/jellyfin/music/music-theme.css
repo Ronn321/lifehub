@@ -47,6 +47,14 @@
   --music-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
   --music-shadow-player: 0 -2px 8px rgba(0, 0, 0, 0.5);
   --music-shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  /* Z-Index System */
+  --music-z-base: 0;
+  --music-z-content: 10;
+  --music-z-sticky: 100;
+  --music-z-dialog: 1000;
+  --music-z-context-menu: 2000;
+  --music-z-toast: 3000;
 }
 
 /* Custom scrollbar for music domain */

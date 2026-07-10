@@ -842,7 +842,7 @@ function FullscreenNowPlaying({
   );
 
   return (
-    <div className="fixed inset-0 z-[1000] flex flex-col bg-[var(--music-bg-base)]">
+    <div className="fixed inset-0 z-[var(--music-z-dialog)] flex flex-col bg-[var(--music-bg-base)]">
       {/* Blurred background */}
       {track?.coverUrl && (
         <div

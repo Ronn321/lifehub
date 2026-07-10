@@ -502,7 +502,7 @@ export function PlaylistSongTable({
       {contextMenu.visible && contextMenu.track && (
         <div
           data-context-menu
-          className="fixed z-[100] min-w-[200px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] py-1 shadow-2xl"
+          className="fixed z-[var(--music-z-context-menu)] min-w-[200px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] py-1 shadow-2xl"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={() => setContextMenu((prev) => ({ ...prev, visible: false }))}
         >

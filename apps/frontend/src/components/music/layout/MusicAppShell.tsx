@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/cn';
 import { MusicSidebar } from '@/components/music/sidebar/MusicSidebar';
+import { useStickyHeader } from '@/components/music/shared/useStickyHeader';
 import type { MusicSidebarProps } from '@/components/music/sidebar/MusicSidebar';
 
 import '@/app/(dashboard)/jellyfin/music/music-theme.css';
@@ -10,6 +11,7 @@ import '@/app/(dashboard)/jellyfin/music/music-theme.css';
 interface MusicAppShellProps {
   children: React.ReactNode;
   topBar?: React.ReactNode;
+  stickyTitle?: string;
   rightSidebar?: React.ReactNode;
   sidebarProps?: Partial<MusicSidebarProps>;
   className?: string;
@@ -18,6 +20,7 @@ interface MusicAppShellProps {
 export function MusicAppShell({
   children,
   topBar,
+  stickyTitle,
   rightSidebar,
   sidebarProps = {},
   className,
@@ -25,6 +28,9 @@ export function MusicAppShell({
   const [collapsed, setCollapsed] = useState(false);
   const hasRightSidebar = !!rightSidebar;
   const sidebarW = collapsed ? 'var(--music-sidebar-collapsed-width)' : 'var(--music-sidebar-width)';
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { isScrolled } = useStickyHeader(scrollRef);
 
   return (
     <div
@@ -49,30 +55,50 @@ export function MusicAppShell({
 
       {/* Content */}
       <div className="flex-1 flex min-w-0 overflow-hidden">
-        <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <div
+          ref={scrollRef}
+          className="flex-1 flex flex-col min-w-0 overflow-y-auto"
+        >
           {topBar && (
             <header
-              className="flex items-center gap-3 px-6 flex-shrink-0 sticky top-0 z-[2]"
-              style={{ height: 'var(--music-topbar-height)', background: 'var(--music-bg-base)' }}
+              className={cn(
+                'flex items-center gap-3 px-6 flex-shrink-0 sticky top-0',
+                'transition-all duration-200 ease-out',
+              )}
+              style={{
+                height: 'var(--music-topbar-height)',
+                background: isScrolled ? 'rgba(18,18,18,0.8)' : 'transparent',
+                backdropFilter: isScrolled ? 'blur(12px)' : 'none',
+                WebkitBackdropFilter: isScrolled ? 'blur(12px)' : 'none',
+                zIndex: 'var(--music-z-sticky)',
+              }}
             >
               {topBar}
+              {stickyTitle && (
+                <span
+                  className={cn(
+                    'text-sm font-semibold text-[var(--music-text-primary)] truncate transition-opacity duration-200',
+                    isScrolled ? 'opacity-100' : 'opacity-0',
+                  )}
+                >
+                  {stickyTitle}
+                </span>
+              )}
             </header>
           )}
           {children}
         </div>
 
         {/* Right Sidebar */}
-        {hasRightSidebar && (
-          <aside
-            className="flex-shrink-0 overflow-y-auto border-l border-[rgba(255,255,255,0.08)]"
-            style={{
-              width: 'var(--music-right-sidebar-width, 360px)',
-              background: 'var(--music-bg-elevated)',
-            }}
-          >
-            {rightSidebar}
-          </aside>
-        )}
+        <aside
+          className={`flex-shrink-0 overflow-hidden border-l border-[rgba(255,255,255,0.08)] transition-[width] duration-200 ease-out`}
+          style={{
+            width: hasRightSidebar ? 'var(--music-right-sidebar-width, 320px)' : '0px',
+            background: 'var(--music-bg-elevated)',
+          }}
+        >
+          {rightSidebar}
+        </aside>
       </div>
     </div>
   );

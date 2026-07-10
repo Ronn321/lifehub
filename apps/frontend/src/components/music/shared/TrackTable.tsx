@@ -415,7 +415,7 @@ function ColumnVisibilityDropdown({
 
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-1 min-w-[180px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl"
+          className="absolute right-0 top-full mt-1 min-w-[180px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl"
           style={{ maxHeight: '320px', overflowY: 'auto' }}
         >
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--music-text-secondary)]">
@@ -484,7 +484,7 @@ function CoverSizeSlider({
 
 interface FilterState {
   search: string;
-  genre: string;
+  selectedGenres: string[];
   artist: string;
   album: string;
   year: string;
@@ -506,10 +506,17 @@ function FilterBar({
   onClear: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const hasFilters = filters.search || filters.genre || filters.artist || filters.album || filters.year;
+  const hasFilters = filters.search || filters.selectedGenres.length > 0 || filters.artist || filters.album || filters.year;
 
   const update = (key: keyof FilterState, value: string) => {
     onChange({ ...filters, [key]: value });
+  };
+
+  const toggleGenre = (genre: string) => {
+    const next = filters.selectedGenres.includes(genre)
+      ? filters.selectedGenres.filter((g) => g !== genre)
+      : [...filters.selectedGenres, genre];
+    onChange({ ...filters, selectedGenres: next });
   };
 
   return (
@@ -547,7 +554,7 @@ function FilterBar({
           <span className="hidden sm:inline">Filter</span>
           {hasFilters && (
             <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--music-accent)] text-[10px] font-bold text-black">
-              {(filters.genre ? 1 : 0) + (filters.artist ? 1 : 0) + (filters.album ? 1 : 0) + (filters.year ? 1 : 0) + (filters.search ? 1 : 0)}
+              {(filters.selectedGenres.length > 0 ? 1 : 0) + (filters.artist ? 1 : 0) + (filters.album ? 1 : 0) + (filters.year ? 1 : 0) + (filters.search ? 1 : 0)}
             </span>
           )}
         </button>
@@ -562,19 +569,31 @@ function FilterBar({
         )}
       </div>
 
+      {/* Genre Chips - always visible when genres exist */}
+      {uniqueGenres.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {uniqueGenres.map((genre) => {
+            const isActive = filters.selectedGenres.includes(genre);
+            return (
+              <button
+                key={genre}
+                onClick={() => toggleGenre(genre)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  isActive
+                    ? 'bg-white text-black'
+                    : 'bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]'
+                }`}
+              >
+                {genre}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Expanded filter row */}
       {expanded && (
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={filters.genre}
-            onChange={(e) => update('genre', e.target.value)}
-            className="rounded-md border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] px-2.5 py-1.5 text-xs text-[var(--music-text-primary)] outline-none transition-colors focus:border-[var(--music-accent)]"
-          >
-            <option value="">Alle Genres</option>
-            {uniqueGenres.map((g) => (
-              <option key={g} value={g}>{g}</option>
-            ))}
-          </select>
           <select
             value={filters.artist}
             onChange={(e) => update('artist', e.target.value)}
@@ -637,7 +656,7 @@ export function TrackTable({
   const [sortColumn, setSortColumn] = useState<ColumnId | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [coverSize, setCoverSize] = useState<CoverSize>(defaultCoverSize);
-  const [filters, setFilters] = useState<FilterState>({ search: '', genre: '', artist: '', album: '', year: '' });
+  const [filters, setFilters] = useState<FilterState>({ search: '', selectedGenres: [], artist: '', album: '', year: '' });
 
   const onSongContextMenu = useSongContextMenu();
 
@@ -675,8 +694,8 @@ export function TrackTable({
           (t.genre && t.genre.toLowerCase().includes(q)),
       );
     }
-    if (filters.genre) {
-      result = result.filter((t) => t.genre === filters.genre);
+    if (filters.selectedGenres.length > 0) {
+      result = result.filter((t) => t.genre && filters.selectedGenres.includes(t.genre));
     }
     if (filters.artist) {
       result = result.filter((t) => t.artist === filters.artist);
@@ -739,7 +758,7 @@ export function TrackTable({
 
   // ── Clear filters ──
   const clearFilters = useCallback(() => {
-    setFilters({ search: '', genre: '', artist: '', album: '', year: '' });
+    setFilters({ search: '', selectedGenres: [], artist: '', album: '', year: '' });
   }, []);
 
   // ── Context menu handler ──
@@ -876,11 +895,11 @@ export function TrackTable({
           <Music className="h-12 w-12 text-[var(--music-text-disabled)] opacity-40" />
           <p className="text-lg font-bold text-[var(--music-text-primary)]">Keine Titel gefunden</p>
           <p className="text-sm text-[var(--music-text-secondary)]">
-            {filters.search || filters.genre || filters.artist || filters.album || filters.year
+            {filters.search || filters.selectedGenres.length > 0 || filters.artist || filters.album || filters.year
               ? 'Keine Ergebnisse für die aktuelle Filterauswahl.'
               : 'Füge Musik zu deiner Jellyfin-Bibliothek hinzu.'}
           </p>
-          {(filters.search || filters.genre || filters.artist || filters.album || filters.year) && (
+          {(filters.search || filters.selectedGenres.length > 0 || filters.artist || filters.album || filters.year) && (
             <button
               onClick={clearFilters}
               className="mt-2 rounded-md bg-[var(--music-accent)] px-4 py-2 text-xs font-medium text-black transition-colors hover:bg-[var(--music-accent-hover)]"

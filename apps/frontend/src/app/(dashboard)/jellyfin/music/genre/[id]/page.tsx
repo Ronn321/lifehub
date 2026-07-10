@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, Clock, ArrowLeft, Disc3 } from 'lucide-react';
+import { Play, Shuffle, Clock, ArrowLeft, Disc3 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import {
@@ -97,6 +97,13 @@ export default function GenreDetailPage() {
     }
   };
 
+  const handleShuffle = () => {
+    if (songs.length > 0) {
+      const randomIndex = Math.floor(Math.random() * songs.length);
+      playTracks(songs, randomIndex, server.id);
+    }
+  };
+
   const handlePlayTrack = (index: number) => {
     playTracks(songs, index, server.id);
   };
@@ -104,6 +111,7 @@ export default function GenreDetailPage() {
   return (
     <MusicPageShell
       sidebarProps={{ activeTab: 'albums' }}
+      stickyTitle={genreName}
       topBar={
         <Link
           href="/jellyfin/music"
@@ -146,15 +154,24 @@ export default function GenreDetailPage() {
                 <span>{songs.length} Songs</span>
               </div>
 
-              {/* Play All Button (wie Album-Detailseite) */}
+              {/* Play All + Shuffle Buttons (wie Album-Detailseite) */}
               {songs.length > 0 && (
-                <button
-                  onClick={handlePlayAll}
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--music-accent)] text-black shadow-lg transition-all hover:scale-105 hover:bg-[var(--music-accent-hover)]"
-                  aria-label="Alle abspielen"
-                >
-                  <Play className="h-5 w-5 fill-black" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handlePlayAll}
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--music-accent)] text-black shadow-lg transition-all hover:scale-105 hover:bg-[var(--music-accent-hover)]"
+                    aria-label="Alle abspielen"
+                  >
+                    <Play className="h-5 w-5 fill-black" />
+                  </button>
+                  <button
+                    onClick={handleShuffle}
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--music-text-secondary)] transition-all hover:scale-105 hover:text-[var(--music-text-primary)]"
+                    aria-label="Zufallswiedergabe"
+                  >
+                    <Shuffle className="h-5 w-5" />
+                  </button>
+                </div>
               )}
             </div>
           </div>

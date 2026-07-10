@@ -75,6 +75,7 @@ export default function PlaylistDetailPage() {
       <div className="flex-1 overflow-y-auto music-scroll">
         <MusicPageShell
           sidebarProps={{ activeTab: 'playlists' }}
+          stickyTitle={playlist?.Name}
           topBar={
             <Link
               href="/jellyfin/music"

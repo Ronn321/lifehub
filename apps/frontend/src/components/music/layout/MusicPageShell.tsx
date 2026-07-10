@@ -9,6 +9,7 @@ import type { MusicSidebarProps } from '@/components/music/sidebar/MusicSidebar'
 interface MusicPageShellProps {
   children: React.ReactNode;
   topBar?: React.ReactNode;
+  stickyTitle?: string;
   sidebarProps?: Partial<MusicSidebarProps>;
   className?: string;
 }
@@ -16,6 +17,7 @@ interface MusicPageShellProps {
 export function MusicPageShell({
   children,
   topBar,
+  stickyTitle,
   sidebarProps = {},
   className,
 }: MusicPageShellProps) {
@@ -32,6 +34,7 @@ export function MusicPageShell({
       sidebarProps={sidebarProps}
       className={className}
       topBar={topBar}
+      stickyTitle={stickyTitle}
       rightSidebar={
         isExpanded
           ? <NowPlayingView mode="sidebar" onClose={toggleExpanded} />

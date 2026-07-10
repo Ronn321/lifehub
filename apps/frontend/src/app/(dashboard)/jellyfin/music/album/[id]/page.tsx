@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, Clock, ArrowLeft } from 'lucide-react';
+import { Play, Shuffle, Clock, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
 import {
@@ -31,6 +31,9 @@ export default function AlbumDetailPage() {
 
   const { data: albumSongs, isLoading } = useAlbumSongs(server?.id, albumId);
   const playTracks = usePlayTracks();
+
+  const [gradientColor, setGradientColor] = useState('#1e1e1e');
+  const imgRef = useRef<HTMLDivElement>(null);
 
   const currentTrack = useMusicPlayerStore((s) => s.currentTrack);
 
@@ -69,6 +72,7 @@ export default function AlbumDetailPage() {
   const albumName = albumInfo?.Album ?? albumInfo?.Name ?? 'Unbekanntes Album';
   const artistName = albumInfo?.AlbumArtist ?? albumInfo?.Artist ?? 'Unbekannter Künstler';
   const year = albumInfo?.ProductionYear;
+  const genre = albumInfo?.Genres?.[0];
   const coverUrl = getCoverUrl(accessToken, server.id, albumId, 400, 400);
 
   const handlePlayAll = () => {
@@ -77,9 +81,64 @@ export default function AlbumDetailPage() {
     }
   };
 
+  const handleShuffle = () => {
+    if (songs.length > 0) {
+      const randomIndex = Math.floor(Math.random() * songs.length);
+      playTracks(songs, randomIndex, server.id);
+    }
+  };
+
   const handlePlayTrack = (index: number) => {
     playTracks(songs, index, server.id);
   };
+
+  // Extract dominant color from cover image for gradient background
+  useEffect(() => {
+    if (!coverUrl || !imgRef.current) return;
+    const img = imgRef.current.querySelector('img');
+    if (!img) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const tempImg = new Image();
+    tempImg.crossOrigin = 'anonymous';
+    tempImg.onload = () => {
+      ctx.drawImage(tempImg, 0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      setGradientColor(`rgb(${r},${g},${b})`);
+    };
+    tempImg.onerror = () => setGradientColor('#1e1e1e');
+    tempImg.src = coverUrl;
+  }, [coverUrl]);
+
+  return (
+    <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
+      <div className="flex-1 overflow-y-auto music-scroll">
+        <MusicPageShell
+          sidebarProps={{ activeTab: 'albums' }}
+          topBar={
+              <Link
+                href="/jellyfin/music"
+                className="flex items-center gap-2 text-sm text-[var(--music-text-secondary)] hover:text-[var(--music-text-primary)] transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Zurück zur Musik
+              </Link>
+            }
+          >
+            <MusicLoader />
+          </MusicPageShell>
+        </div>
+        <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>
+          <MusicPlayerWrapper />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
@@ -95,19 +154,18 @@ export default function AlbumDetailPage() {
               Zurück zur Musik
             </Link>
           }
-        
         >
           <div className="music-fade-in">
         {/* ── Header with Gradient ── */}
         <div
           className="relative -mx-[var(--music-space-lg)] -mt-[var(--music-space-lg)] px-[var(--music-space-lg)] pt-[var(--music-space-lg)] pb-6"
           style={{
-            background: 'linear-gradient(to bottom, #1E1E1E 0%, transparent 40%, var(--music-bg-base) 100%)',
+            background: `linear-gradient(to bottom, ${gradientColor} 0%, transparent 40%, var(--music-bg-base) 100%)`,
           }}
         >
           <div className="flex items-end gap-6">
             {/* Cover */}
-            <div className="h-[232px] w-[232px] shrink-0 overflow-hidden rounded-md shadow-xl">
+            <div ref={imgRef} className="h-[232px] w-[232px] shrink-0 overflow-hidden rounded-md shadow-xl">
               <MusicImage
                 src={coverUrl}
                 alt={albumName}
@@ -133,19 +191,34 @@ export default function AlbumDetailPage() {
                     <span>{year}</span>
                   </>
                 )}
+                {genre && (
+                  <>
+                    <span>·</span>
+                    <span>{genre}</span>
+                  </>
+                )}
                 <span>·</span>
                 <span>{songs.length} Songs</span>
               </div>
 
-              {/* Play Button */}
+              {/* Play + Shuffle Buttons */}
               {songs.length > 0 && (
-                <button
-                  onClick={handlePlayAll}
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--music-accent)] text-black shadow-lg transition-all hover:scale-105 hover:bg-[var(--music-accent-hover)]"
-                  aria-label="Alle abspielen"
-                >
-                  <Play className="h-5 w-5 fill-black" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handlePlayAll}
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--music-accent)] text-black shadow-lg transition-all hover:scale-105 hover:bg-[var(--music-accent-hover)]"
+                    aria-label="Alle abspielen"
+                  >
+                    <Play className="h-5 w-5 fill-black" />
+                  </button>
+                  <button
+                    onClick={handleShuffle}
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--music-text-secondary)] transition-all hover:scale-105 hover:text-[var(--music-text-primary)]"
+                    aria-label="Zufallswiedergabe"
+                  >
+                    <Shuffle className="h-5 w-5" />
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -194,7 +267,7 @@ export default function AlbumDetailPage() {
             </div>
           )}
         </div>
-          </div>
+        </div>
         </MusicPageShell>
       </div>
       <div className="flex-shrink-0" style={{ height: 'var(--music-player-bar-height)' }}>

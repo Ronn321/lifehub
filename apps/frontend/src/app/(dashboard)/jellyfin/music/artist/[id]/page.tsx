@@ -9,6 +9,7 @@ import {
   useJellyfinServer,
   useTopSongs,
   useAlbums,
+  useArtists,
   getCoverUrl,
   jellyfinItemToTrack,
   usePlayTracks,
@@ -34,6 +35,7 @@ export default function ArtistDetailPage() {
 
   const { data: topSongs, isLoading: songsLoading } = useTopSongs(server?.id, artistId, 10);
   const { data: albums, isLoading: albumsLoading } = useAlbums(server?.id, artistId);
+  const { data: artists } = useArtists(server?.id);
   const playTracks = usePlayTracks();
 
   const currentTrack = useMusicPlayerStore((s) => s.currentTrack);
@@ -60,6 +62,8 @@ export default function ArtistDetailPage() {
     ?? albums?.[0]?.Artist
     ?? 'Künstler';
   const artistCover = getCoverUrl(accessToken, server.id, artistId, 400, 400);
+  const artistInfo = artists?.find(a => a.Id === artistId);
+  const overview = artistInfo?.Overview;
 
   const handlePlayTop = () => {
     if (topSongs && topSongs.length > 0) {
@@ -82,6 +86,7 @@ export default function ArtistDetailPage() {
       <div className="flex-1 overflow-y-auto music-scroll">
         <MusicPageShell
           sidebarProps={{ activeTab: 'artists' }}
+          stickyTitle={artistName}
           topBar={
             <Link
               href="/jellyfin/music"
@@ -186,6 +191,15 @@ export default function ArtistDetailPage() {
                 );
               })}
             </MusicCardGrid>
+          </MusicSection>
+        )}
+
+        {/* ── Biography Section ── */}
+        {overview && (
+          <MusicSection title="Über den Künstler">
+            <p className="text-sm text-[var(--music-text-secondary)] leading-relaxed whitespace-pre-line">
+              {overview}
+            </p>
           </MusicSection>
         )}
 

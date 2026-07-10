@@ -215,6 +215,40 @@ export class JellyfinController {
     return this.jellyfin.getTopSongs(user.sub, serverId, artistId, limit ? parseInt(limit, 10) : 10);
   }
 
+  // =================== Playlist Endpoints ===================
+
+  @Get('servers/:serverId/playlists')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Alle Playlists abrufen' })
+  async getPlaylists(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+  ) {
+    return this.jellyfin.getPlaylists(user.sub, serverId);
+  }
+
+  @Get('servers/:serverId/playlists/:playlistId')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Einzelne Playlist abrufen' })
+  async getPlaylist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('playlistId') playlistId: string,
+  ) {
+    return this.jellyfin.getPlaylist(user.sub, serverId, playlistId);
+  }
+
+  @Get('servers/:serverId/playlists/:playlistId/items')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Songs einer Playlist abrufen' })
+  async getPlaylistItems(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('playlistId') playlistId: string,
+  ) {
+    return this.jellyfin.getPlaylistItems(user.sub, serverId, playlistId);
+  }
+
   // =================== Media v0.3 API Endpoints (Netflix-style) ===================
 
   @Get('servers/:serverId/items/:externalId/detail')
@@ -262,7 +296,7 @@ export class JellyfinController {
     return this.jellyfin.getItemPeople(user.sub, serverId, externalId);
   }
 
-  @Get('servers/:serverId/search')
+  @Get('servers/:serverId/search-media')
   @RequirePermission('jellyfin', 'read')
   @ApiOperation({ summary: 'Filme/Serien/Episoden durchsuchen' })
   async searchMedia(

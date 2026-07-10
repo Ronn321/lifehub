@@ -2,9 +2,12 @@
 
 import React, { memo, useState, useRef, useCallback } from 'react';
 import { Play, Pause, Heart, MoreHorizontal, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { MusicImage } from './MusicCard';
-import { formatTime } from '@/lib/music-api';
+import { formatTime, useJellyfinServer, useToggleFavorite } from '@/lib/music-api';
+import { useAuthStore } from '@/lib/auth-store';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
+import { useSongContextMenu } from './ContextMenu';
 import type { MusicTrack } from '@/lib/music-player-store';
 
 /* ------------------------------------------------------------------ */
@@ -36,6 +39,15 @@ function SongRowImpl({
 }: SongRowProps) {
   const [hovered, setHovered] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const router = useRouter();
+  const server = useJellyfinServer();
+  const toggleFavoriteStore = useMusicPlayerStore((s) => s.toggleFavorite);
+  const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
+  const addToQueueNext = useMusicPlayerStore((s) => s.addToQueueNext);
+  const isFav = useMusicPlayerStore((s) => s.isFavorite);
+  const toggleFavoriteAPI = useToggleFavorite();
+  const onSongContextMenu = useSongContextMenu();
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -75,6 +87,26 @@ function SongRowImpl({
       onMouseLeave={() => setHovered(false)}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={(e) =>
+        onSongContextMenu(e, {
+          onPlay,
+          onAddToQueue: () => addToQueue(track),
+          onAddToQueueNext: () => addToQueueNext(track),
+          onToggleFavorite: () => {
+            toggleFavoriteStore(track);
+            if (server) {
+              toggleFavoriteAPI(server.id, track.id);
+            }
+          },
+          onGoToArtist: track.artistId
+            ? () => router.push(`/jellyfin/music/artist/${track.artistId}`)
+            : undefined,
+          onGoToAlbum: track.albumId
+            ? () => router.push(`/jellyfin/music/album/${track.albumId}`)
+            : undefined,
+          isFavorite: track.isFavorite ?? isFav(track.id),
+        })
+      }
     >
       {/* Index / Play button */}
       <div className="flex w-8 shrink-0 items-center justify-center">
@@ -139,8 +171,22 @@ function SongRowImpl({
       <button
         className="shrink-0 p-1 opacity-0 transition-opacity group-hover:opacity-100"
         aria-label="Favorit"
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFavoriteStore(track);
+          if (server) {
+            toggleFavoriteAPI(server.id, track.id);
+          }
+        }}
       >
-        <Heart className="h-4 w-4 text-[var(--music-text-secondary)] hover:text-[var(--music-accent)]" />
+        <Heart
+          className={
+            'h-4 w-4 ' +
+            (track.isFavorite ?? isFav(track.id)
+              ? 'fill-[var(--music-accent)] text-[var(--music-accent)]'
+              : 'text-[var(--music-text-secondary)] hover:text-[var(--music-accent)]')
+          }
+        />
       </button>
 
       {/* Duration */}
@@ -151,6 +197,27 @@ function SongRowImpl({
         <button
           className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
           aria-label="Mehr"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSongContextMenu(e, {
+              onPlay,
+              onAddToQueue: () => addToQueue(track),
+              onAddToQueueNext: () => addToQueueNext(track),
+              onToggleFavorite: () => {
+                toggleFavoriteStore(track);
+                if (server) {
+                  toggleFavoriteAPI(server.id, track.id);
+                }
+              },
+              onGoToArtist: track.artistId
+                ? () => router.push(`/jellyfin/music/artist/${track.artistId}`)
+                : undefined,
+              onGoToAlbum: track.albumId
+                ? () => router.push(`/jellyfin/music/album/${track.albumId}`)
+                : undefined,
+              isFavorite: track.isFavorite ?? isFav(track.id),
+            });
+          }}
         >
           <MoreHorizontal className="h-4 w-4 text-[var(--music-text-secondary)]" />
         </button>

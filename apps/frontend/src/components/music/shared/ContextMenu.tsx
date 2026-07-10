@@ -121,9 +121,12 @@ export function useSongContextMenu() {
       actions: {
         onPlay?: () => void;
         onAddToQueue?: () => void;
+        onAddToQueueNext?: () => void;
         onAddToPlaylist?: () => void;
         onToggleFavorite?: () => void;
         onShowInfo?: () => void;
+        onGoToArtist?: () => void;
+        onGoToAlbum?: () => void;
         isFavorite?: boolean;
       },
     ) => {
@@ -135,6 +138,9 @@ export function useSongContextMenu() {
       }
       if (actions.onAddToQueue) {
         items.push({ label: 'Zur Warteschlange hinzufügen', onClick: actions.onAddToQueue });
+      }
+      if (actions.onAddToQueueNext) {
+        items.push({ label: 'Als Nächstes abspielen', onClick: actions.onAddToQueueNext });
       }
       if (actions.onAddToPlaylist) {
         items.push({
@@ -155,6 +161,12 @@ export function useSongContextMenu() {
           onClick: actions.onShowInfo,
           separator: true,
         });
+      }
+      if (actions.onGoToArtist) {
+        items.push({ label: 'Zum Künstler gehen', onClick: actions.onGoToArtist });
+      }
+      if (actions.onGoToAlbum) {
+        items.push({ label: 'Zum Album gehen', onClick: actions.onGoToAlbum });
       }
 
       showMenu(e.clientX, e.clientY, items);

@@ -15,10 +15,7 @@ import {
   Mic2,
   Trash2,
   Star,
-  Info,
   Disc3,
-  Music,
-  Sparkles,
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
@@ -29,11 +26,11 @@ import { formatTime } from '@/lib/music-api';
 /* ------------------------------------------------------------------ */
 /*  NowPlayingView — Right Sidebar / Fullscreen / Mini Player         */
 /*  Spec: spotify_now_playing_view.md                                  */
-/*  5 Tabs: Album, Info, Lyrics, Queue, Empfehlungen                  */
+/*  3 Tabs: Now Playing, Lyrics, Queue                                 */
 /*  Queue: Aktueller, Nächste, History + Aktionen                     */
 /* ------------------------------------------------------------------ */
 
-type TabId = 'album' | 'info' | 'lyrics' | 'queue' | 'empfehlungen';
+type TabId = 'nowplaying' | 'lyrics' | 'queue';
 
 type NowPlayingMode = 'sidebar' | 'fullscreen' | 'mini';
 
@@ -44,11 +41,9 @@ interface NowPlayingViewProps {
 }
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'album', label: 'Album', icon: <Disc3 className="h-3.5 w-3.5" /> },
-  { id: 'info', label: 'Info', icon: <Info className="h-3.5 w-3.5" /> },
+  { id: 'nowplaying', label: 'Now Playing', icon: <Disc3 className="h-3.5 w-3.5" /> },
   { id: 'lyrics', label: 'Lyrics', icon: <Mic2 className="h-3.5 w-3.5" /> },
   { id: 'queue', label: 'Queue', icon: <ListMusic className="h-3.5 w-3.5" /> },
-  { id: 'empfehlungen', label: 'Empfehlungen', icon: <Sparkles className="h-3.5 w-3.5" /> },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -83,7 +78,7 @@ function formatSampleRate(hz?: number): string {
 /* ------------------------------------------------------------------ */
 
 export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('album');
+  const [activeTab, setActiveTab] = useState<TabId>('nowplaying');
 
   const {
     currentTrack,
@@ -188,8 +183,7 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden music-scroll">
-        {activeTab === 'album' && <AlbumTab track={currentTrack} />}
-        {activeTab === 'info' && <InfoTab track={currentTrack} />}
+        {activeTab === 'nowplaying' && <NowPlayingTab track={currentTrack} />}
         {activeTab === 'lyrics' && (
           <LyricsTab track={currentTrack} position={position} status={status} />
         )}
@@ -204,54 +198,112 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
             onClearQueue={clearQueue}
           />
         )}
-        {activeTab === 'empfehlungen' && <EmpfehlungenTab track={currentTrack} />}
       </div>
     </aside>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Album Tab — großes Cover + Titel + Interpret + Album + Favorit + Bewertung */
+/*  Now Playing Tab — merged album/info/inhalt + playback controls     */
 /* ------------------------------------------------------------------ */
 
-function AlbumTab({
+function CrossFadeCover({ src, alt }: { src?: string; alt: string }) {
+  const [prevSrc, setPrevSrc] = useState<string | undefined>();
+  const [fading, setFading] = useState(false);
+  const stableRef = useRef<string | undefined>();
+
+  useEffect(() => {
+    if (!src) return;
+    const old = stableRef.current;
+    stableRef.current = src;
+
+    if (old && old !== src) {
+      setPrevSrc(old);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setFading(true);
+        });
+      });
+      const timer = setTimeout(() => {
+        setPrevSrc(undefined);
+        setFading(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [src]);
+
+  return (
+    <div
+      className="relative w-full overflow-hidden rounded-lg shadow-2xl"
+      style={{ aspectRatio: '1/1', maxWidth: '280px' }}
+    >
+      {prevSrc && (
+        <div
+          className="absolute inset-0"
+          style={{
+            opacity: fading ? 0 : 1,
+            transition: 'opacity 300ms ease-in-out',
+          }}
+        >
+          <MusicImage src={prevSrc} alt={alt} className="h-full w-full object-cover" />
+        </div>
+      )}
+      <div className="absolute inset-0">
+        <MusicImage src={src} alt={alt} className="h-full w-full object-cover" />
+      </div>
+    </div>
+  );
+}
+
+function NowPlayingTab({
   track,
 }: {
   track: ReturnType<typeof useMusicPlayerStore.getState>['currentTrack'];
 }) {
+  const { status, togglePlay, next, previous } = useMusicPlayerStore();
   const [isFavorite, setIsFavorite] = useState(false);
   const [rating, setRating] = useState(0);
+  const isPlaying = status === 'playing';
+
+  if (!track) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <Disc3 className="mb-3 h-12 w-12 text-[var(--music-text-disabled)]" />
+        <p className="text-sm font-bold text-[var(--music-text-primary)]">Kein Titel ausgewählt</p>
+      </div>
+    );
+  }
+
+  const infoRows: { label: string; value: string }[] = [
+    { label: 'Genre', value: track.genre ?? '--' },
+    { label: 'Jahr', value: track.year?.toString() ?? '--' },
+    { label: 'Bitrate', value: formatBitrate(track.bitrate) },
+    { label: 'Samplingrate', value: formatSampleRate(track.sampleRate) },
+    { label: 'Codec', value: track.quality ?? '--' },
+    { label: 'Dauer', value: formatTime(track.duration) },
+    { label: 'Dateigröße', value: formatFileSize(track.fileSize) },
+  ];
 
   return (
     <div className="flex flex-col items-center gap-4 p-6">
-      {/* Large Cover — responsive to sidebar width */}
-      <div
-        className="w-full overflow-hidden rounded-lg shadow-2xl"
-        style={{ aspectRatio: '1/1', maxWidth: '280px' }}
-      >
-        <MusicImage
-          src={track?.coverUrl}
-          alt={track?.album ?? 'Cover'}
-          className="h-full w-full object-cover"
-        />
-      </div>
+      {/* Large Cover with cross-fade */}
+      <CrossFadeCover src={track.coverUrl} alt={track.album ?? 'Cover'} />
 
       {/* Track Info */}
       <div className="w-full text-center">
         <p className="text-lg font-bold text-[var(--music-text-primary)] leading-tight">
-          {track?.title ?? '--'}
+          {track.title ?? '--'}
         </p>
         <p className="mt-1 text-sm text-[var(--music-text-secondary)]">
-          {track?.artist ?? 'Unbekannt'}
+          {track.artist ?? 'Unbekannt'}
         </p>
-        {track?.album && (
+        {track.album && (
           <p className="mt-0.5 text-xs text-[var(--music-text-tertiary)]">{track.album}</p>
         )}
       </div>
 
       {/* Favorite + Rating */}
       <div className="flex flex-col items-center gap-2">
-        {/* Favorite toggle */}
         <button
           onClick={() => setIsFavorite(!isFavorite)}
           className="flex items-center gap-1.5 text-xs font-medium"
@@ -263,7 +315,6 @@ function AlbumTab({
           {isFavorite ? 'Favorit' : 'Als Favorit markieren'}
         </button>
 
-        {/* Star Rating (1–5) */}
         <div className="flex items-center gap-0.5">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -285,52 +336,50 @@ function AlbumTab({
           ))}
         </div>
       </div>
-    </div>
-  );
-}
 
-/* ------------------------------------------------------------------ */
-/*  Info Tab — Genre, Jahr, Bitrate, Samplingrate, Codec, Dauer, Dateigröße */
-/* ------------------------------------------------------------------ */
-
-function InfoTab({
-  track,
-}: {
-  track: ReturnType<typeof useMusicPlayerStore.getState>['currentTrack'];
-}) {
-  if (!track) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Info className="mb-3 h-12 w-12 text-[var(--music-text-disabled)]" />
-        <p className="text-sm font-bold text-[var(--music-text-primary)]">Keine Informationen</p>
+      {/* Playback Controls — Play/Pause 32px circle, Prev/Next 20px */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={previous}
+          className="flex items-center justify-center text-[var(--music-text-secondary)] hover:text-white transition-colors"
+          style={{ width: '20px', height: '20px' }}
+        >
+          <SkipBack className="h-5 w-5" />
+        </button>
+        <button
+          onClick={togglePlay}
+          className="flex items-center justify-center rounded-full"
+          style={{
+            width: '32px',
+            height: '32px',
+            background: 'var(--music-accent)',
+            color: 'var(--music-bg-base)',
+          }}
+        >
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </button>
+        <button
+          onClick={next}
+          className="flex items-center justify-center text-[var(--music-text-secondary)] hover:text-white transition-colors"
+          style={{ width: '20px', height: '20px' }}
+        >
+          <SkipForward className="h-5 w-5" />
+        </button>
       </div>
-    );
-  }
 
-  const rows: { label: string; value: string }[] = [
-    { label: 'Genre', value: track.genre ?? '--' },
-    { label: 'Jahr', value: track.year?.toString() ?? '--' },
-    { label: 'Bitrate', value: formatBitrate(track.bitrate) },
-    { label: 'Samplingrate', value: formatSampleRate(track.sampleRate) },
-    { label: 'Codec', value: track.quality ?? '--' },
-    { label: 'Dauer', value: formatTime(track.duration) },
-    { label: 'Dateigröße', value: formatFileSize(track.fileSize) },
-    { label: 'Album', value: track.album ?? '--' },
-    { label: 'Künstler', value: track.artist ?? '--' },
-  ];
-
-  return (
-    <div className="px-4 py-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--music-text-secondary)]">
-        Songinformationen
-      </h3>
-      <div className="divide-y divide-[rgba(255,255,255,0.06)]">
-        {rows.map(({ label, value }) => (
-          <div key={label} className="flex items-center justify-between py-2.5">
-            <span className="text-xs text-[var(--music-text-tertiary)]">{label}</span>
-            <span className="text-xs font-medium text-[var(--music-text-primary)]">{value}</span>
-          </div>
-        ))}
+      {/* Technical Info */}
+      <div className="w-full">
+        <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--music-text-secondary)]">
+          Songinformationen
+        </h3>
+        <div className="divide-y divide-[rgba(255,255,255,0.06)]">
+          {infoRows.map(({ label, value }) => (
+            <div key={label} className="flex items-center justify-between py-2.5">
+              <span className="text-xs text-[var(--music-text-tertiary)]">{label}</span>
+              <span className="text-xs font-medium text-[var(--music-text-primary)]">{value}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -700,51 +749,6 @@ function QueueItem({
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Empfehlungen Tab — Platzhalter für ähnliche Songs/Künstler         */
-/* ------------------------------------------------------------------ */
-
-function EmpfehlungenTab({
-  track,
-}: {
-  track: ReturnType<typeof useMusicPlayerStore.getState>['currentTrack'];
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-      <Sparkles className="mb-4 h-16 w-16 text-[var(--music-text-disabled)]" />
-      <p className="text-base font-bold text-[var(--music-text-primary)]">Empfehlungen</p>
-      <p className="mt-2 text-xs text-[var(--music-text-secondary)] leading-relaxed max-w-[240px]">
-        Ähnliche Songs und Künstler basierend auf
-        <br />
-        <span className="font-medium text-[var(--music-text-primary)]">
-          „{track?.title ?? 'diesen Titel'}"
-        </span>
-      </p>
-
-      <div className="mt-8 flex flex-col items-center gap-3">
-        <div
-          className="flex items-center gap-2 rounded-lg px-4 py-2.5"
-          style={{ background: 'rgba(255,255,255,0.04)' }}
-        >
-          <Music className="h-4 w-4 text-[var(--music-text-tertiary)]" />
-          <span className="text-xs text-[var(--music-text-tertiary)]">
-            Ähnliche Künstler werden bald angezeigt
-          </span>
-        </div>
-        <div
-          className="flex items-center gap-2 rounded-lg px-4 py-2.5"
-          style={{ background: 'rgba(255,255,255,0.04)' }}
-        >
-          <Sparkles className="h-4 w-4 text-[var(--music-text-tertiary)]" />
-          <span className="text-xs text-[var(--music-text-tertiary)]">
-            Song-Empfehlungen in Kürze verfügbar
-          </span>
-        </div>
-      </div>
     </div>
   );
 }

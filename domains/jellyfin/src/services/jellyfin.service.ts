@@ -703,6 +703,37 @@ export class JellyfinService {
     return data.Items ?? [];
   }
 
+  // =================== Playlist Endpoints ===================
+
+  async getPlaylists(ownerId: string, serverId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?IncludeItemTypes=Playlist&Recursive=true&Fields=PrimaryImageAspectRatio,Overview,ChildCount,RunTimeTicks,CumulativeRunTimeTicks`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getPlaylist(ownerId: string, serverId: string, playlistId: string): Promise<any> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    return this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items/${playlistId}?Fields=PrimaryImageAspectRatio,Overview,ChildCount,RunTimeTicks,CumulativeRunTimeTicks`,
+    );
+  }
+
+  async getPlaylistItems(ownerId: string, serverId: string, playlistId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?ParentId=${playlistId}&Recursive=true&IncludeItemTypes=Audio&Fields=AudioInfo,PrimaryImageAspectRatio`,
+    );
+    return data.Items ?? [];
+  }
+
   // =================== Media v0.3 API Extensions (Netflix-style Movies & Series) ===================
 
   async getItemDetail(ownerId: string, serverId: string, externalId: string): Promise<any> {

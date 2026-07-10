@@ -359,6 +359,10 @@ interface TrackTableProps {
   compact?: boolean;
   /** Callback when sort column/direction changes (for server-side re-fetch) */
   onSortChange?: (columnId: ColumnId | null, direction: SortDirection) => void;
+  /** External selection model (selected track IDs) */
+  selectedIds?: Set<string>;
+  /** Callback for row click (selection handling) */
+  onRowClick?: (e: React.MouseEvent, trackId: string, index: number) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -624,6 +628,9 @@ export function TrackTable({
   alwaysShow = [],
   viewMode = 'list',
   compact = false,
+  onSortChange,
+  selectedIds,
+  onRowClick,
 }: TrackTableProps) {
   // ── State ──
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(new Set(DEFAULT_VISIBLE));
@@ -717,14 +724,18 @@ export function TrackTable({
   // ── Sort handler ──
   const handleSort = useCallback((colId: ColumnId) => {
     setSortColumn((prev) => {
+      let newDir: SortDirection;
       if (prev === colId) {
-        setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+        newDir = sortDirection === 'asc' ? 'desc' : 'asc';
+        setSortDirection(newDir);
+        onSortChange?.(colId, newDir);
         return prev;
       }
       setSortDirection('asc');
+      onSortChange?.(colId, 'asc');
       return colId;
     });
-  }, []);
+  }, [sortDirection, onSortChange]);
 
   // ── Clear filters ──
   const clearFilters = useCallback(() => {
@@ -893,6 +904,7 @@ export function TrackTable({
             {virtualizer.getVirtualItems().map((vItem) => {
               const track = processedTracks[vItem.index]!;
               const isPlaying = currentTrackId === track.id;
+              const isSelected = selectedIds?.has(track.id) ?? false;
 
               return (
                 <div
@@ -905,10 +917,13 @@ export function TrackTable({
                     height: `${ROW_HEIGHT}px`,
                     transform: `translateY(${vItem.start}px)`,
                   }}
+                  onClick={(e) => onRowClick?.(e, track.id, vItem.index)}
                   onContextMenu={(e) => handleContextMenu(e, vItem.index)}
                   onDoubleClick={() => onPlay(vItem.index)}
                   className={`group flex items-center gap-3 rounded-md px-4 transition-colors hover:bg-[var(--music-bg-hover)] ${
                     isPlaying ? 'bg-[var(--music-accent)]/5' : ''
+                  } ${
+                    isSelected ? 'bg-[var(--music-bg-hover)] border-l-[3px] border-[var(--music-accent)]' : 'border-l-[3px] border-transparent'
                   } ${compact ? 'gap-2 px-3' : ''}`}
                 >
                   {visibleColDefs.map((col) => {

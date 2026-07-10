@@ -158,6 +158,8 @@ interface MusicPlayerStore {
     queueType?: QueueType,
   ) => void;
   playFromQueue: (index: number) => void;
+  play: () => void;
+  pause: () => void;
   togglePlay: () => void;
   setPlaying: (playing: boolean) => void;
   setStatus: (status: PlayerStatus) => void;
@@ -393,6 +395,20 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
           set({ status: 'paused' });
         } else if (status === 'paused' || status === 'ready') {
           set({ status: 'playing' });
+        }
+      },
+
+      play: () => {
+        const { status } = get();
+        if (status === 'paused' || status === 'ready') {
+          set({ status: 'playing' });
+        }
+      },
+
+      pause: () => {
+        const { status } = get();
+        if (status === 'playing') {
+          set({ status: 'paused' });
         }
       },
 

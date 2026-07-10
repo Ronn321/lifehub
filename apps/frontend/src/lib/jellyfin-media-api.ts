@@ -143,7 +143,7 @@ export async function fetchItemPeople(serverId: string, externalId: string): Pro
 }
 
 export async function searchMedia(serverId: string, query: string, limit = 30): Promise<SearchResults> {
-  return api.get<SearchResults>(`/jellyfin/servers/${serverId}/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+  return api.get<SearchResults>(`/jellyfin/servers/${serverId}/search-media?q=${encodeURIComponent(query)}&limit=${limit}`);
 }
 
 export async function fetchChildren(serverId: string, externalId: string): Promise<JellyfinMediaItem[]> {

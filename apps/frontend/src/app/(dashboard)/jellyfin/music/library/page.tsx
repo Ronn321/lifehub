@@ -1,13 +1,11 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useRef, useMemo, useCallback } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Clock,
+  Play,
+  ListMusic,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/lib/auth-store';
@@ -25,9 +23,11 @@ import { useMusicPlayerStore } from '@/lib/music-player-store';
 import type { MusicTrack } from '@/lib/music-player-store';
 import type { JellyfinApiItem } from '@/lib/music-api';
 import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
-import { SongRow, MusicEmptyState } from '@/components/music/shared/SongRow';
+import { MusicEmptyState } from '@/components/music/shared/SongRow';
 import { MusicCard, MusicCardGrid, MusicLoader } from '@/components/music/shared/MusicCard';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
+import { TrackTable } from '@/components/music/shared/TrackTable';
+import { useSelection } from '@/components/music/shared/useSelection';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -42,86 +42,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'artists', label: 'Künstler' },
   { key: 'genres', label: 'Genres' },
 ];
-
-interface SortColDef {
-  key: SortField;
-  label: string;
-  className: string;
-  icon?: React.ReactNode;
-}
-
-const SORT_COLUMNS: SortColDef[] = [
-  {
-    key: 'Name',
-    label: 'Titel',
-    className: 'flex-1 text-left',
-  },
-  {
-    key: 'Album',
-    label: 'Album',
-    className: 'hidden min-w-0 flex-1 text-left md:block',
-  },
-  {
-    key: 'DateCreated',
-    label: 'Hinzugefügt',
-    className: 'hidden w-24 shrink-0 text-left sm:block',
-  },
-  {
-    key: 'RunTimeTicks',
-    label: '',
-    className: 'flex w-12 shrink-0 items-center justify-end',
-    icon: <Clock className="h-3.5 w-3.5" />,
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Sort Header                                                        */
-/* ------------------------------------------------------------------ */
-
-function SortHeader({
-  sortBy,
-  sortOrder,
-  onSort,
-}: {
-  sortBy: SortField;
-  sortOrder: 'Ascending' | 'Descending';
-  onSort: (field: SortField) => void;
-}) {
-  const renderIcon = (field: SortField) => {
-    if (sortBy !== field) return <ArrowUpDown className="h-3 w-3 opacity-30" />;
-    return sortOrder === 'Ascending' ? (
-      <ArrowUp className="h-3 w-3 text-[var(--music-accent)]" />
-    ) : (
-      <ArrowDown className="h-3 w-3 text-[var(--music-accent)]" />
-    );
-  };
-
-  return (
-    <div
-      className="flex items-center gap-3 border-b border-[rgba(255,255,255,0.1)] px-4 pb-2 text-xs uppercase tracking-wide text-[var(--music-text-secondary)]"
-      style={{ height: '40px' }}
-    >
-      <div className="flex w-8 shrink-0 items-center justify-center">
-        <span>#</span>
-      </div>
-      <div className="w-10 shrink-0" />
-
-      {SORT_COLUMNS.map((col) => (
-        <button
-          key={col.key}
-          onClick={() => onSort(col.key)}
-          className={`flex items-center gap-1.5 hover:text-[var(--music-text-primary)] transition-colors ${col.className}`}
-        >
-          {col.icon ?? col.label}
-          {renderIcon(col.key)}
-        </button>
-      ))}
-
-      <div className="w-8 shrink-0" />
-      <div className="w-12 shrink-0" />
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  TabContent — reusable loading/empty/content wrapper                */
@@ -216,20 +136,65 @@ export default function MusicLibraryPage() {
   const handlePlaySong = useCallback(
     (index: number) => {
       if (!songsQuery.data?.items || !server?.id) return;
-      playTracks(songsQuery.data.items, index, server.id);
+      // TrackTable may reorder/filter — look up the original raw item by ID
+      const track = tracks[index];
+      if (!track) return;
+      const rawIndex = songsQuery.data.items.findIndex((i) => i.Id === track.id);
+      if (rawIndex === -1) return;
+      playTracks(songsQuery.data.items, rawIndex, server.id);
     },
-    [songsQuery.data, server?.id, playTracks],
+    [tracks, songsQuery.data, server?.id, playTracks],
   );
 
-  // ── Virtualizer ──
+  // ── Selection (songs tab only) ──
 
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: tracks.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 56,
-    overscan: 5,
-  });
+  const selection = useSelection();
+  const allTrackIds = useMemo(() => tracks.map((t) => t.id), [tracks]);
+  const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
+
+  const handleRowClick = useCallback(
+    (e: React.MouseEvent, trackId: string) => {
+      e.stopPropagation();
+      if (e.shiftKey) {
+        selection.selectRange(trackId, allTrackIds);
+      } else if (e.ctrlKey || e.metaKey) {
+        selection.toggleOne(trackId);
+      } else {
+        selection.selectOne(trackId);
+      }
+    },
+    [selection, allTrackIds],
+  );
+
+  // Ctrl+A to select all visible tracks
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        const active = document.activeElement;
+        if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return;
+        e.preventDefault();
+        selection.selectAll(allTrackIds);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selection, allTrackIds]);
+
+  const handlePlaySelected = useCallback(() => {
+    if (!songsQuery.data?.items || !server?.id) return;
+    const selectedItems = songsQuery.data.items.filter((item) =>
+      selection.selectedIds.has(item.Id),
+    );
+    if (selectedItems.length > 0) {
+      playTracks(selectedItems, 0, server.id);
+    }
+  }, [songsQuery.data, server?.id, playTracks, selection.selectedIds]);
+
+  const handleQueueSelected = useCallback(() => {
+    const selectedTracks = tracks.filter((t) => selection.selectedIds.has(t.id));
+    selectedTracks.forEach((t) => addToQueue(t));
+    selection.clear();
+  }, [tracks, selection, addToQueue]);
 
   const songsLoading =
     songsQuery.isLoading || (songsQuery.isFetching && tracks.length === 0);
@@ -273,82 +238,59 @@ export default function MusicLibraryPage() {
         {/* ═══════════════════════ Songs ═══════════════════════ */}
         {activeTab === 'songs' && (
           <>
-            <SortHeader
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSort={handleSort}
-            />
-
-            {songsLoading ? (
-              <MusicLoader />
-            ) : tracks.length === 0 ? (
-              <MusicEmptyState
-                title="Keine Lieder gefunden"
-                description="Füge Musik zu deiner Jellyfin-Bibliothek hinzu."
-              />
-            ) : (
+            {/* ── Selection Bulk Action Bar ── */}
+            {selection.selectedCount > 0 && (
               <div
-                ref={parentRef}
-                className="flex-1 overflow-auto music-scroll rounded-md"
-                style={{ background: 'var(--music-bg-elevated)' }}
+                className="flex items-center gap-3 rounded-md px-4 py-2"
+                style={{
+                  background: 'var(--music-bg-elevated)',
+                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                }}
               >
-                <div
-                  style={{
-                    height: virtualizer.getTotalSize(),
-                    position: 'relative',
-                  }}
-                >
-                  {virtualizer.getVirtualItems().map((vItem) => (
-                    <div
-                      key={vItem.key}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        transform: `translateY(${vItem.start}px)`,
-                      }}
-                    >
-                      <SongRow
-                        index={vItem.index}
-                        track={tracks[vItem.index]!}
-                        isPlaying={
-                          currentTrack?.id === tracks[vItem.index]!.id
-                        }
-                        onPlay={() => handlePlaySong(vItem.index)}
-                      />
-                    </div>
-                  ))}
+                <span className="text-sm font-medium text-[var(--music-text-primary)]">
+                  {selection.selectedCount} ausgewählt
+                </span>
+                <div className="flex items-center gap-2 ml-4">
+                  <button
+                    onClick={handlePlaySelected}
+                    className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--music-bg-hover)] text-[var(--music-text-primary)]"
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                    Ausgewählte abspielen
+                  </button>
+                  <button
+                    onClick={handleQueueSelected}
+                    className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--music-bg-hover)] text-[var(--music-text-primary)]"
+                  >
+                    <ListMusic className="h-3.5 w-3.5" />
+                    Zur Queue hinzufügen
+                  </button>
+                  <button
+                    onClick={selection.clear}
+                    className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[var(--music-bg-hover)] text-[var(--music-text-secondary)] ml-auto"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Auswahl aufheben
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-2 text-xs text-[var(--music-text-secondary)]">
-                <span>
-                  Seite {page + 1} von {totalPages} ({totalSongs} Lieder)
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page <= 0}
-                    className="rounded-md px-3 py-1.5 transition-colors disabled:opacity-30 hover:bg-[var(--music-bg-hover)]"
-                  >
-                    Vorherige
-                  </button>
-                  <button
-                    onClick={() =>
-                      setPage((p) => Math.min(totalPages - 1, p + 1))
-                    }
-                    disabled={page >= totalPages - 1}
-                    className="rounded-md px-3 py-1.5 transition-colors disabled:opacity-30 hover:bg-[var(--music-bg-hover)]"
-                  >
-                    Nächste
-                  </button>
-                </div>
-              </div>
-            )}
+            <TrackTable
+              tracks={tracks}
+              isLoading={songsLoading}
+              currentTrackId={currentTrack?.id ?? undefined}
+              onPlay={handlePlaySong}
+              serverId={server?.id ?? undefined}
+              accessToken={accessToken ?? undefined}
+              totalCount={totalSongs}
+              page={page}
+              totalPages={totalPages}
+              onPrevPage={() => setPage((p) => Math.max(0, p - 1))}
+              onNextPage={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              selectedIds={selection.selectedIds}
+              onRowClick={handleRowClick}
+            />
           </>
         )}
 

@@ -68,12 +68,16 @@ export function MusicPlayerWrapper() {
   /* ── Local UI state for the player bar ── */
   const [isLiked, setIsLiked] = useState(false);
   const [isLyricsVisible, setIsLyricsVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   /* ── Ref: intended status (playing/paused) for buffering/seeking recovery ── */
   const intendedStatusRef = useRef<'playing' | 'paused'>('paused');
 
   /* ── Ref: finished → next delay timer ── */
   const finishedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* ── Ref: error → auto-skip timer ── */
+  const errorSkipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* Keep intendedStatusRef in sync with store status when not buffering/seeking */
   useEffect(() => {
@@ -199,7 +203,18 @@ export function MusicPlayerWrapper() {
   }, [status, server?.id]);
 
   /* ════════════════════════════════════════════════════════════════ */
-  /*  4. Audio event listeners                                       */
+  /*  4a. Error auto-skip: clear the timeout if status leaves error  */
+  /* ════════════════════════════════════════════════════════════════ */
+
+  useEffect(() => {
+    if (status !== 'error' && errorSkipTimerRef.current) {
+      clearTimeout(errorSkipTimerRef.current);
+      errorSkipTimerRef.current = null;
+    }
+  }, [status]);
+
+  /* ════════════════════════════════════════════════════════════════ */
+  /*  4b. Audio event listeners                                      */
   /*     State transitions:                                          */
   /*       loadstart → loading                                       */
   /*       canplay → recover from loading → [playing|paused]          */
@@ -310,6 +325,19 @@ export function MusicPlayerWrapper() {
       console.error('Audio playback error:', errMsg, audio.error);
       setStatus('error');
       useMusicPlayerStore.getState().setError(errMsg);
+
+      // Auto-skip to next track after 5 seconds on error
+      if (errorSkipTimerRef.current) {
+        clearTimeout(errorSkipTimerRef.current);
+      }
+      errorSkipTimerRef.current = setTimeout(() => {
+        const store = useMusicPlayerStore.getState();
+        store.next();
+      }, 5000);
+
+      // Show toast notification
+      setToastMessage('Fehler bei Wiedergabe — überspringe zu nächstem Track');
+      setTimeout(() => setToastMessage(null), 4000);
     };
 
     /* ── Register all listeners ── */
@@ -349,6 +377,9 @@ export function MusicPlayerWrapper() {
 
       if (finishedTimerRef.current) {
         clearTimeout(finishedTimerRef.current);
+      }
+      if (errorSkipTimerRef.current) {
+        clearTimeout(errorSkipTimerRef.current);
       }
     };
   }, []);
@@ -429,6 +460,20 @@ export function MusicPlayerWrapper() {
         isVisible={isLyricsVisible}
         onClose={handleLyricsToggle}
       />
+
+      {/* ── Toast notification ── */}
+      {toastMessage && (
+        <div
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium"
+          style={{
+            background: 'rgba(239, 68, 68, 0.9)',
+            color: '#fff',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          {toastMessage}
+        </div>
+      )}
     </>
   );
 }

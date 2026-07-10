@@ -279,13 +279,23 @@ export function MusicPlayerBar({
           break;
         }
         case 'ArrowLeft': {
-          e.preventDefault();
-          previous();
+          if (e.shiftKey) {
+            e.preventDefault();
+            if (hasTrack) handleSeek(position - 10);
+          } else {
+            e.preventDefault();
+            previous();
+          }
           break;
         }
         case 'ArrowRight': {
-          e.preventDefault();
-          next();
+          if (e.shiftKey) {
+            e.preventDefault();
+            if (hasTrack) handleSeek(position + 10);
+          } else {
+            e.preventDefault();
+            next();
+          }
           break;
         }
         case 'Equal':
@@ -327,7 +337,7 @@ export function MusicPlayerBar({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasTrack, togglePlay, previous, next, localVolume, handleVolumeChange, handleToggleMute, toggleShuffle, cycleRepeat, handleFullscreen]);
+  }, [hasTrack, togglePlay, previous, next, localVolume, handleVolumeChange, handleToggleMute, toggleShuffle, cycleRepeat, handleFullscreen, handleSeek, position]);
 
   /* ── Render ── */
 

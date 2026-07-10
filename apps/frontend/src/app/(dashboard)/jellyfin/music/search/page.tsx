@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search as SearchIcon, X, Clock } from 'lucide-react';
 import {
   useJellyfinServer,
@@ -58,6 +58,7 @@ export default function MusicSearchPage() {
   const [showAllArtists, setShowAllArtists] = useState(false);
   const [showAllAlbums, setShowAllAlbums] = useState(false);
   const [showAllSongs, setShowAllSongs] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   /* ── Search History ── */
 
@@ -108,6 +109,67 @@ export default function MusicSearchPage() {
     playTracks(searchResults.Songs, 0, server.id);
   }, [server?.id, accessToken, searchResults, playTracks]);
 
+  /* ── Autocomplete suggestions ── */
+
+  const suggestions = useMemo(() => {
+    const list: { label: string; type: 'history' | 'result' }[] = [];
+    if (query.length < 1) return list;
+    const q = query.toLowerCase();
+    for (const entry of history) {
+      if (list.length >= 5) break;
+      if (entry.query.toLowerCase().includes(q)) {
+        list.push({ label: entry.query, type: 'history' });
+      }
+    }
+    if (searchResults) {
+      const seen = new Set(list.map((s) => s.label.toLowerCase()));
+      const candidates = [
+        ...(searchResults.Artists || []).map((a) => ({ label: a.Name, type: 'result' as const })),
+        ...(searchResults.Albums || []).map((a) => ({ label: a.Name, type: 'result' as const })),
+        ...(searchResults.Songs || []).map((s) => ({ label: s.Name, type: 'result' as const })),
+      ];
+      for (const c of candidates) {
+        if (list.length >= 5) break;
+        if (!seen.has(c.label.toLowerCase()) && c.label.toLowerCase().includes(q)) {
+          list.push(c);
+          seen.add(c.label.toLowerCase());
+        }
+      }
+    }
+    return list;
+  }, [query, history, searchResults]);
+
+  const showAutocomplete = isInputFocused && query.length >= 1 && suggestions.length > 0;
+
+  useEffect(() => { setSelectedIndex(-1); }, [suggestions.length]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showAutocomplete) return;
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev + 1) % suggestions.length);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
+        break;
+      case 'Enter':
+        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+          e.preventDefault();
+          const sel = suggestions[selectedIndex]!;
+          setQuery(sel.label);
+          setDebouncedQuery(sel.label);
+          setIsInputFocused(false);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsInputFocused(false);
+        break;
+    }
+  };
+
   const hasNoResults = hasQuery && !searchLoading && searchResults &&
     (!searchResults.Artists || searchResults.Artists.length === 0) &&
     (!searchResults.Albums || searchResults.Albums.length === 0) &&
@@ -140,6 +202,7 @@ export default function MusicSearchPage() {
                 }}
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
+                onKeyDown={handleKeyDown}
                 placeholder="Was möchtest du wiedergeben?"
                 autoFocus
                 className="w-full rounded-full border-none py-3 pl-12 pr-12 text-sm font-medium outline-none transition-all placeholder:text-[var(--music-text-tertiary)]"
@@ -156,6 +219,38 @@ export default function MusicSearchPage() {
                 >
                   <X className="h-4 w-4" style={{ color: 'var(--music-text-secondary)' }} />
                 </button>
+              )}
+
+              {/* ── Autocomplete Dropdown ── */}
+              {showAutocomplete && (
+                <div
+                  className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-[rgba(255,255,255,0.1)] shadow-2xl"
+                  style={{ background: 'var(--music-bg-elevated)' }}
+                >
+                  {suggestions.map((suggestion, idx) => (
+                    <button
+                      key={`${suggestion.type}-${suggestion.label}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setQuery(suggestion.label);
+                        setDebouncedQuery(suggestion.label);
+                        setIsInputFocused(false);
+                      }}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
+                        idx === selectedIndex ? 'bg-[var(--music-bg-hover)]' : ''
+                      }`}
+                      style={{ color: 'var(--music-text-primary)' }}
+                    >
+                      {suggestion.type === 'history' ? (
+                        <Clock className="h-4 w-4 shrink-0" style={{ color: 'var(--music-text-secondary)' }} />
+                      ) : (
+                        <SearchIcon className="h-4 w-4 shrink-0" style={{ color: 'var(--music-text-secondary)' }} />
+                      )}
+                      <span className="truncate">{suggestion.label}</span>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 

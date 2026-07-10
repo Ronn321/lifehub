@@ -68,11 +68,17 @@ export function ContextMenuProvider({ children }: { children: React.ReactNode })
   return (
     <ContextMenuContext.Provider value={{ showMenu, hideMenu }}>
       {children}
+      <style>{`
+        @keyframes context-menu-fade-in {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {menu && (
         <div
           ref={menuRef}
           className="fixed z-[var(--music-z-context-menu)] min-w-[200px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl"
-          style={{ left: menu.x, top: menu.y }}
+          style={{ left: menu.x, top: menu.y, animation: 'context-menu-fade-in 150ms ease-out' }}
           role="menu"
         >
           {menu.items.map((item, i) => (

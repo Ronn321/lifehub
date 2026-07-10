@@ -22,6 +22,23 @@ import {
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { MusicImage } from '@/components/music/shared/MusicCard';
 import { formatTime } from '@/lib/music-api';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 
 /* ------------------------------------------------------------------ */
 /*  NowPlayingView — Right Sidebar / Fullscreen / Mini Player         */
@@ -537,6 +554,14 @@ function QueueTab({
   onClearQueue: () => void;
 }) {
   const hasAny = queue.length > 0 || history.length > 0;
+  const [activeId, setActiveId] = useState<number | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor),
+  );
 
   if (!hasAny) {
     return (
@@ -551,6 +576,18 @@ function QueueTab({
   }
 
   const nextTracks = queue.slice(currentIndex + 1);
+  const nextIndices = nextTracks.map((_, i) => currentIndex + 1 + i);
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(Number(event.active.id));
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    onReorderQueue(Number(active.id), Number(over.id));
+  }
 
   return (
     <div className="flex flex-col">
@@ -608,27 +645,98 @@ function QueueTab({
           <p className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--music-text-tertiary)]">
             Als Nächstes ({nextTracks.length})
           </p>
-          {nextTracks.map((track, i) => (
-            <QueueItem
-              key={`next-${track.id}-${i}`}
-              track={track}
-              index={currentIndex + 1 + i}
-              onPlay={onPlayFromQueue}
-              onRemove={onRemoveFromQueue}
-              onMoveUp={
-                i > 0
-                  ? () => onReorderQueue(currentIndex + 1 + i, currentIndex + i)
-                  : undefined
-              }
-              onMoveDown={
-                i < nextTracks.length - 1
-                  ? () => onReorderQueue(currentIndex + 1 + i, currentIndex + 2 + i)
-                  : undefined
-              }
-            />
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis]}
+          >
+            <SortableContext
+              items={nextIndices}
+              strategy={verticalListSortingStrategy}
+            >
+              {nextTracks.map((track, i) => {
+                const globalIndex = currentIndex + 1 + i;
+                return (
+                  <SortableQueueItem
+                    key={`next-${track.id}-${i}`}
+                    id={globalIndex}
+                    track={track}
+                    index={globalIndex}
+                    onPlay={onPlayFromQueue}
+                    onRemove={onRemoveFromQueue}
+                    onMoveUp={
+                      i > 0
+                        ? () => onReorderQueue(globalIndex, globalIndex - 1)
+                        : undefined
+                    }
+                    onMoveDown={
+                      i < nextTracks.length - 1
+                        ? () => onReorderQueue(globalIndex, globalIndex + 1)
+                        : undefined
+                    }
+                  />
+                );
+              })}
+            </SortableContext>
+            <DragOverlay>
+              {activeId != null && queue[activeId] ? (
+                <div className="flex items-center gap-2 rounded-md px-2 py-1.5 bg-[var(--music-bg-elevated)] shadow-xl opacity-90">
+                  <div className="h-8 w-8 shrink-0 overflow-hidden rounded">
+                    <MusicImage
+                      src={queue[activeId].coverUrl}
+                      alt={queue[activeId].album ?? 'Cover'}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-[var(--music-text-primary)]">
+                      {queue[activeId].title}
+                    </p>
+                    <p className="truncate text-xs text-[var(--music-text-secondary)]">
+                      {queue[activeId].artist}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sortable Queue Item — drag & drop wrapper                          */
+/* ------------------------------------------------------------------ */
+
+interface SortableQueueItemProps extends QueueItemProps {
+  id: number;
+}
+
+function SortableQueueItem({ id, ...itemProps }: SortableQueueItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition: `${transition}`,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
+      <QueueItem {...itemProps} />
     </div>
   );
 }

@@ -549,6 +549,29 @@ export class PagesService {
     await this.repo.setActiveBrowserTab(sessionId, tabId);
   }
 
+  // ========== BROWSER SESSIONS ==========
+
+  async getOrCreateBrowserSession(ownerId: string, blockId: string, startUrl?: string) {
+    const existing = await this.repo.findBrowserSessionByBlock(blockId, ownerId);
+    if (existing) return existing;
+    const created = await this.repo.createBrowserSession({ blockId, ownerId, startUrl });
+    if (!created) throw new Error('Browser-Session konnte nicht erstellt werden');
+    return created;
+  }
+
+  async getBrowserSession(ownerId: string, blockId: string) {
+    return this.repo.findBrowserSessionByBlock(blockId, ownerId);
+  }
+
+  async updateBrowserSession(ownerId: string, sessionId: string, data: Partial<{
+    startUrl: string;
+    settings: Record<string, unknown>;
+  }>) {
+    const session = await this.repo.findBrowserSessionById(sessionId);
+    if (!session) throw new NotFoundException('Browser-Session nicht gefunden');
+    return this.repo.updateBrowserSession(sessionId, data);
+  }
+
   async findPageBySlug(ownerId: string, slug: string) {
     return this.repo.findPageBySlug(slug, ownerId);
   }

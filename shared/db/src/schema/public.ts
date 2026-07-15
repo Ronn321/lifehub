@@ -601,10 +601,25 @@ export const pagePins = pgTable('page_pins', {
   index('page_pins_user_idx').on(t.userId, t.sortOrder),
 ]);
 
+// ===================== browser_sessions =====================
+export const browserSessions = pgTable('browser_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  blockId: uuid('block_id').notNull().references(() => pageBlocks.id, { onDelete: 'cascade' }),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  startUrl: text('start_url').notNull().default(''),
+  settings: jsonb('settings').notNull().default('{"zoom":1.0,"darkMode":false}'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('browser_sessions_block_idx').on(t.blockId),
+  index('browser_sessions_owner_idx').on(t.ownerId),
+]);
+
 // ===================== browser_tabs =====================
 export const browserTabs = pgTable('browser_tabs', {
   id: uuid('id').primaryKey().defaultRandom(),
   sessionId: uuid('session_id').notNull().references(() => researchSessions.id, { onDelete: 'cascade' }),
+  browserSessionId: uuid('browser_session_id').references(() => browserSessions.id, { onDelete: 'cascade' }),
   url: text('url').notNull().default('about:blank'),
   title: text('title'),
   favicon: text('favicon'),

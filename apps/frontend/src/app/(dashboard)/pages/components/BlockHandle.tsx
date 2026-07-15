@@ -5,7 +5,7 @@ import {
   GripVertical, Trash2, Copy, ChevronUp, ChevronDown, Plus, History,
   Type, Heading, List, ListOrdered, CheckSquare,
   Image, Grid3X3, File, Minus, Quote, Code,
-  Bookmark, Table2, ToggleLeft, MessageSquare, Link2,
+  Bookmark, Table2, ToggleLeft, MessageSquare, Link2, Globe,
 } from 'lucide-react';
 
 export type BlockType =
@@ -13,7 +13,7 @@ export type BlockType =
   | 'todo' | 'toggle' | 'callout' | 'quote' | 'code'
   | 'bookmark' | 'table' | 'page-reference'
   | 'checklist' | 'timeline' | 'embed' | 'video' | 'file' | 'link' | 'map'
-  | 'research_workspace' | 'search';
+  | 'research_workspace' | 'browser_embed' | 'search';
 
 const BLOCK_TYPE_OPTIONS: Array<{ type: BlockType; label: string; icon: React.ReactNode; category: string }> = [
   { type: 'text', label: 'Text', icon: <Type className="h-4 w-4" />, category: 'Basis' },
@@ -30,6 +30,7 @@ const BLOCK_TYPE_OPTIONS: Array<{ type: BlockType; label: string; icon: React.Re
   { type: 'table', label: 'Tabelle', icon: <Table2 className="h-4 w-4" />, category: 'Struktur' },
   { type: 'divider', label: 'Trenner', icon: <Minus className="h-4 w-4" />, category: 'Struktur' },
   { type: 'page-reference', label: 'Seiten-Verweis', icon: <Link2 className="h-4 w-4" />, category: 'Struktur' },
+  { type: 'browser_embed', label: 'Browser', icon: <Globe className="h-4 w-4" />, category: 'Widgets' },
 ];
 
 interface BlockHandleProps {

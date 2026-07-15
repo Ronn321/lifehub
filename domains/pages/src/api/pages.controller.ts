@@ -445,4 +445,35 @@ export class PagesController {
     await this.pages.setActiveBrowserTab(sessionId, tabId);
   }
 
+  // ========== BROWSER SESSIONS (for browser_embed blocks) ==========
+
+  @Post('browser/:blockId/session')
+  @RequirePermission('pages', 'update')
+  async getOrCreateBrowserSession(
+    @Param('blockId') blockId: string,
+    @Body() body: { startUrl?: string },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.pages.getOrCreateBrowserSession(user.sub, blockId, body?.startUrl);
+  }
+
+  @Get('browser/:blockId/session')
+  @RequirePermission('pages', 'read')
+  async getBrowserSession(
+    @Param('blockId') blockId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.pages.getBrowserSession(user.sub, blockId);
+  }
+
+  @Put('browser/sessions/:sessionId')
+  @RequirePermission('pages', 'update')
+  async updateBrowserSession(
+    @Param('sessionId') sessionId: string,
+    @Body() body: { startUrl?: string; settings?: Record<string, unknown> },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.pages.updateBrowserSession(user.sub, sessionId, body);
+  }
+
 }

@@ -41,6 +41,7 @@ const blockTypes = [
   'checklist', 'timeline', 'embed', 'video', 'file', 'link', 'map',
   'research_workspace', 'calendar_view', 'finance_widget',
   'it_inventory_widget', 'jellyfin_player',
+  'browser_embed', 'search',
 ] as const;
 
 export const createBlockSchema = z.object({

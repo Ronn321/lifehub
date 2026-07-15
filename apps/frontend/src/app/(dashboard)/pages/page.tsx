@@ -21,6 +21,7 @@ import { BookmarkBlock } from './components/blocks/BookmarkBlock';
 import { TableBlock } from './components/blocks/TableBlock';
 import { PageReferenceBlock } from './components/blocks/PageReferenceBlock';
 import { ResearchWorkspaceBlock } from './components/blocks/ResearchWorkspaceBlock';
+import { BrowserBlock } from './components/blocks/BrowserBlock';
 import { ChecklistBlock } from './components/blocks/ChecklistBlock';
 import { TimelineBlock } from './components/blocks/TimelineBlock';
 import { EmbedBlock } from './components/blocks/EmbedBlock';
@@ -38,7 +39,7 @@ import {
   Plus, Notebook, Loader2, Trash2,
   Heading, Type, Image, Grid3X3, File, Minus, Check,
   ChevronRight, MessageSquare, Quote, Code, Bookmark, Table2, Link2,
-  Calendar, PiggyBank, Server, History, Search,
+  Calendar, PiggyBank, Server, History, Search, Globe,
 } from 'lucide-react';
 
 interface Page {
@@ -60,7 +61,7 @@ type BlockTypeUnion = 'heading' | 'text' | 'image' | 'gallery' | 'file-list' | '
   | 'todo' | 'toggle' | 'callout' | 'quote' | 'code'
   | 'bookmark' | 'table' | 'page-reference'
   | 'checklist' | 'timeline' | 'embed' | 'video' | 'file' | 'link' | 'map'
-  | 'research_workspace' | 'search';
+  | 'research_workspace' | 'browser_embed' | 'search';
 
 interface PageBlock {
   id: string;
@@ -108,6 +109,7 @@ const blockIcon: Record<string, React.ReactNode> = {
   link: <Link2 className="h-4 w-4" />,
   map: <Image className="h-4 w-4" />,
   research_workspace: <Notebook className="h-4 w-4" />,
+  browser_embed: <Globe className="h-4 w-4" />,
   calendar_view: <Calendar className="h-4 w-4" />,
   finance_widget: <PiggyBank className="h-4 w-4" />,
   it_inventory_widget: <Server className="h-4 w-4" />,
@@ -138,6 +140,7 @@ const blockLabel: Record<string, string> = {
   link: 'Verknüpfung',
   map: 'Karte',
   research_workspace: 'Recherche',
+  browser_embed: 'Browser',
   calendar_view: 'Kalender-Ansicht',
   finance_widget: 'Finanzen',
   it_inventory_widget: 'IT-Inventar',
@@ -172,6 +175,7 @@ const BLOCK_DEFAULTS: Record<string, Record<string, unknown>> = {
   bookmark: { url: '' },
   table: { columns: [], rows: [], functions: {} },
   'page-reference': { pageId: '' },
+  browser_embed: { startUrl: '', title: '', sessionId: null },
   search: { scope: 'page', query: '' },
 };
 
@@ -695,6 +699,17 @@ function BlockEditor({ block, onUpdate, onBlockTypeChange, pageId, allPages, onN
   if (block.type === 'research_workspace') {
     return (
       <ResearchWorkspaceBlock
+        pageId={pageId}
+        content={block.content}
+        onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
+      />
+    );
+  }
+
+  if (block.type === 'browser_embed') {
+    return (
+      <BrowserBlock
+        blockId={block.id}
         pageId={pageId}
         content={block.content}
         onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}

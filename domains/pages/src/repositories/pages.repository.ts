@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { and, eq, isNull, sql, asc, desc } from 'drizzle-orm';
-import { DbService, pages, pageBlocks, blockVersions, pageVersions, pageRelations, pageTemplates, researchSessions, researchSources, researchCollections, pagePins, browserTabs, type Db } from '@lifehub/db';
+import { DbService, pages, pageBlocks, blockVersions, pageVersions, pageRelations, pageTemplates, researchSessions, researchSources, researchCollections, pagePins, browserTabs, browserSessions, type Db } from '@lifehub/db';
 import type { PageBlock } from '../entities/pages';
 
 export class PagesRepository {
@@ -620,5 +620,51 @@ export class PagesRepository {
     await this.db.update(browserTabs)
       .set({ isActive: true })
       .where(eq(browserTabs.id, tabId));
+  }
+
+  // ========== BROWSER SESSIONS ==========
+
+  async createBrowserSession(data: {
+    blockId: string;
+    ownerId: string;
+    startUrl?: string;
+    settings?: Record<string, unknown>;
+  }) {
+    const [row] = await this.db.insert(browserSessions).values({
+      blockId: data.blockId,
+      ownerId: data.ownerId,
+      startUrl: data.startUrl ?? '',
+      settings: (data.settings ?? { zoom: 1.0, darkMode: false }) as typeof browserSessions.$inferInsert.settings,
+    }).returning();
+    return row;
+  }
+
+  async findBrowserSessionByBlock(blockId: string, ownerId: string) {
+    const [row] = await this.db.select().from(browserSessions)
+      .where(and(eq(browserSessions.blockId, blockId), eq(browserSessions.ownerId, ownerId)));
+    return row ?? null;
+  }
+
+  async findBrowserSessionById(id: string) {
+    const [row] = await this.db.select().from(browserSessions)
+      .where(eq(browserSessions.id, id));
+    return row ?? null;
+  }
+
+  async updateBrowserSession(id: string, data: Partial<{
+    startUrl: string;
+    settings: Record<string, unknown>;
+  }>) {
+    const [row] = await this.db.update(browserSessions)
+      .set({ ...data, updatedAt: sql`now()` })
+      .where(eq(browserSessions.id, id))
+      .returning();
+    return row ?? null;
+  }
+
+  async findBrowserTabsByBrowserSession(browserSessionId: string) {
+    return this.db.select().from(browserTabs)
+      .where(eq(browserTabs.browserSessionId as any, browserSessionId))
+      .orderBy(asc(browserTabs.sortOrder));
   }
 }

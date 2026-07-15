@@ -1,0 +1,301 @@
+'use client';
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import {
+  Globe, ChevronLeft, ChevronRight, RotateCw, Plus, X, ExternalLink, Loader2,
+} from 'lucide-react';
+
+interface BrowserBlockProps {
+  blockId: string;
+  pageId: string;
+  content: Record<string, unknown>;
+  onChange: (data: Record<string, unknown>) => void;
+}
+
+interface BrowserSession {
+  id: string;
+  blockId: string;
+  startUrl: string;
+  settings: Record<string, unknown>;
+}
+
+interface BrowserTab {
+  id: string;
+  url: string;
+  title: string | null;
+  isActive: boolean;
+}
+
+const PROXY_BASE = typeof window !== 'undefined'
+  ? `http://${window.location.hostname}:3007/api/v1/browser/proxy`
+  : '/api/v1/browser/proxy';
+
+export function BrowserBlock({ blockId, pageId, content, onChange }: BrowserBlockProps) {
+  const queryClient = useQueryClient();
+
+  // Session state — stored in block content
+  const sessionId = (content.sessionId as string) ?? null;
+  const startUrl = (content.startUrl as string) ?? '';
+
+  // Browser UI state
+  const [urlInput, setUrlInput] = useState(startUrl || '');
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // ─── Session: create or get ───────────────────────────────────────────────
+  const { mutate: initSession } = useMutation({
+    mutationFn: () =>
+      api.post<BrowserSession>(`/pages/browser/${blockId}/session`, { startUrl }),
+    onSuccess: (session: BrowserSession) => {
+      onChange({ ...content, sessionId: session.id });
+    },
+  });
+
+  // Auto-init session on mount if not present
+  useEffect(() => {
+    if (!sessionId) {
+      initSession();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── Tabs ─────────────────────────────────────────────────────────────────
+  const { data: tabs } = useQuery({
+    queryKey: ['browser-tabs', sessionId],
+    queryFn: () => api.get<BrowserTab[]>(`/pages/research-sessions/${sessionId}/tabs`),
+    enabled: !!sessionId,
+  });
+
+  const createTabMutation = useMutation({
+    mutationFn: ({ url, title }: { url: string; title?: string }) =>
+      api.post<BrowserTab>(`/pages/research-sessions/${sessionId}/tabs`, { url, title }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['browser-tabs', sessionId] });
+    },
+  });
+
+  const closeTabMutation = useMutation({
+    mutationFn: (tabId: string) =>
+      api.delete(`/pages/browser-tabs/${tabId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['browser-tabs', sessionId] });
+    },
+  });
+
+  const activateTabMutation = useMutation({
+    mutationFn: (tabId: string) =>
+      api.post(`/pages/research-sessions/${sessionId}/tabs/${tabId}/activate`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['browser-tabs', sessionId] });
+    },
+  });
+
+  // ─── Navigation helpers ───────────────────────────────────────────────────
+  const normalizeUrl = useCallback((input: string) => {
+    let n = input.trim();
+    if (!n) return '';
+    if (!/^https?:\/\//i.test(n)) n = 'https://' + n;
+    return n;
+  }, []);
+
+  const getProxyUrl = useCallback((target: string) => {
+    return `${PROXY_BASE}?url=${encodeURIComponent(target)}`;
+  }, []);
+
+  const navigate = useCallback((url: string) => {
+    const normalized = normalizeUrl(url);
+    if (!normalized) return;
+    setUrlInput(normalized);
+    setIsLoading(true);
+    setCurrentUrl(normalized);
+    setHistory((prev) => {
+      const h = prev.slice(0, historyIndex + 1);
+      h.push(normalized);
+      return h;
+    });
+    setHistoryIndex((prev) => prev + 1);
+    // Create a tab if we have a session
+    if (sessionId) {
+      createTabMutation.mutate({ url: normalized, title: normalized });
+    }
+  }, [normalizeUrl, historyIndex, sessionId, createTabMutation]);
+
+  const handleGo = useCallback(() => {
+    navigate(urlInput);
+  }, [urlInput, navigate]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleGo();
+  }, [handleGo]);
+
+  const handleBack = useCallback(() => {
+    if (historyIndex <= 0) return;
+    const idx = historyIndex - 1;
+    const url = history[idx];
+    if (!url) return;
+    setHistoryIndex(idx);
+    setUrlInput(url);
+    setCurrentUrl(url);
+    setIsLoading(true);
+  }, [historyIndex, history]);
+
+  const handleForward = useCallback(() => {
+    if (historyIndex >= history.length - 1) return;
+    const idx = historyIndex + 1;
+    const url = history[idx];
+    if (!url) return;
+    setHistoryIndex(idx);
+    setUrlInput(url);
+    setCurrentUrl(url);
+    setIsLoading(true);
+  }, [historyIndex, history]);
+
+  const handleRefresh = useCallback(() => {
+    if (currentUrl) {
+      setCurrentUrl(null);
+      setTimeout(() => setCurrentUrl(currentUrl), 50);
+      setIsLoading(true);
+    }
+  }, [currentUrl]);
+
+  const handleTabClick = useCallback((tab: BrowserTab) => {
+    setUrlInput(tab.url);
+    setCurrentUrl(tab.url);
+    setIsLoading(true);
+    activateTabMutation.mutate(tab.id);
+  }, [activateTabMutation]);
+
+  const handleCloseTab = useCallback((tabId: string) => {
+    closeTabMutation.mutate(tabId);
+  }, [closeTabMutation]);
+
+  // Loading timeout — hide spinner after 5s max
+  useEffect(() => {
+    if (!currentUrl) return;
+    const timer = setTimeout(() => setIsLoading(false), 5000);
+    return () => clearTimeout(timer);
+  }, [currentUrl]);
+
+  const tabList = tabs ?? [];
+
+  return (
+    <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+      {/* Tab Bar */}
+      <div className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 overflow-x-auto">
+        {tabList.map((tab) => (
+          <div
+            key={tab.id}
+            onClick={() => handleTabClick(tab)}
+            className={`group flex items-center gap-1 px-2.5 py-1.5 text-xs cursor-pointer border-r border-zinc-200 dark:border-zinc-700 min-w-0 max-w-[160px] transition-colors ${
+              tab.isActive
+                ? 'bg-white dark:bg-zinc-900 text-fg'
+                : 'bg-zinc-50 dark:bg-zinc-800/50 text-fg-muted hover:bg-zinc-100 dark:hover:bg-zinc-700'
+            }`}
+          >
+            <Globe className="h-3 w-3 shrink-0" />
+            <span className="truncate">{tab.title || tab.url}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCloseTab(tab.id); }}
+              className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded p-0.5 transition-opacity"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => { setUrlInput(''); setCurrentUrl(null); }}
+          className="p-1.5 text-fg-muted hover:text-fg hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded shrink-0 ml-1"
+          title="Neuer Tab"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* URL Bar */}
+      <div className="flex items-center gap-1 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
+        <button
+          onClick={handleBack}
+          disabled={historyIndex <= 0}
+          className="p-1 text-fg-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
+          title="Zurück"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <button
+          onClick={handleForward}
+          disabled={historyIndex >= history.length - 1}
+          className="p-1 text-fg-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
+          title="Vorwärts"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+        <button
+          onClick={handleRefresh}
+          disabled={!currentUrl}
+          className="p-1 text-fg-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
+          title="Aktualisieren"
+        >
+          <RotateCw className="h-4 w-4" />
+        </button>
+        <input
+          type="text"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="URL eingeben oder suchen..."
+          className="flex-1 px-2.5 py-1 text-sm rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30"
+        />
+        <button
+          onClick={handleGo}
+          disabled={!urlInput.trim() || createTabMutation.isPending}
+          className="px-3 py-1 text-sm rounded bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-colors"
+        >
+          Go
+        </button>
+        {currentUrl && (
+          <a
+            href={getProxyUrl(currentUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1 text-fg-muted hover:text-fg"
+            title="In neuem Tab öffnen"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        )}
+      </div>
+
+      {/* iframe Area */}
+      <div className="relative bg-zinc-900" style={{ minHeight: '500px', height: '500px' }}>
+        {currentUrl ? (
+          <>
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/80 z-10">
+                <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+              </div>
+            )}
+            <iframe
+              ref={iframeRef}
+              key={currentUrl}
+              src={getProxyUrl(currentUrl)}
+              className="w-full h-full border-none"
+              sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+              title="Browser"
+              onLoad={() => setIsLoading(false)}
+            />
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-3">
+            <Globe className="h-16 w-16 opacity-20" />
+            <p className="text-sm">URL eingeben und Go klicken</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

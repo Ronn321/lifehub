@@ -22,7 +22,8 @@ export type BlockType =
   | 'bookmark' | 'table' | 'page-reference'
   | 'checklist' | 'timeline' | 'embed' | 'video' | 'file' | 'link' | 'map'
   | 'research_workspace' | 'calendar_view' | 'finance_widget'
-  | 'it_inventory_widget' | 'jellyfin_player';
+  | 'it_inventory_widget' | 'jellyfin_player'
+  | 'browser_embed' | 'search';
 
 export type BlockStatus = 'active' | 'archived' | 'draft';
 export type BlockChangeType = 'created' | 'updated' | 'moved' | 'archived' | 'restored';

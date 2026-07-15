@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import {
   Heading, Type, Image, Grid3X3, File, Minus, Check,
   ChevronRight, MessageSquare, Quote, Code, Bookmark, Table2, Link2,
-  Calendar, Notebook, PiggyBank, Server, type LucideIcon,
+  Calendar, Notebook, PiggyBank, Server, Globe, type LucideIcon,
 } from 'lucide-react';
 
 /* ─── Types ─── */
@@ -13,7 +13,7 @@ export type BlockTypeUnion =
   | 'bookmark' | 'table' | 'page-reference'
   | 'checklist' | 'timeline' | 'embed' | 'video' | 'file' | 'link' | 'map'
   | 'research_workspace' | 'calendar_view' | 'finance_widget' | 'it_inventory_widget'
-  | 'jellyfin_player' | 'search';
+  | 'jellyfin_player' | 'browser_embed' | 'search';
 
 /* ─── Registry Entry ─── */
 
@@ -281,6 +281,14 @@ export function registerAllBlocks(): void {
       label: 'Jellyfin Player',
       icon: Image,
       defaultContent: {},
+      category: 'Widgets',
+    },
+    {
+      type: 'browser_embed',
+      component: null,
+      label: 'Browser',
+      icon: Globe,
+      defaultContent: { startUrl: '', title: '', sessionId: null },
       category: 'Widgets',
     },
     {

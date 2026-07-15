@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { and, eq, isNull, sql, asc, desc } from 'drizzle-orm';
-import { DbService, pages, pageBlocks, blockVersions, pageVersions, pageRelations, pageTemplates, researchSessions, researchSources, researchCollections, pagePins, browserTabs, browserSessions, type Db } from '@lifehub/db';
+import { DbService, pages, pageBlocks, blockVersions, pageVersions, pageRelations, pageTemplates, researchSessions, researchSources, researchCollections, pagePins, browserTabs, browserSessions, browserBookmarks, type Db } from '@lifehub/db';
 import type { PageBlock } from '../entities/pages';
 
 export class PagesRepository {
@@ -666,5 +666,34 @@ export class PagesRepository {
     return this.db.select().from(browserTabs)
       .where(eq(browserTabs.browserSessionId as any, browserSessionId))
       .orderBy(asc(browserTabs.sortOrder));
+  }
+
+  // ========== BROWSER BOOKMARKS ==========
+
+  async createBrowserBookmark(data: {
+    sessionId: string;
+    url: string;
+    title?: string;
+    faviconUrl?: string;
+    folder?: string;
+  }) {
+    const [row] = await this.db.insert(browserBookmarks).values({
+      sessionId: data.sessionId,
+      url: data.url,
+      title: data.title ?? null,
+      faviconUrl: data.faviconUrl ?? null,
+      folder: data.folder ?? '',
+    }).returning();
+    return row;
+  }
+
+  async findBrowserBookmarks(sessionId: string) {
+    return this.db.select().from(browserBookmarks)
+      .where(eq(browserBookmarks.sessionId, sessionId))
+      .orderBy(asc(browserBookmarks.sortOrder));
+  }
+
+  async deleteBrowserBookmark(id: string) {
+    await this.db.delete(browserBookmarks).where(eq(browserBookmarks.id, id));
   }
 }

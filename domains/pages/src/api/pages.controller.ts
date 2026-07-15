@@ -476,4 +476,28 @@ export class PagesController {
     return this.pages.updateBrowserSession(user.sub, sessionId, body);
   }
 
+  // ========== BROWSER BOOKMARKS ==========
+
+  @Get('browser/sessions/:sessionId/bookmarks')
+  @RequirePermission('pages', 'read')
+  async getBrowserBookmarks(@Param('sessionId') sessionId: string) {
+    return this.pages.getBrowserBookmarks(sessionId);
+  }
+
+  @Post('browser/sessions/:sessionId/bookmarks')
+  @RequirePermission('pages', 'update')
+  async addBrowserBookmark(
+    @Param('sessionId') sessionId: string,
+    @Body() body: { url: string; title?: string; folder?: string },
+  ) {
+    return this.pages.addBrowserBookmark(sessionId, body);
+  }
+
+  @Delete('browser/bookmarks/:bookmarkId')
+  @HttpCode(204)
+  @RequirePermission('pages', 'update')
+  async deleteBrowserBookmark(@Param('bookmarkId') bookmarkId: string) {
+    await this.pages.removeBrowserBookmark(bookmarkId);
+  }
+
 }

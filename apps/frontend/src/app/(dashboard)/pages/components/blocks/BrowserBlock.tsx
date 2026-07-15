@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import {
-  Globe, ChevronLeft, ChevronRight, RotateCw, Plus, X, ExternalLink, Loader2,
+  Globe, ChevronLeft, ChevronRight, RotateCw, Plus, X, ExternalLink, Loader2, Bookmark,
 } from 'lucide-react';
 
 interface BrowserBlockProps {
@@ -174,6 +174,34 @@ export function BrowserBlock({ blockId, pageId, content, onChange }: BrowserBloc
     closeTabMutation.mutate(tabId);
   }, [closeTabMutation]);
 
+  // ─── Bookmarks ─────────────────────────────────────────────────────────────
+  const { data: bookmarks } = useQuery({
+    queryKey: ['browser-bookmarks', sessionId],
+    queryFn: () => api.get<Array<{ id: string; url: string; title: string | null }>>(`/pages/browser/sessions/${sessionId}/bookmarks`),
+    enabled: !!sessionId,
+  });
+
+  const addBookmarkMutation = useMutation({
+    mutationFn: () =>
+      api.post(`/pages/browser/sessions/${sessionId}/bookmarks`, {
+        url: currentUrl,
+        title: urlInput,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['browser-bookmarks', sessionId] });
+    },
+  });
+
+  const removeBookmarkMutation = useMutation({
+    mutationFn: (bookmarkId: string) =>
+      api.delete(`/pages/browser/bookmarks/${bookmarkId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['browser-bookmarks', sessionId] });
+    },
+  });
+
+  const isBookmarked = currentUrl && bookmarks?.some((b) => b.url === currentUrl);
+
   // Loading timeout — hide spinner after 5s max
   useEffect(() => {
     if (!currentUrl) return;
@@ -288,6 +316,37 @@ export function BrowserBlock({ blockId, pageId, content, onChange }: BrowserBloc
               title="Browser"
               onLoad={() => setIsLoading(false)}
             />
+            {/* Bookmark button */}
+            <button
+              onClick={() => {
+                if (isBookmarked) {
+                  const bm = bookmarks?.find((b) => b.url === currentUrl);
+                  if (bm) removeBookmarkMutation.mutate(bm.id);
+                } else {
+                  addBookmarkMutation.mutate();
+                }
+              }}
+              disabled={!currentUrl || addBookmarkMutation.isPending || removeBookmarkMutation.isPending}
+              className={`absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1.5 text-xs rounded shadow-lg backdrop-blur-sm transition-colors disabled:opacity-50 ${
+                isBookmarked
+                  ? 'bg-amber-600/90 hover:bg-amber-700 text-white'
+                  : 'bg-zinc-700/80 hover:bg-zinc-600 text-white'
+              }`}
+              title={isBookmarked ? 'Lesezeichen entfernen' : 'Als Lesezeichen speichern'}
+            >
+              <Bookmark className={`h-3 w-3 ${isBookmarked ? 'fill-current' : ''}`} />
+              <span>{isBookmarked ? 'Gespeichert' : 'Speichern'}</span>
+            </button>
+            <a
+              href={getProxyUrl(currentUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1.5 text-xs rounded bg-zinc-700/80 hover:bg-zinc-600 text-white shadow-lg backdrop-blur-sm transition-colors"
+              title="In neuem Tab öffnen"
+            >
+              <ExternalLink className="h-3 w-3" />
+              <span>Neuer Tab</span>
+            </a>
           </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-3">

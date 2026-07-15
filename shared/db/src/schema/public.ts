@@ -615,6 +615,21 @@ export const browserSessions = pgTable('browser_sessions', {
   index('browser_sessions_owner_idx').on(t.ownerId),
 ]);
 
+// ===================== browser_bookmarks =====================
+export const browserBookmarks = pgTable('browser_bookmarks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sessionId: uuid('session_id').notNull().references(() => browserSessions.id, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  title: text('title'),
+  faviconUrl: text('favicon_url'),
+  folder: text('folder').notNull().default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('browser_bookmarks_session_idx').on(t.sessionId, t.sortOrder),
+  uniqueIndex('browser_bookmarks_session_url_uq').on(t.sessionId, t.url),
+]);
+
 // ===================== browser_tabs =====================
 export const browserTabs = pgTable('browser_tabs', {
   id: uuid('id').primaryKey().defaultRandom(),

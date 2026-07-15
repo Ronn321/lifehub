@@ -53,15 +53,16 @@ Users may pin useful websites directly into Pages.
 
 ---
 
-## Browser Features
+## Browser Features (implemented 2026-07-15)
 
-- Navigation
-- Back
-- Forward
-- Reload
-- Address Bar
-- Zoom
-- Open in external browser
+- ✅ Navigation (Back, Forward, Reload)
+- ✅ Address Bar (URL-Eingabe + Enter)
+- ✅ Tab Support (hinzufügen, schließen, aktivieren)
+- ✅ Open in external browser
+- ✅ Session-Isolation (eigene Tabs pro Block)
+- ✅ Auto-Init Session (via API)
+- ⬜ Zoom (Settings)
+- ⬜ Bookmarks (API bereit, UI pending)
 
 ---
 
@@ -104,9 +105,9 @@ Focus remains isolated within the browser.
 
 ## Future Extensions
 
-- tab support
+- ✅ ~~tab support~~ **implemented**
 - split view
-- bookmarks
-- research history
+- bookmarks (API backend bereit)
+- research history (API backend bereit)
 - annotation layer
 - web clipping

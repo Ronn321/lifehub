@@ -572,6 +572,20 @@ export class PagesService {
     return this.repo.updateBrowserSession(sessionId, data);
   }
 
+  // ========== BROWSER BOOKMARKS ==========
+
+  async getBrowserBookmarks(sessionId: string) {
+    return this.repo.findBrowserBookmarks(sessionId);
+  }
+
+  async addBrowserBookmark(sessionId: string, data: { url: string; title?: string; folder?: string }) {
+    return this.repo.createBrowserBookmark({ ...data, sessionId });
+  }
+
+  async removeBrowserBookmark(bookmarkId: string) {
+    await this.repo.deleteBrowserBookmark(bookmarkId);
+  }
+
   async findPageBySlug(ownerId: string, slug: string) {
     return this.repo.findPageBySlug(slug, ownerId);
   }

@@ -1,22 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import {
-  Loader2,
-  Plus,
-  ExternalLink,
-  Pin,
-  Trash2,
-  FolderOpen,
-  Search,
-  Globe,
-  ChevronLeft,
-  ChevronRight,
-  RotateCw,
-  X,
+  Loader2, Plus, ExternalLink, Pin, Trash2, FolderOpen, Search,
 } from 'lucide-react';
+import { BrowserBlock } from './BrowserBlock';
 
 interface ResearchWorkspaceBlockProps {
   pageId: string;
@@ -50,13 +40,6 @@ interface ResearchCollection {
   sourceIds: string[];
 }
 
-interface BrowserTab {
-  id: string;
-  url: string;
-  title: string;
-  isActive: boolean;
-}
-
 type TabKind = 'sources' | 'collections' | 'notes' | 'browser';
 
 export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWorkspaceBlockProps) {
@@ -68,18 +51,25 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
   const [newSourceTitle, setNewSourceTitle] = useState('');
   const [activeTab, setActiveTab] = useState<TabKind>('sources');
 
-  // Build proxy URL (no auth needed - points directly to backend)
-  const getProxyUrl = useCallback((targetUrl: string) => {
-    const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    return `http://${host}:3007/api/v1/proxy?url=${encodeURIComponent(targetUrl)}`;
-  }, []);
+  // ─── Research Session browser block ID (virtual, for BrowserBlock) ────────
+  // BrowserBlock needs a stable blockId for session management. We use the
+  // research session id prefixed with 'research-' as a virtual block ID.
+  const browserBlockId = activeSessionId ? `research-${activeSessionId}` : 'research-pending';
 
-  // Browser state
-  const [urlInput, setUrlInput] = useState('https://lite.duckduckgo.com/lite/');
-  const [currentIframeUrl, setCurrentIframeUrl] = useState<string | null>(null);
-  const [browserHistory, setBrowserHistory] = useState<string[]>([]);
-  const [browserHistoryIndex, setBrowserHistoryIndex] = useState(-1);
-  const [activeBrowserTabId, setActiveBrowserTabId] = useState<string | null>(null);
+  // ─── Pin-as-source: runs when user clicks "pin" in BrowserBlock ───────────
+  const pinSourceMutation = useMutation({
+    mutationFn: ({ url, title }: { url: string; title?: string }) =>
+      api.post(`/pages/research-sessions/${activeSessionId}/sources`, {
+        type: 'web',
+        url,
+        title: title || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['research-sources', activeSessionId] });
+    },
+  });
+
+  const [pinUrl, setPinUrl] = useState<string | null>(null);
 
   // Fetch sessions
   const { data: sessions, isLoading } = useQuery({
@@ -144,297 +134,6 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
     mutationFn: (name: string) => api.post(`/pages/research-sessions/${activeSessionId}/collections`, { name }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['research-collections', activeSessionId] }),
   });
-
-  // ─── Browser tabs API ────────────────────────────────────────────────────────
-
-  const { data: browserTabs } = useQuery({
-    queryKey: ['research-browser-tabs', activeSessionId],
-    queryFn: () => api.get<BrowserTab[]>(`/pages/research-sessions/${activeSessionId}/tabs`),
-    enabled: !!activeSessionId,
-  });
-
-  const createTabMutation = useMutation({
-    mutationFn: ({ url, title }: { url: string; title?: string }) =>
-      api.post<BrowserTab>(`/pages/research-sessions/${activeSessionId}/tabs`, { url, title }),
-    onSuccess: (tab: BrowserTab) => {
-      queryClient.invalidateQueries({ queryKey: ['research-browser-tabs', activeSessionId] });
-      setActiveBrowserTabId(tab.id);
-    },
-  });
-
-  const activateTabMutation = useMutation({
-    mutationFn: (tabId: string) =>
-      api.post(`/pages/research-sessions/${activeSessionId}/tabs/${tabId}/activate`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['research-browser-tabs', activeSessionId] });
-    },
-  });
-
-  const closeTabMutation = useMutation({
-    mutationFn: (tabId: string) =>
-      api.delete(`/pages/research-sessions/${activeSessionId}/tabs/${tabId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['research-browser-tabs', activeSessionId] });
-      setActiveBrowserTabId(null);
-    },
-  });
-
-  const pinSourceMutation = useMutation({
-    mutationFn: ({ url, title }: { url: string; title?: string }) =>
-      api.post(`/pages/research-sessions/${activeSessionId}/sources`, {
-        type: 'web',
-        url,
-        title: title || undefined,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['research-sources', activeSessionId] });
-    },
-  });
-
-  // ─── Browser helpers ─────────────────────────────────────────────────────────
-
-  const normalizeUrl = useCallback((input: string) => {
-    let normalized = input.trim();
-    if (!normalized) return '';
-    if (!/^https?:\/\//i.test(normalized)) {
-      normalized = 'https://' + normalized;
-    }
-    return normalized;
-  }, []);
-
-  const navigateToUrl = useCallback(
-    (url: string) => {
-      const normalized = normalizeUrl(url);
-      if (!normalized) return;
-
-      setUrlInput(normalized);
-      setCurrentIframeUrl(normalized);
-
-      // Manage browser history
-      setBrowserHistory((prev) => {
-        const newHistory = prev.slice(0, browserHistoryIndex + 1);
-        newHistory.push(normalized);
-        return newHistory;
-      });
-      setBrowserHistoryIndex((prev) => prev + 1);
-    },
-    [normalizeUrl, browserHistoryIndex],
-  );
-
-  const handleGo = useCallback(() => {
-    const normalized = normalizeUrl(urlInput);
-    if (!normalized) return;
-    // Navigate FIRST (synchronous state update)
-    setUrlInput(normalized);
-    setCurrentIframeUrl(normalized);
-    setBrowserHistory((prev) => {
-      const newHistory = prev.slice(0, browserHistoryIndex + 1);
-      newHistory.push(normalized);
-      return newHistory;
-    });
-    setBrowserHistoryIndex((prev) => prev + 1);
-
-    // Then create backend tab (fire-and-forget)
-    if (activeSessionId) {
-      createTabMutation.mutate({ url: normalized, title: normalized });
-    }
-  }, [urlInput, normalizeUrl, browserHistoryIndex, activeSessionId, createTabMutation]);
-
-  const handleBack = useCallback(() => {
-    if (browserHistoryIndex <= 0) return;
-    const newIndex = browserHistoryIndex - 1;
-    const url = browserHistory[newIndex];
-    if (!url) return;
-    setBrowserHistoryIndex(newIndex);
-    setUrlInput(url);
-    setCurrentIframeUrl(url);
-  }, [browserHistoryIndex, browserHistory]);
-
-  const handleForward = useCallback(() => {
-    if (browserHistoryIndex >= browserHistory.length - 1) return;
-    const newIndex = browserHistoryIndex + 1;
-    const url = browserHistory[newIndex];
-    if (!url) return;
-    setBrowserHistoryIndex(newIndex);
-    setUrlInput(url);
-    setCurrentIframeUrl(url);
-  }, [browserHistoryIndex, browserHistory]);
-
-  const handleRefresh = useCallback(() => {
-    if (currentIframeUrl) {
-      // Force iframe re-render by briefly clearing
-      setCurrentIframeUrl(null);
-      setTimeout(() => setCurrentIframeUrl(currentIframeUrl), 50);
-    }
-  }, [currentIframeUrl]);
-
-  const handleTabClick = useCallback(
-    (tab: BrowserTab) => {
-      setActiveBrowserTabId(tab.id);
-      setUrlInput(tab.url);
-      setCurrentIframeUrl(tab.url);
-      activateTabMutation.mutate(tab.id);
-    },
-    [activateTabMutation],
-  );
-
-  const handleCloseTab = useCallback(
-    (tabId: string) => {
-      if (tabId === activeBrowserTabId) {
-        const tabs = browserTabs ?? [];
-        const idx = tabs.findIndex((t) => t.id === tabId);
-        const next = idx > 0 ? tabs[idx - 1] : tabs.length > 1 ? tabs[1] : null;
-        if (next) {
-          setActiveBrowserTabId(next.id);
-          setUrlInput(next.url);
-          setCurrentIframeUrl(next.url);
-        } else {
-          setActiveBrowserTabId(null);
-          setUrlInput('');
-          setCurrentIframeUrl(null);
-        }
-      }
-      closeTabMutation.mutate(tabId);
-    },
-    [activeBrowserTabId, browserTabs, closeTabMutation],
-  );
-
-  const handlePinAsSource = useCallback(() => {
-    if (!currentIframeUrl) return;
-    pinSourceMutation.mutate({ url: currentIframeUrl, title: urlInput });
-  }, [currentIframeUrl, urlInput, pinSourceMutation]);
-
-  // ─── Render helpers ──────────────────────────────────────────────────────────
-
-  const renderBrowser = () => {
-    const tabs = browserTabs ?? [];
-    const activeTabData = tabs.find((t) => t.id === activeBrowserTabId);
-
-    return (
-      <div className="flex flex-col h-full">
-        {/* Browser Tab Bar */}
-        <div className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 overflow-x-auto">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              onClick={() => handleTabClick(tab)}
-              className={`group flex items-center gap-1 px-2.5 py-1.5 text-xs cursor-pointer border-r border-zinc-200 dark:border-zinc-700 min-w-0 max-w-[160px] transition-colors ${
-                tab.id === activeBrowserTabId
-                  ? 'bg-white dark:bg-zinc-900 text-fg'
-                  : 'bg-zinc-50 dark:bg-zinc-800/50 text-fg-muted hover:bg-zinc-100 dark:hover:bg-zinc-700'
-              }`}
-            >
-              <Globe className="h-3 w-3 shrink-0" />
-              <span className="truncate">{tab.title || tab.url}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCloseTab(tab.id);
-                }}
-                className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 hover:bg-zinc-200 dark:hover:bg-zinc-600 rounded p-0.5 transition-opacity"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={() => {
-              setUrlInput('');
-              setCurrentIframeUrl(null);
-            }}
-            className="p-1.5 text-fg-muted hover:text-fg hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded shrink-0 ml-1"
-            title="Neuer Tab"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        {/* URL Bar */}
-        <div className="flex items-center gap-1 px-2 py-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
-          <button
-            onClick={handleBack}
-            disabled={browserHistoryIndex <= 0}
-            className="p-1 text-fg-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Zurück"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={handleForward}
-            disabled={browserHistoryIndex >= browserHistory.length - 1}
-            className="p-1 text-fg-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Vorwärts"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          <button
-            onClick={handleRefresh}
-            disabled={!currentIframeUrl}
-            className="p-1 text-fg-muted hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Aktualisieren"
-          >
-            <RotateCw className="h-4 w-4" />
-          </button>
-          <input
-            type="text"
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleGo();
-            }}
-            placeholder='URL oder Suche (z.B. DuckDuckGo Lite)...'
-            className="flex-1 px-2.5 py-1 text-sm rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30"
-          />
-          <button
-            onClick={handleGo}
-            disabled={!urlInput.trim() || createTabMutation.isPending}
-            className="px-3 py-1 text-sm rounded bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-colors"
-          >
-            Go
-          </button>
-        </div>
-
-        {/* Iframe Area */}
-        <div className="relative flex-1 bg-zinc-900 min-h-[300px]">
-          {currentIframeUrl ? (
-            <>
-              <iframe
-                key={currentIframeUrl}
-                src={getProxyUrl(currentIframeUrl)}
-                className="w-full h-full border-none"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                title="Browser"
-              />
-              <button
-                onClick={handlePinAsSource}
-                disabled={pinSourceMutation.isPending}
-                className="absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1.5 text-xs rounded bg-amber-600/90 hover:bg-amber-700 text-white shadow-lg backdrop-blur-sm transition-colors disabled:opacity-50"
-                title="Als Quelle pinnen"
-              >
-                <Pin className="h-3 w-3" />
-                <span>Als Quelle pinnen</span>
-              </button>
-              <a
-                href={getProxyUrl(currentIframeUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1.5 text-xs rounded bg-zinc-700/80 hover:bg-zinc-600 text-white shadow-lg backdrop-blur-sm transition-colors"
-                title="In neuem Tab öffnen"
-              >
-                <ExternalLink className="h-3 w-3" />
-                <span>Neuer Tab</span>
-              </a>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-fg-muted gap-2">
-              <Globe className="h-10 w-10 opacity-30" />
-              <p className="text-sm">URL eingeben und Go klicken, oder Enter drücken</p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-fg-muted" /></div>;
@@ -542,7 +241,31 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
 
       {/* Content */}
       {activeTab === 'browser' ? (
-        <div className="min-h-[400px]">{renderBrowser()}</div>
+        <div className="min-h-[400px]">
+          <BrowserBlock
+            blockId={browserBlockId}
+            pageId={pageId}
+            content={{}}
+            onChange={() => {}}
+            onUrlChange={(url) => setPinUrl(url)}
+            extraOverlayControls={
+              pinUrl ? (
+                <button
+                  onClick={() => {
+                    pinSourceMutation.mutate({ url: pinUrl, title: pinUrl });
+                    setPinUrl(null);
+                  }}
+                  disabled={pinSourceMutation.isPending}
+                  className="absolute top-12 right-2 flex items-center gap-1 px-2.5 py-1.5 text-xs rounded bg-amber-600/90 hover:bg-amber-700 text-white shadow-lg backdrop-blur-sm transition-colors disabled:opacity-50"
+                  title="Als Quelle pinnen"
+                >
+                  <Pin className="h-3 w-3" />
+                  <span>Als Quelle pinnen</span>
+                </button>
+              ) : null
+            }
+          />
+        </div>
       ) : (
         <div className="p-3">
           {activeTab === 'sources' && (

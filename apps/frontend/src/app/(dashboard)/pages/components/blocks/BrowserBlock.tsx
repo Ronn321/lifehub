@@ -15,6 +15,8 @@ interface BrowserBlockProps {
   onChange: (data: Record<string, unknown>) => void;
   /** Optional extra overlay buttons rendered on top of the iframe */
   extraOverlayControls?: React.ReactNode;
+  /** Called when the user navigates to a new URL */
+  onUrlChange?: (url: string) => void;
 }
 
 interface BrowserSession {
@@ -41,7 +43,7 @@ const PROXY_BASE = typeof window !== 'undefined'
   ? `http://${window.location.hostname}:3007/api/v1/browser/proxy`
   : '/api/v1/browser/proxy';
 
-export function BrowserBlock({ blockId, pageId, content, onChange, extraOverlayControls }: BrowserBlockProps) {
+export function BrowserBlock({ blockId, pageId, content, onChange, extraOverlayControls, onUrlChange }: BrowserBlockProps) {
   const queryClient = useQueryClient();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -179,7 +181,8 @@ export function BrowserBlock({ blockId, pageId, content, onChange, extraOverlayC
     } else {
       updateTabMutation.mutate({ tabId: activeTab.id, url: normalized, title: normalized });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    onUrlChange?.(normalized);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [normalizeUrl, historyIndex, sessionId, activeTab?.id]);
 
   const handleGo = useCallback(() => navigate(urlInput), [urlInput, navigate]);

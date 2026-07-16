@@ -56,7 +56,7 @@ Jede Domain hat exakt einen Status:
 |--------|--------|
 | travel | IMPLEMENTED | Backend: Entities, DTOs (Zod), Repository (Drizzle), Service, Controller + Module (NestJS), DB-Tabellen (travel_trips, travel_destinations, travel_trip_days, travel_trip_media_refs), Migration existent. Frontend: Trips-Übersicht (Grid/Liste, Suche, Status-Badge), Trip-Detail (Tabs: Übersicht/Orte/Tage/Karte), Orte-CRUD, Tage-CRUD, OSM-Kartenansicht, Dialog zum Anlegen. Missing: Leaflet-Map via npm, Event-Emission, Unit-Tests, Permission-Tests. |
 | projects | IMPLEMENTED | Backend: Entities, DTOs, Repository, Service, Controller (CRUD + Notes + Links + Permission Guards, YouTube-Sanitisierung). Frontend: Create-Dialog, Card-Grid, Detail-Ansicht (Übersicht/Notizen/Links-Tabs), GitHub-/YouTube-Integration. DB: 4 Tabellen (projects, project_files, project_notes, project_links) + Migration. Module in app.module.ts registriert. Typecheck 0 Fehler. |
-| recipes | NOT_STARTED |
+| recipes | IMPLEMENTED | Backend + Frontend + DB vorhanden (recipes, ingredients, steps, recipe_tags, dishes). |
 | shopping | IMPLEMENTED | Backend: Entities, DTOs (Zod), Repository (Drizzle), Service (CRUD + check/uncheck), Controller + Module (NestJS), DB-Tabellen (shopping_lists, shopping_items). Frontend: Übersicht (Karten, Fortschrittsbalken, Farbe), Detail (Kategorie-Gruppierung, Check/Uncheck, Menge/Einheit, neues Item, archivieren). Sidebar integriert. |
 
 ---
@@ -66,9 +66,9 @@ Jede Domain hat exakt einen Status:
 | Domain | Status |
 |--------|--------|
 | finance | IMPLEMENTED | Backend: 7 Entities, DTOs (Zod), Repository (Drizzle), Service, Controller + Module (NestJS). Frontend: Dashboard mit Net Worth, Konten, Transaktionen, Budgets, Sparziele, Wertanlagen. DB: 7 Tabellen in shared/db/schema/public.ts. Migration existent. Sidebar integriert. |
-| insurance | NOT_STARTED |
-| vault | NOT_STARTED |
-| documents | NOT_STARTED |
+| insurance | BLOCKED | Backend + Frontend + Controller existieren. Fehlt: Drizzle-Schema-Definitionen (insurancePolicies, insuranceDocuments) — Typecheck schlägt fehl. Migration 0013 nötig. |
+| vault | BLOCKED | Backend + Frontend + Controller existieren. Fehlt: Drizzle-Schema-Definitionen (vaultEntries, etc.) — Typecheck schlägt fehl. Migration 0013 nötig. |
+| documents | BLOCKED | Backend + Frontend + Controller existieren. Fehlt: Drizzle-Schema-Definitionen (documents, documentTags, documentRefs) — Typecheck schlägt fehl. Migration 0013 nötig. |
 
 ---
 
@@ -76,12 +76,12 @@ Jede Domain hat exakt einen Status:
 
 | Domain | Status | Notes |
 |--------|--------|------|
-| calendar | NOT_STARTED | |
-| it_inventory | NOT_STARTED | |
-| search | NOT_STARTED | |
+| calendar | BLOCKED | Backend + Frontend + Controller existieren. Fehlt: Drizzle-Schema-Definitionen (calendarEvents, calendars, etc.) — Typecheck schlägt fehl. Migration 0013 nötig. |
+| it_inventory | BLOCKED | Backend + Frontend + Controller existieren. Fehlt: Drizzle-Schema-Definitionen (itDevices, itLocations, etc.) — Typecheck schlägt fehl. Migration 0013 nötig. |
+| search | BLOCKED | Backend + Frontend + Controller existieren. Fehlt: Drizzle-Schema-Definitionen (searchQueries, searchClicks) — Typecheck schlägt fehl. Migration 0013 nötig. |
 | jellyfin | IMPLEMENTED | Netflix-style Media UI v1 — Movies, Series, Detailseiten, Player, Search, Collections, Continue Watching |
 | **pages** | **IMPLEMENTED** | **Notion-like Page System: Pages CRUD, Blocks CRUD, Versioning (Page + Block), Relations, Templates, Research Workspace (Sessions, Sources, Collections), Browser Tabs, Page Pins, Web Proxy, Search API, Page Move, Children API, Import/Export (JSON/Markdown), Permission Overrides, Drag & Drop UI, 16 Block Components, TipTap Editor, Media Picker, Tree View. Backend: NestJS (domains/pages/). Frontend: apps/frontend/src/app/(dashboard)/pages/. DB: 10 Tables in shared/db (pages, page_blocks, block_versions, page_versions, page_relations, page_templates, research_sessions, research_sources, research_collections, page_pins, browser_tabs) + 2 new (page_permissions, database_pages).** |
-| plugins | NOT_STARTED | |
+| plugins | BLOCKED | Backend + Frontend + Controller existieren. Fehlt: Drizzle-Schema-Definitionen (plugins, pluginPermissions, pluginData) — Typecheck schlägt fehl. Migration 0013 nötig. |
 
 ---
 

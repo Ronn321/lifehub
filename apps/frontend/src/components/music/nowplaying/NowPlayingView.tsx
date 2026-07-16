@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Play,
   Pause,
@@ -12,7 +12,7 @@ import {
   ChevronDown,
   Heart,
   ListMusic,
-  Mic2,
+  Music2,
   Trash2,
   Star,
   Disc3,
@@ -22,6 +22,8 @@ import {
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { MusicImage } from '@/components/music/shared/MusicCard';
 import { formatTime } from '@/lib/music-api';
+import { LyricsOverlay } from '@/components/music/player/LyricsOverlay';
+import { extractDominantColor, rgbToCss } from '@/lib/color-extraction';
 import {
   DndContext,
   DragOverlay,
@@ -59,7 +61,7 @@ interface NowPlayingViewProps {
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'nowplaying', label: 'Now Playing', icon: <Disc3 className="h-3.5 w-3.5" /> },
-  { id: 'lyrics', label: 'Lyrics', icon: <Mic2 className="h-3.5 w-3.5" /> },
+  { id: 'lyrics', label: 'Lyrics', icon: <Music2 className="h-3.5 w-3.5" /> },
   { id: 'queue', label: 'Queue', icon: <ListMusic className="h-3.5 w-3.5" /> },
 ];
 
@@ -96,6 +98,7 @@ function formatSampleRate(hz?: number): string {
 
 export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('nowplaying');
+  const [sidebarGradientColor, setSidebarGradientColor] = useState('#1e1e1e');
 
   const {
     currentTrack,
@@ -122,6 +125,14 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
     seek,
     history,
   } = useMusicPlayerStore();
+
+  // Extract dominant color from current track cover for sidebar gradient
+  useEffect(() => {
+    if (!currentTrack?.coverUrl) return;
+    extractDominantColor(currentTrack.coverUrl)
+      .then((rgb) => setSidebarGradientColor(rgbToCss(rgb)))
+      .catch(() => setSidebarGradientColor('#1e1e1e'));
+  }, [currentTrack?.coverUrl]);
 
   // Don't render if no track
   if (!currentTrack && mode !== 'fullscreen') return null;
@@ -162,7 +173,11 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
   return (
     <aside
       className="flex h-full flex-col border-l border-[rgba(255,255,255,0.08)] overflow-hidden"
-      style={{ width: 'var(--music-right-sidebar-width, 360px)' }}
+      style={{
+        width: 'var(--music-right-sidebar-width, 360px)',
+        background: `linear-gradient(to bottom, ${sidebarGradientColor} 0%, transparent 50%, var(--music-bg-base) 100%)`,
+        transition: 'background 500ms ease-out',
+      }}
     >
       {/* Tabs */}
       <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.1)] px-1">
@@ -201,9 +216,7 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden music-scroll">
         {activeTab === 'nowplaying' && <NowPlayingTab track={currentTrack} />}
-        {activeTab === 'lyrics' && (
-          <LyricsTab track={currentTrack} position={position} status={status} />
-        )}
+        {activeTab === 'lyrics' && <LyricsOverlay variant="inline" />}
         {activeTab === 'queue' && (
           <QueueTab
             queue={queue}
@@ -397,136 +410,6 @@ function NowPlayingTab({
             </div>
           ))}
         </div>
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Lyrics Tab — Sync/Unsync, aktuelle Zeile markieren, Auto-Scroll   */
-/* ------------------------------------------------------------------ */
-
-function LyricsTab({
-  track,
-  position,
-  status,
-}: {
-  track: ReturnType<typeof useMusicPlayerStore.getState>['currentTrack'];
-  position: number;
-  status: string;
-}) {
-  const lyricsContainerRef = useRef<HTMLDivElement>(null);
-  const activeLineRef = useRef<HTMLDivElement>(null);
-
-  const hasSynced = !!track?.lyrics && track.lyrics.length > 0;
-  const hasUnsynced = !!track?.lyricsText;
-
-  // For synced lyrics: find the active line index based on current playback position
-  const activeLineIndex = useMemo(() => {
-    if (!hasSynced || !track?.lyrics) return -1;
-    let idx = -1;
-    for (let i = 0; i < track.lyrics.length; i++) {
-      const line = track.lyrics[i]!;
-      if (line.time <= position) {
-        idx = i;
-      } else {
-        break;
-      }
-    }
-    return idx;
-  }, [track?.lyrics, position, hasSynced]);
-
-  // Auto-scroll to keep active line visible
-  useEffect(() => {
-    const el = activeLineRef.current;
-    const container = lyricsContainerRef.current;
-    if (!el || !container) return;
-
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-
-    if (
-      elRect.top < containerRect.top + 60 ||
-      elRect.bottom > containerRect.bottom - 20
-    ) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [activeLineIndex]);
-
-  if (!track) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Mic2 className="mb-3 h-12 w-12 text-[var(--music-text-disabled)]" />
-        <p className="text-sm font-bold text-[var(--music-text-primary)]">Kein Titel ausgewählt</p>
-      </div>
-    );
-  }
-
-  if (!hasSynced && !hasUnsynced) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Mic2 className="mb-3 h-12 w-12 text-[var(--music-text-disabled)]" />
-        <p className="text-sm font-bold text-[var(--music-text-primary)]">Keine Lyrics verfügbar</p>
-        <p className="mt-1 text-xs text-[var(--music-text-secondary)]">
-          Lyrics für „{track.title}" sind nicht verfügbar.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col" style={{ height: '100%' }}>
-      {/* Sync/unsync badge */}
-      <div className="px-4 pt-3 pb-1">
-        <span
-          className="inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-          style={{
-            background: 'var(--music-accent)',
-            color: 'var(--music-bg-base)',
-            opacity: 0.8,
-          }}
-        >
-          {hasSynced ? 'Synchronisiert' : 'Nicht synchronisiert'}
-        </span>
-      </div>
-
-      {/* Lyrics content */}
-      <div
-        ref={lyricsContainerRef}
-        className="flex-1 overflow-y-auto px-6 py-4 music-scroll"
-      >
-        {hasSynced ? (
-          /* ── Synced lyrics (timed) ── */
-          <div className="space-y-4">
-            {track.lyrics!.map((line, i) => (
-              <div
-                key={i}
-                ref={i === activeLineIndex ? activeLineRef : undefined}
-                className="transition-all duration-300"
-                style={{
-                  color:
-                    i === activeLineIndex
-                      ? 'var(--music-accent)'
-                      : i < activeLineIndex
-                      ? 'var(--music-text-tertiary)'
-                      : 'var(--music-text-secondary)',
-                  fontSize: i === activeLineIndex ? '1rem' : '0.875rem',
-                  fontWeight: i === activeLineIndex ? 700 : 400,
-                  opacity: i < activeLineIndex ? 0.4 : 1,
-                  transform:
-                    i === activeLineIndex ? 'scale(1.02)' : 'scale(1)',
-                }}
-              >
-                {line.text || '\u00A0'}
-              </div>
-            ))}
-          </div>
-        ) : (
-          /* ── Unsynced lyrics (plain text) ── */
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--music-text-secondary)]">
-            {track.lyricsText}
-          </div>
-        )}
       </div>
     </div>
   );

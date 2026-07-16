@@ -824,6 +824,27 @@ export class JellyfinService {
     return data.Items ?? [];
   }
 
+  async getLyrics(
+    ownerId: string,
+    serverId: string,
+    itemId: string,
+  ): Promise<{ lyrics: string | null; synced: boolean }> {
+    try {
+      const server = await this.findServerOrFallback(serverId, ownerId);
+      const res = await fetch(
+        `${server.url.replace(/\/$/, '')}/Audio/${itemId}/Lyrics?api_key=${server.apiKey}`,
+      );
+      if (!res.ok) return { lyrics: null, synced: false };
+      const data: any = await res.json();
+      return {
+        lyrics: data.Lyrics ?? null,
+        synced: !!data.SyncedLyrics,
+      };
+    } catch {
+      return { lyrics: null, synced: false };
+    }
+  }
+
   async toggleFavorite(ownerId: string, serverId: string, externalId: string): Promise<{ isFavorite: boolean }> {
     const server = await this.findServerOrFallback(serverId, ownerId);
     const userId = await this.getJellyfinUserId(server);

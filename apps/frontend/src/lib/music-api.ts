@@ -410,6 +410,23 @@ export function useToggleFavorite() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Lyrics Hooks                                                       */
+/* ------------------------------------------------------------------ */
+
+/** Fetch lyrics for a track from Jellyfin */
+export function useLyrics(serverId?: string, itemId?: string | null) {
+  return useQuery<{ lyrics: string | null; synced: boolean }>({
+    queryKey: ['music-lyrics', serverId, itemId],
+    queryFn: () =>
+      api.get<{ lyrics: string | null; synced: boolean }>(
+        `/jellyfin/servers/${serverId}/items/${itemId}/lyrics`,
+      ),
+    enabled: !!serverId && !!itemId,
+    staleTime: 300_000,
+  });
+}
+
+/* ------------------------------------------------------------------ */
 /*  Playback Reporting Hooks                                           */
 /* ------------------------------------------------------------------ */
 

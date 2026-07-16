@@ -21,6 +21,7 @@ import {
 import { MusicImage } from '@/components/music/shared/MusicCard';
 import type { JellyfinPlaylist } from '@/lib/music-api';
 import { ticksToSeconds, formatDuration, getPlaylistCoverUrl } from '@/lib/music-api';
+import { extractDominantColor, rgbToCss } from '@/lib/color-extraction';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 
 /* ------------------------------------------------------------------ */
@@ -57,27 +58,12 @@ export function PlaylistHeader({
   const contextRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
 
-  // Extract gradient color from cover via Canvas
+  // Extract gradient color from cover via centralized utility
   useEffect(() => {
-    if (!coverUrl || !imgRef.current) return;
-    const img = imgRef.current.querySelector('img');
-    if (!img) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 1;
-    canvas.height = 1;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const tempImg = new Image();
-    tempImg.crossOrigin = 'anonymous';
-    tempImg.onload = () => {
-      ctx.drawImage(tempImg, 0, 0, 1, 1);
-      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-      setGradientColor(`rgb(${r},${g},${b})`);
-    };
-    tempImg.onerror = () => setGradientColor('#1e1e1e');
-    tempImg.src = coverUrl;
+    if (!coverUrl) return;
+    extractDominantColor(coverUrl)
+      .then((rgb) => setGradientColor(rgbToCss(rgb)))
+      .catch(() => setGradientColor('#1e1e1e'));
   }, [coverUrl]);
 
   // Close context menu on outside click

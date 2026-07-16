@@ -13,6 +13,7 @@ import {
   usePlayTracks,
 } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
+import { extractDominantColor, rgbToCss } from '@/lib/color-extraction';
 import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { SongRow, TracklistHeader } from '@/components/music/shared/SongRow';
 import { MusicImage, MusicLoader } from '@/components/music/shared/MusicCard';
@@ -94,25 +95,10 @@ export default function AlbumDetailPage() {
 
   // Extract dominant color from cover image for gradient background
   useEffect(() => {
-    if (!coverUrl || !imgRef.current) return;
-    const img = imgRef.current.querySelector('img');
-    if (!img) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 1;
-    canvas.height = 1;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const tempImg = new Image();
-    tempImg.crossOrigin = 'anonymous';
-    tempImg.onload = () => {
-      ctx.drawImage(tempImg, 0, 0, 1, 1);
-      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-      setGradientColor(`rgb(${r},${g},${b})`);
-    };
-    tempImg.onerror = () => setGradientColor('#1e1e1e');
-    tempImg.src = coverUrl;
+    if (!coverUrl) return;
+    extractDominantColor(coverUrl)
+      .then((rgb) => setGradientColor(rgbToCss(rgb)))
+      .catch(() => setGradientColor('#1e1e1e'));
   }, [coverUrl]);
 
   if (!accessToken || !server) {

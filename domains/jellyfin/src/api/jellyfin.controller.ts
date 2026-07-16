@@ -364,4 +364,17 @@ export class JellyfinController {
   ) {
     await this.jellyfin.reportPlaybackStop(user.sub, serverId, body.itemId, body.positionTicks);
   }
+
+  // =================== Lyrics ===================
+
+  @Get('servers/:serverId/items/:itemId/lyrics')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Songtexte (Lyrics) für ein Audio-Item abrufen' })
+  async getLyrics(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('itemId') itemId: string,
+  ) {
+    return this.jellyfin.getLyrics(user.sub, serverId, itemId);
+  }
 }

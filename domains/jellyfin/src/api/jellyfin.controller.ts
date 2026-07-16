@@ -249,6 +249,17 @@ export class JellyfinController {
     return this.jellyfin.getPlaylistItems(user.sub, serverId, playlistId);
   }
 
+  @Post('servers/:serverId/playlists')
+  @RequirePermission('jellyfin', 'create')
+  @ApiOperation({ summary: 'Neue Playlist erstellen' })
+  async createPlaylist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Body() body: { name: string; songIds?: string[] },
+  ) {
+    return this.jellyfin.createPlaylist(user.sub, serverId, body.name, body.songIds);
+  }
+
   // =================== Media v0.3 API Endpoints (Netflix-style) ===================
 
   @Get('servers/:serverId/items/:externalId/detail')

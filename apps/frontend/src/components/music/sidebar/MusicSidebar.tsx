@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Home, Search, PanelLeftClose, PanelLeftOpen, Mic2, Disc3 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { SidebarNavButton } from './SidebarNavButton';
@@ -14,6 +15,7 @@ import {
   getCoverUrl,
 } from '@/lib/music-api';
 import { useAuthStore } from '@/lib/auth-store';
+import { CreatePlaylistDialog } from '@/components/music/playlist/CreatePlaylistDialog';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -76,10 +78,12 @@ export function MusicSidebar({
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
   const server = useJellyfinServer();
+  const queryClient = useQueryClient();
   const { data: artists } = useArtists(server?.id);
   const { data: albums } = useRecentAlbums(server?.id, 20);
   // Manage tab state locally as fallback when no onTabChange from parent
   const [localTab, setLocalTab] = useState<LibraryTab>(activeTab);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const effectiveTab = onTabChange ? activeTab : localTab;
   const handleTabClick = (tab: LibraryTab) => {
     if (onTabChange) {
@@ -306,7 +310,19 @@ export function MusicSidebar({
 
       {/* ── Create Playlist Button (always visible) ── */}
       {onCreatePlaylist && (
-        <SidebarCreateButton onClick={onCreatePlaylist} collapsed={collapsed} />
+        <SidebarCreateButton onClick={() => setShowCreateDialog(true)} collapsed={collapsed} />
+      )}
+
+      {/* ── Create Playlist Dialog ── */}
+      {showCreateDialog && server && (
+        <CreatePlaylistDialog
+          serverId={server.id}
+          onCreated={() => {
+            setShowCreateDialog(false);
+            queryClient.invalidateQueries({ queryKey: ['music-playlists', server.id] });
+          }}
+          onClose={() => setShowCreateDialog(false)}
+        />
       )}
     </aside>
   );

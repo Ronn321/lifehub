@@ -13,7 +13,8 @@ import {
 } from '@/lib/music-api';
 import { useAuthStore } from '@/lib/auth-store';
 import type { JellyfinApiItem } from '@/lib/music-api';
-import { MusicCard, MusicCardGrid, MusicLoader } from '@/components/music/shared/MusicCard';
+import { MusicCard, MusicCardGrid } from '@/components/music/shared/MusicCard';
+import { SongRowSkeleton } from '@/components/music/shared/SongRowSkeleton';
 import { SongRow, TracklistHeader, MusicEmptyState } from '@/components/music/shared/SongRow';
 import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
@@ -258,7 +259,7 @@ export default function MusicSearchPage() {
             {/*  Loading                                                       */}
             {/* ================================================================ */}
 
-            {searchLoading && <MusicLoader />}
+            {searchLoading && <SongRowSkeleton rows={8} />}
 
             {/* ================================================================ */}
             {/*  Search History — shown when input focused and empty             */}

@@ -24,7 +24,8 @@ import type { MusicTrack } from '@/lib/music-player-store';
 import type { JellyfinApiItem } from '@/lib/music-api';
 import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { MusicEmptyState } from '@/components/music/shared/SongRow';
-import { MusicCard, MusicCardGrid, MusicLoader } from '@/components/music/shared/MusicCard';
+import { MusicCard, MusicCardGrid } from '@/components/music/shared/MusicCard';
+import { SongRowSkeleton } from '@/components/music/shared/SongRowSkeleton';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
 import { TrackTable } from '@/components/music/shared/TrackTable';
 import { useSelection } from '@/components/music/shared/useSelection';
@@ -59,7 +60,7 @@ function TabContent({
   const items = query.data ?? [];
 
   if (query.isLoading && items.length === 0) {
-    return <MusicLoader />;
+    return <SongRowSkeleton />;
   }
 
   if (items.length === 0) {

@@ -372,6 +372,16 @@ export function getPlaylistCoverUrl(
   return `${baseUrl}/api/v1/jellyfin/servers/${serverId}/items/${playlistId}/image?w=${width}&h=${height}&token=${encodeURIComponent(accessToken)}`;
 }
 
+/** Create a new playlist */
+export function useCreatePlaylist() {
+  return useCallback(
+    async (serverId: string, name: string, songIds?: string[]): Promise<JellyfinPlaylist> => {
+      return api.post<JellyfinPlaylist>(`/jellyfin/servers/${serverId}/playlists`, { name, songIds });
+    },
+    [],
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Favorites API Hooks                                                */
 /* ------------------------------------------------------------------ */

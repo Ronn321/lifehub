@@ -135,6 +135,22 @@ export default function MusicPage() {
             </MusicScrollRow>
           </MusicSection>
 
+          {/* Weiter hören — Continue Listening */}
+          <section>
+            <MusicSection title="Weiter hören" showAllHref="/jellyfin/music/tracks">
+              {recentLoading ? <MusicSkeleton count={6} />
+              : !recentTracks || recentTracks.length === 0 ? null
+              : <MusicScrollRow>{recentTracks.map((item: any) => (
+                  <div key={`continue-${item.Id}`} className="w-44 shrink-0">
+                    <MusicCard title={item.Name} subtitle={item.Artist ?? item.AlbumArtist ?? item.Album}
+                      coverUrl={getCoverUrl(accessToken!, server!.id, item.AlbumId ?? item.Id, 160, 160)}
+                      onClick={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))}
+                      onPlay={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))} />
+                  </div>
+                ))}</MusicScrollRow>}
+            </MusicSection>
+          </section>
+
           {/* Zuletzt gehört */}
           <section id="section-recent">
             <MusicSection title="Zuletzt gehört" showAllHref="/jellyfin/music/tracks">

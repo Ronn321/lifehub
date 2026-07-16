@@ -734,6 +734,28 @@ export class JellyfinService {
     return data.Items ?? [];
   }
 
+  async createPlaylist(ownerId: string, serverId: string, name: string, songIds?: string[]): Promise<any> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const jellyfinUserId = await this.getJellyfinUserId(server);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const encodedName = encodeURIComponent(name);
+    const res = await fetch(`${baseUrl}/Playlists?name=${encodedName}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `MediaBrowser Token=${server.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        UserId: jellyfinUserId,
+        Ids: songIds ?? [],
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Jellyfin createPlaylist error: ${res.status} ${res.statusText}`);
+    }
+    return res.json();
+  }
+
   // =================== Media v0.3 API Extensions (Netflix-style Movies & Series) ===================
 
   async getItemDetail(ownerId: string, serverId: string, externalId: string): Promise<any> {

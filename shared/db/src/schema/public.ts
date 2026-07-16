@@ -851,3 +851,347 @@ export const databasePages = pgTable('database_pages', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ===================== INSURANCE DOMAIN =====================
+
+// ===================== insurance_policies =====================
+export const insurancePolicies = pgTable('insurance_policies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  category: text('category').notNull(),
+  provider: text('provider').notNull(),
+  policyNumber: text('policy_number'),
+  premium: text('premium'),
+  interval: text('interval').notNull().default('monthly'),
+  startDate: timestamp('start_date', { withTimezone: true }),
+  endDate: timestamp('end_date', { withTimezone: true }),
+  cancellationPeriodDays: integer('cancellation_period_days'),
+  endsAt: timestamp('ends_at', { withTimezone: true }),
+  contactName: text('contact_name'),
+  contactPhone: text('contact_phone'),
+  contactEmail: text('contact_email'),
+  notes: text('notes'),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('insurance_policies_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
+// ===================== insurance_documents =====================
+export const insuranceDocuments = pgTable('insurance_documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  policyId: uuid('policy_id').notNull().references(() => insurancePolicies.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  documentId: text('document_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('insurance_documents_policy_idx').on(t.policyId),
+]);
+
+// ===================== VAULT DOMAIN =====================
+
+// ===================== vault_entries =====================
+export const vaultEntries = pgTable('vault_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  type: text('type').notNull().default('login'),
+  username: text('username'),
+  encryptedPassword: text('encrypted_password'),
+  url: text('url'),
+  notes: text('notes'),
+  totpSecret: text('totp_secret'),
+  cardLast4: text('card_last4'),
+  cardBrand: text('card_brand'),
+  keyVersion: integer('key_version').notNull().default(1),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('vault_entries_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
+// ===================== VAULT DOMAIN =====================
+
+// ===================== vault_attachments =====================
+export const vaultAttachments = pgTable('vault_attachments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  entryId: uuid('entry_id').notNull().references(() => vaultEntries.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  storagePath: text('storage_path'),
+  mimeType: text('mime_type'),
+  fileSize: integer('file_size'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('vault_attachments_entry_idx').on(t.entryId),
+]);
+
+// ===================== vault_cards =====================
+export const vaultCards = pgTable('vault_cards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  entryId: uuid('entry_id').notNull().references(() => vaultEntries.id, { onDelete: 'cascade' }),
+  cardNumberEnc: text('card_number_enc'),
+  expiryMonth: integer('expiry_month'),
+  expiryYear: integer('expiry_year'),
+  cardHolderName: text('card_holder_name'),
+  issuer: text('issuer'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('vault_cards_entry_idx').on(t.entryId),
+]);
+
+// ===================== vault_totp_secrets =====================
+export const vaultTotpSecrets = pgTable('vault_totp_secrets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  entryId: uuid('entry_id').notNull().references(() => vaultEntries.id, { onDelete: 'cascade' }),
+  secret: text('secret').notNull(),
+  issuer: text('issuer'),
+  label: text('label'),
+  algorithm: text('algorithm').notNull().default('SHA1'),
+  digits: integer('digits').notNull().default(6),
+  period: integer('period').notNull().default(30),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('vault_totp_secrets_entry_idx').on(t.entryId),
+]);
+
+// ===================== documents =====================
+export const documents = pgTable('documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  type: text('type').notNull().default('other'),
+  description: text('description'),
+  mimeType: text('mime_type'),
+  fileSize: integer('file_size'),
+  storagePath: text('storage_path'),
+  tags: jsonb('tags'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('documents_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
+// ===================== DOCUMENTS DOMAIN =====================
+
+// ===================== document_tags =====================
+export const documentTags = pgTable('document_tags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  documentId: uuid('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  tag: text('tag').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('document_tags_document_idx').on(t.documentId),
+]);
+
+// ===================== document_refs =====================
+export const documentRefs = pgTable('document_refs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  documentId: uuid('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  refType: text('ref_type').notNull(),
+  refId: text('ref_id'),
+  refUrl: text('ref_url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('document_refs_document_idx').on(t.documentId),
+]);
+
+// ===================== calendar_events =====================
+export const calendarEvents = pgTable('calendar_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+  endDate: timestamp('end_date', { withTimezone: true }),
+  allDay: boolean('all_day').notNull().default(false),
+  location: text('location'),
+  color: text('color'),
+  category: text('category'),
+  calendarSource: text('calendar_source').notNull().default('local'),
+  externalId: text('external_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('calendar_events_owner_idx').on(t.ownerId, t.startDate, t.deletedAt),
+]);
+
+// ===================== CALENDAR DOMAIN =====================
+
+// ===================== calendars =====================
+export const calendars = pgTable('calendars', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  color: text('color'),
+  source: text('source').notNull().default('local'),
+  externalId: text('external_id'),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('calendars_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
+// ===================== event_attendees =====================
+export const eventAttendees = pgTable('event_attendees', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  eventId: uuid('event_id').notNull().references(() => calendarEvents.id, { onDelete: 'cascade' }),
+  name: text('name'),
+  email: text('email'),
+  status: text('status').notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('event_attendees_event_idx').on(t.eventId),
+]);
+
+// ===================== event_reminders =====================
+export const eventReminders = pgTable('event_reminders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  eventId: uuid('event_id').notNull().references(() => calendarEvents.id, { onDelete: 'cascade' }),
+  method: text('method').notNull().default('notification'),
+  minutesBefore: integer('minutes_before').notNull().default(15),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('event_reminders_event_idx').on(t.eventId),
+]);
+
+// ===================== it_devices =====================
+export const itDevices = pgTable('it_devices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  type: text('type').notNull().default('other'),
+  ipAddress: text('ip_address'),
+  macAddress: text('mac_address'),
+  hostname: text('hostname'),
+  os: text('os'),
+  location: text('location'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('it_devices_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
+// ===================== IT-INVENTORY DOMAIN =====================
+
+// ===================== it_locations =====================
+export const itLocations = pgTable('it_locations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  description: text('description'),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('it_locations_owner_idx').on(t.ownerId),
+]);
+
+// ===================== it_network_interfaces =====================
+export const itNetworkInterfaces = pgTable('it_network_interfaces', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  deviceId: uuid('device_id').notNull().references(() => itDevices.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  macAddress: text('mac_address'),
+  ipAddress: text('ip_address'),
+  subnet: text('subnet'),
+  gateway: text('gateway'),
+  dnsServers: text('dns_servers'),
+  type: text('type').notNull().default('ethernet'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('it_network_interfaces_device_idx').on(t.deviceId),
+]);
+
+// ===================== it_device_credentials =====================
+export const itDeviceCredentials = pgTable('it_device_credentials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  deviceId: uuid('device_id').notNull().references(() => itDevices.id, { onDelete: 'cascade' }),
+  username: text('username').notNull(),
+  encryptedPassword: text('encrypted_password'),
+  sshKeyPath: text('ssh_key_path'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('it_device_credentials_device_idx').on(t.deviceId),
+]);
+
+// ===================== search_queries =====================
+export const searchQueries = pgTable('search_queries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  query: text('query').notNull(),
+  domainFilter: text('domain_filter'),
+  resultCount: integer('result_count').notNull().default(0),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('search_queries_user_idx').on(t.userId, t.createdAt),
+]);
+
+// ===================== SEARCH DOMAIN =====================
+
+// ===================== search_clicks =====================
+export const searchClicks = pgTable('search_clicks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  queryId: uuid('query_id').references(() => searchQueries.id),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  domain: text('domain').notNull(),
+  resultId: text('result_id').notNull(),
+  resultTitle: text('result_title'),
+  position: integer('position'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('search_clicks_user_idx').on(t.userId),
+  index('search_clicks_query_idx').on(t.queryId),
+]);
+
+// ===================== PLUGINS DOMAIN =====================
+
+// ===================== plugins =====================
+export const plugins = pgTable('plugins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  version: text('version').notNull(),
+  description: text('description'),
+  author: text('author'),
+  homepage: text('homepage'),
+  enabled: boolean('enabled').notNull().default(true),
+  settings: jsonb('settings').notNull().default('{}'),
+  permissions: jsonb('permissions'),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('plugins_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
+// ===================== plugin_permissions =====================
+export const pluginPermissions = pgTable('plugin_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pluginId: uuid('plugin_id').notNull().references(() => plugins.id, { onDelete: 'cascade' }),
+  domain: text('domain').notNull(),
+  action: text('action').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('plugin_permissions_plugin_idx').on(t.pluginId),
+]);
+
+// ===================== plugin_data =====================
+export const pluginData = pgTable('plugin_data', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pluginId: uuid('plugin_id').notNull().references(() => plugins.id, { onDelete: 'cascade' }),
+  key: text('key').notNull(),
+  value: jsonb('value').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('plugin_data_plugin_key_uq').on(t.pluginId, t.key),
+]);

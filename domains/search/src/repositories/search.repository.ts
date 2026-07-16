@@ -46,10 +46,10 @@ export class SearchRepository {
 
   async logQuery(query: string, domainFilter: string | null, resultCount: number, userId: string): Promise<void> {
     await this.db.insert(searchQueries).values({
-      query,
-      domainFilter,
-      resultCount,
       userId,
+      query,
+      domainFilter: domainFilter ?? null,
+      resultCount,
     });
   }
 

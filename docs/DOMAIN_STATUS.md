@@ -55,7 +55,7 @@ Jede Domain hat exakt einen Status:
 | Domain | Status |
 |--------|--------|
 | travel | IMPLEMENTED | Backend: Entities, DTOs (Zod), Repository (Drizzle), Service, Controller + Module (NestJS), DB-Tabellen (travel_trips, travel_destinations, travel_trip_days, travel_trip_media_refs), Migration existent. Frontend: Trips-Übersicht (Grid/Liste, Suche, Status-Badge), Trip-Detail (Tabs: Übersicht/Orte/Tage/Karte), Orte-CRUD, Tage-CRUD, OSM-Kartenansicht, Dialog zum Anlegen. Missing: Leaflet-Map via npm, Event-Emission, Unit-Tests, Permission-Tests. |
-| projects | NOT_STARTED |
+| projects | IMPLEMENTED | Backend: Entities, DTOs, Repository, Service, Controller (CRUD + Notes + Links + Permission Guards, YouTube-Sanitisierung). Frontend: Create-Dialog, Card-Grid, Detail-Ansicht (Übersicht/Notizen/Links-Tabs), GitHub-/YouTube-Integration. DB: 4 Tabellen (projects, project_files, project_notes, project_links) + Migration. Module in app.module.ts registriert. Typecheck 0 Fehler. |
 | recipes | NOT_STARTED |
 | shopping | IMPLEMENTED | Backend: Entities, DTOs (Zod), Repository (Drizzle), Service (CRUD + check/uncheck), Controller + Module (NestJS), DB-Tabellen (shopping_lists, shopping_items). Frontend: Übersicht (Karten, Fortschrittsbalken, Farbe), Detail (Kategorie-Gruppierung, Check/Uncheck, Menge/Einheit, neues Item, archivieren). Sidebar integriert. |
 

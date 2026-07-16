@@ -47,7 +47,7 @@ function SongRowImpl({
   const addToQueueNext = useMusicPlayerStore((s) => s.addToQueueNext);
   const isFav = useMusicPlayerStore((s) => s.isFavorite);
   const toggleFavoriteAPI = useToggleFavorite();
-  const onSongContextMenu = useSongContextMenu();
+  const onSongContextMenu = useSongContextMenu({ serverId: server?.id });
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -105,6 +105,7 @@ function SongRowImpl({
             ? () => router.push(`/jellyfin/music/album/${track.albumId}`)
             : undefined,
           isFavorite: track.isFavorite ?? isFav(track.id),
+          songId: track.id,
         })
       }
     >
@@ -216,6 +217,7 @@ function SongRowImpl({
                 ? () => router.push(`/jellyfin/music/album/${track.albumId}`)
                 : undefined,
               isFavorite: track.isFavorite ?? isFav(track.id),
+              songId: track.id,
             });
           }}
         >

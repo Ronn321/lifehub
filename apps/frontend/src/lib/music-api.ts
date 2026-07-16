@@ -382,6 +382,36 @@ export function useCreatePlaylist() {
   );
 }
 
+/** Add songs to a playlist */
+export function useAddToPlaylist() {
+  return useCallback(
+    async (serverId: string, playlistId: string, songIds: string[]): Promise<void> => {
+      await api.post(`/jellyfin/servers/${serverId}/playlists/${playlistId}/items`, { songIds });
+    },
+    [],
+  );
+}
+
+/** Remove a song from a playlist */
+export function useRemoveFromPlaylist() {
+  return useCallback(
+    async (serverId: string, playlistId: string, songId: string): Promise<void> => {
+      await api.delete(`/jellyfin/servers/${serverId}/playlists/${playlistId}/items/${songId}`);
+    },
+    [],
+  );
+}
+
+/** Delete a playlist */
+export function useDeletePlaylist() {
+  return useCallback(
+    async (serverId: string, playlistId: string): Promise<void> => {
+      await api.delete(`/jellyfin/servers/${serverId}/playlists/${playlistId}`);
+    },
+    [],
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Favorites API Hooks                                                */
 /* ------------------------------------------------------------------ */

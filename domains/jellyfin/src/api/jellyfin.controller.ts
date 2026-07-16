@@ -260,6 +260,44 @@ export class JellyfinController {
     return this.jellyfin.createPlaylist(user.sub, serverId, body.name, body.songIds);
   }
 
+  @Post('servers/:serverId/playlists/:playlistId/items')
+  @HttpCode(204)
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Songs zu einer Playlist hinzufügen' })
+  async addToPlaylist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('playlistId') playlistId: string,
+    @Body() body: { songIds: string[] },
+  ) {
+    await this.jellyfin.addToPlaylist(user.sub, serverId, playlistId, body.songIds);
+  }
+
+  @Delete('servers/:serverId/playlists/:playlistId/items/:songId')
+  @HttpCode(204)
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Song aus Playlist entfernen' })
+  async removeFromPlaylist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('playlistId') playlistId: string,
+    @Param('songId') songId: string,
+  ) {
+    await this.jellyfin.removeFromPlaylist(user.sub, serverId, playlistId, songId);
+  }
+
+  @Delete('servers/:serverId/playlists/:playlistId')
+  @HttpCode(204)
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Playlist löschen' })
+  async deletePlaylist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('playlistId') playlistId: string,
+  ) {
+    await this.jellyfin.deletePlaylist(user.sub, serverId, playlistId);
+  }
+
   // =================== Media v0.3 API Endpoints (Netflix-style) ===================
 
   @Get('servers/:serverId/items/:externalId/detail')

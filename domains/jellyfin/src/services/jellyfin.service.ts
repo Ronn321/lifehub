@@ -756,6 +756,61 @@ export class JellyfinService {
     return res.json();
   }
 
+  async addToPlaylist(ownerId: string, serverId: string, playlistId: string, songIds: string[]): Promise<void> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const jellyfinUserId = await this.getJellyfinUserId(server);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const idsParam = songIds.join(',');
+    const res = await fetch(
+      `${baseUrl}/Playlists/${playlistId}/Items?ids=${encodeURIComponent(idsParam)}&api_key=${server.apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `MediaBrowser Token=${server.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ UserId: jellyfinUserId }),
+      },
+    );
+    if (!res.ok) {
+      throw new Error(`Jellyfin addToPlaylist error: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  async removeFromPlaylist(ownerId: string, serverId: string, playlistId: string, songId: string): Promise<void> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const res = await fetch(
+      `${baseUrl}/Playlists/${playlistId}/Items?entryIds=${songId}&api_key=${server.apiKey}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `MediaBrowser Token=${server.apiKey}`,
+        },
+      },
+    );
+    if (!res.ok) {
+      throw new Error(`Jellyfin removeFromPlaylist error: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  async deletePlaylist(ownerId: string, serverId: string, playlistId: string): Promise<void> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const res = await fetch(
+      `${baseUrl}/Items/${playlistId}?api_key=${server.apiKey}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `MediaBrowser Token=${server.apiKey}`,
+        },
+      },
+    );
+    if (!res.ok) {
+      throw new Error(`Jellyfin deletePlaylist error: ${res.status} ${res.statusText}`);
+    }
+  }
+
   // =================== Media v0.3 API Extensions (Netflix-style Movies & Series) ===================
 
   async getItemDetail(ownerId: string, serverId: string, externalId: string): Promise<any> {

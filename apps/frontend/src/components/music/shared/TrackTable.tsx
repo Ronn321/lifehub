@@ -658,7 +658,7 @@ export function TrackTable({
   const [coverSize, setCoverSize] = useState<CoverSize>(defaultCoverSize);
   const [filters, setFilters] = useState<FilterState>({ search: '', selectedGenres: [], artist: '', album: '', year: '' });
 
-  const onSongContextMenu = useSongContextMenu();
+  const onSongContextMenu = useSongContextMenu({ serverId });
 
   // ── Unique values for filters ──
   const uniqueGenres = useMemo(() => {
@@ -768,9 +768,10 @@ export function TrackTable({
         onPlay: () => onPlay(trackIndex),
         onAddToQueue: () => {},
         onToggleFavorite: () => {},
+        songId: tracks[trackIndex]?.id,
       });
     },
-    [onPlay, onSongContextMenu],
+    [onPlay, onSongContextMenu, tracks],
   );
 
   // ── Ensure index, cover, title are always visible ──

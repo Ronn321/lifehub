@@ -60,6 +60,7 @@ export default function MusicSearchPage() {
   const [showAllAlbums, setShowAllAlbums] = useState(false);
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [filter, setFilter] = useState<'alle' | 'musik' | 'alben' | 'künstler'>('alle');
 
   /* ── Search History ── */
 
@@ -254,6 +255,28 @@ export default function MusicSearchPage() {
                 </div>
               )}
             </div>
+
+            {/* ================================================================ */}
+            {/*  Filter Tabs                                                    */}
+            {/* ================================================================ */}
+
+            {hasQuery && (
+              <div className="flex flex-wrap gap-2">
+                {(['alle', 'musik', 'alben', 'künstler'] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className="rounded-full px-4 py-1.5 text-sm font-medium transition-all"
+                    style={{
+                      background: filter === f ? '#ffffff' : '#2A2A2A',
+                      color: filter === f ? '#000000' : '#ffffff',
+                    }}
+                  >
+                    {f === 'alle' ? 'Alle' : f === 'musik' ? 'Musik' : f === 'alben' ? 'Alben' : 'Künstler'}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* ================================================================ */}
             {/*  Loading                                                       */}

@@ -514,7 +514,23 @@ Tasks sind nach Priority gruppiert und nach Dependencies geordnet. Jede Aufgabe 
 
 # Offene Punkte
 
+**Alle 20 Implementierungs-Tasks sind ERLEDIGT ✅**
+
 Sortiert nach Priorität. Status: OFFEN = noch nicht begonnen, IN ARBEIT = Subagent dispatched, ERLEDIGT = implementiert und verifiziert.
+
+## Iteration 2 — Neue Features (Wave 1-3)
+
+| Feature | Wave | Status | Commit |
+|---------|------|--------|--------|
+| Playlist Create Dialog + Backend | Wave 1 | ✅ ERLEDIGT | 29bd9a8 |
+| Skeleton-Shimmer Loading States | Wave 1 | ✅ ERLEDIGT | 29bd9a8 |
+| Home "Weiter hören" Section | Wave 1 | ✅ ERLEDIGT | 29bd9a8 |
+| Color Extraction (Canvas Utility) | Wave 2 | ✅ ERLEDIGT | 1614922 |
+| Lyrics Backend + Frontend Display | Wave 2 | ✅ ERLEDIGT | 1614922 |
+| Gapless Playback (Dual-Audio) | Wave 2 | ✅ ERLEDIGT | 1614922 |
+| Playlist CRUD (Add/Remove/Delete) | Wave 3 | ✅ ERLEDIGT | 45a98e0 |
+| Context Menu Playlist Submenu | Wave 3 | ✅ ERLEDIGT | 45a98e0 |
+| Search Filter Tabs (Alle/Musik/Alben/Künstler) | Wave 3 | ✅ ERLEDIGT | 50360e0 |
 
 ## Alles ERLEDIGT ✅
 
@@ -530,7 +546,7 @@ Sortiert nach Priorität. Status: OFFEN = noch nicht begonnen, IN ARBEIT = Subag
 | IMPL-008 | Search Limits + Kategorien (S-001) | ✅ ERLEDIGT |
 | IMPL-009 | Home Sections (H-003) | ✅ ERLEDIGT |
 | IMPL-010 | Quick Access Cover-Cards (H-001) | ✅ ERLEDIGT |
-| IMPL-011 | Gapless Playback (P-006) | OFFEN — benötigt neue Architektur |
+|| IMPL-011 | Gapless Playback (P-006) | ✅ ERLEDIGT — Dual-Audio-Architektur in Wave 2 |
 | IMPL-012 | Auto-Skip 5s (P-007) | ✅ ERLEDIGT |
 | IMPL-013 | Shift+Arrow Seek (P-008) | ✅ ERLEDIGT |
 | IMPL-014 | NowPlaying 3 Tabs + Controls (P-014, P-015) | ✅ ERLEDIGT |
@@ -539,7 +555,7 @@ Sortiert nach Priorität. Status: OFFEN = noch nicht begonnen, IN ARBEIT = Subag
 | IMPL-017 | play()/pause() Actions (P-002) | ✅ ERLEDIGT |
 | IMPL-018 | Autocomplete (S-004) | ✅ ERLEDIGT |
 | IMPL-019 | Card Hover Scale + Grid Gap (H-005, C-002) | ✅ ERLEDIGT |
-| IMPL-020 | Skeleton-Shimmer (L-009) | OFFEN — geringe Priorität |
+|| IMPL-020 | Skeleton-Shimmer (L-009) | ✅ ERLEDIGT — SongRowSkeleton in Wave 1 |
 | — | D-023..D-031 Playlist Detail Page | ✅ ERLEDIGT |
 | — | L-006 Sticky Header Blur | ✅ ERLEDIGT |
 | — | A-001 Backend Route Collision | ✅ ERLEDIGT |
@@ -558,3 +574,4 @@ Sortiert nach Priorität. Status: OFFEN = noch nicht begonnen, IN ARBEIT = Subag
 | Iteration | Datum | Start-Commit | End-Commit | Zusammenfassung |
 |-----------|-------|-------------|-----------|-----------------|
 | 1 | 2026-07-10 | deaa206 | b5e936e | **Vollständiges Architektur-, UX-, Code- und Implementierungsreview.** 202 Checks durch 5 Analyse-Subagents. 9 Critical, 30 High, 42 Medium, 27 Low Abweichungen identifiziert. 31 Implementierungs-Tasks an Subagents delegiert. 7 Commits mit ~2.000+ Zeilen Änderungen. ~30 Abweichungen behoben. 2 offene Low-Priority-Tasks (Gapless Playback, Skeleton-Shimmer). |
+| 2 | 2026-07-16 | 1ee7585 | 50360e0 | **Iteration 2: Functional Features.** 3 Wellen mit je 2-4 Subagents. 9 neue Features implementiert: Playlist Create Dialog + Backend, Skeleton-Shimmer Loading, Home "Weiter hören", Color Extraction Utility, Lyrics Backend+Frontend (LRC-Parser), Gapless Playback (Dual-Audio-Architektur), Playlist CRUD (Add/Remove/Delete), Context Menu Playlist Submenu, Search Filter Tabs. ~1.500 Zeilen neue Funktionalität. Alle 20 Implementierungs-Tasks ERLEDIGT. 0 offene Punkte (funktional). |

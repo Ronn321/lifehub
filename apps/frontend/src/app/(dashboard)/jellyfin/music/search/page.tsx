@@ -198,6 +198,7 @@ export default function MusicSearchPage() {
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
+                  setFilter('alle');
                   setShowAllArtists(false);
                   setShowAllAlbums(false);
                   setShowAllSongs(false);
@@ -394,7 +395,7 @@ export default function MusicSearchPage() {
             {hasQuery && searchResults && !searchLoading && (
               <>
                 {/* ─── Top Result ─── */}
-                {topResult && (
+                {topResult && filter === 'alle' && (
                   <section className="space-y-3">
                     <h2
                       className="text-xl font-bold"
@@ -430,7 +431,7 @@ export default function MusicSearchPage() {
                 )}
 
                 {/* ─── Artists ─── */}
-                {searchResults.Artists && searchResults.Artists.length > 0 && (
+                {searchResults.Artists && searchResults.Artists.length > 0 && (filter === 'alle' || filter === 'künstler') && (
                   <section className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h2
@@ -464,7 +465,7 @@ export default function MusicSearchPage() {
                 )}
 
                 {/* ─── Albums ─── */}
-                {searchResults.Albums && searchResults.Albums.length > 0 && (
+                {searchResults.Albums && searchResults.Albums.length > 0 && (filter === 'alle' || filter === 'alben') && (
                   <section className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h2
@@ -497,7 +498,7 @@ export default function MusicSearchPage() {
                 )}
 
                 {/* ─── Songs ─── */}
-                {searchResults.Songs && searchResults.Songs.length > 0 && (
+                {searchResults.Songs && searchResults.Songs.length > 0 && (filter === 'alle' || filter === 'musik') && (
                   <section className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h2

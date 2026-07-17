@@ -2,88 +2,97 @@
 
 ## Purpose
 
-The /recipes domain defines the complete system for managing, creating, importing, storing, and consuming recipes in the LifeHub ecosystem. It is designed as an offline-first, NAS-ready, mobile-native recipe system inspired by Mealie and Tandoor, but structurally aligned with MorphCook principles.
+Die Recipes-Domain ist das **zentrale Rezept-Management-System** des LifeHub-Ökosystems. Sie dient als:
+
+- **Backend für MorphCook** — Standardisierte JSON-API zur Versorgung der MorphCook-Flutter-App mit Rezeptdaten
+- **Import-Pipeline** — Automatischer Import externer Rezepte (Chefkoch, generische HTML-Seiten, MorphCook-Export)
+- **Management-UI** — Web-basierte Verwaltung, Suche und Kuratierung von Rezepten
+- **Koch-Plattform** — Cook Mode, Meal Planning, Shopping List direkt im Browser
 
 ## Core Objectives
 
-### 1. Offline-First Operation
-- No runtime backend required in v1
-- All recipe data is stored locally on device
-- Synchronization is handled via file export/import only
+### 1. Vollständige Import-Pipeline
+- Automatischer Import von Chefkoch-Rezepten per URL
+- 9-stufige Pipeline: URL-Erkennung → HTML-Download → DOM/JSON-LD-Extraktion → Normalisierung → Ingredient-Mapping → Ontology-Mapping → Validierung → Draft
+- Modulare Adapter-Architektur für zukünftige Quellen
 
-### 2. NAS-Centric Future Architecture
-- Recipes are designed to be centrally stored on a NAS (LifeHub core)
-- Mobile apps act as clients + editors
-- Future sync layer is additive, not structural
+### 2. MorphCook-kompatibles Datenmodell
+- Explizite Rezept-Varianten unter Dish-Konzepten
+- contains_flags + attributes + ontology_tags
+- Multilinguale Textfelder (DE + EN)
+- Deterministisch, keine Runtime-KI
 
-### 3. MorphCook Compatibility
-- Each variant is a standalone recipe entity
-- Recipes are grouped under dish concepts
-- Full flag-based ontology system is required
+### 3. NAS-Centric Architecture
+- Läuft im LifeHub-Docker-Stack auf dem NAS
+- PostgreSQL als zentrale Datenquelle
+- Traefik für HTTPS + Tailscale für sicheren Remote-Zugriff
 
-### 4. High-Quality Import System
-- External recipes (e.g. Chefkoch) can be converted into native format
-- Import pipeline is deterministic, not AI runtime dependent
+### 4. PWA-Offline-Fähigkeit
+- Service Worker für App-Shell-Caching
+- IndexedDB für lokale Rezeptspeicherung
+- Cook Mode funktioniert offline
 
 ## System Boundaries
 
-### In Scope (v1)
-- Recipe storage (local)
-- Recipe creation (mobile)
-- Recipe import (external sources via pipeline)
-- Recipe search (local index)
-- Meal planning (local)
-- Shopping list generation (local aggregation)
-- File-based export/import
+### Im Scope
+- Rezept-Speicherung (PostgreSQL) + Verwaltung (NestJS API)
+- Rezept-Import (Chefkoch + generische Quellen)
+- Rezept-Suche (PostgreSQL Full-Text-Search)
+- Matching-Engine (deterministisch, dietary-filtered)
+- Variantensystem (explizite Varianten unter Dishes)
+- Meal Planning (Wochenraster)
+- Shopping List (Aggregation aus Rezepten)
+- Dietary-Profile (avoid_flags, calorie_target, etc.)
+- MorphCook-Sync (Export/Import JSON)
+- Cook Mode (Web-UI)
+- Ontology-Management (Flags, Ingredients-Tree)
 
 ### Out of Scope (v1)
-- Cloud backend
-- Real-time sync
-- Social features
-- AI runtime inference
-- Multi-user collaboration
+- Native Mobile App (→ MorphCook)
+- Real-time Multi-User-Kollaboration
+- Social Features
+- AI-Runtime-Inference
 
-## Domain Entities (High-Level)
-- **Recipe** — atomic cooking instruction set
-- **Dish** — conceptual grouping of recipes
-- **Ingredient** — normalized ontology entity
-- **Variant** — explicit recipe variant, not virtual
-- **MealPlan** — calendar assignment of recipes
-- **ShoppingList** — aggregated ingredient output
-- **ImportSource** — external recipe origin, e.g. Chefkoch
+## Domain Entities (Hoch-Level)
+- **Recipe** — Atomare Kocheinheit mit Zutaten + Schritten + Nährwerten
+- **Dish** — Konzeptuelle Gruppierung von Rezept-Varianten ("Döner" → Classic, Vegan, Keto)
+- **Variant** — Explizite Rezept-Variante, kein Overlay/Substitution
+- **IngredientOntology** — Hierarchische Zutaten-Taxonomie
+- **OntologyFlag** — Flag-Taxonomie (contains_flags, attributes, compound_flags)
+- **DietaryProfile** — User-Einstellungen für Matching/Suche
+- **MealPlan** — Wochen-Kalender-Zuweisung
+- **ShoppingList** — Aggregierte Zutaten aus Rezepten
+- **ImportJob** — Async-Import-Draft mit Status-Tracking
 
-## Key Design Principle
+## Design-Prinzipien
 
-> A recipe is never modified implicitly. Every variation becomes a new explicit entity.
+| Prinzip | Bedeutung |
+|---|---|
+| **Deterministisch** | Matching, Suche, Import — keine Runtime-KI, keine Zufallslogik |
+| **Explizit** | Varianten sind vollständige Rezepte, keine abgeleiteten Substitutionen |
+| **Additiv** | Ontology wird nur erweitert, nie geändert oder gelöscht |
+| **Schichten-Trennung** | Controller → Service → Repository → DB. Nie überspringen. |
+| **Modular** | Import-Adapter, Normalisierer — jedes Teil austauschbar |
+| **Offline-fähig** | Cook Mode + gespeicherte Rezepte im Browser offline nutzbar |
 
-This ensures:
-- reproducibility
-- offline determinism
-- clean sync semantics
-- MorphCook compatibility
+## Beziehung zu MorphCook
 
-## External Integration Strategy
+| Aspekt | LifeHub Recipes | MorphCook |
+|---|---|---|
+| Rolle | Backend + Management-System | Mobile App (Consumption) |
+| Plattform | Web (NestJS + Next.js) | iOS + Android (Flutter) |
+| Storage | PostgreSQL | Hive (lokal) |
+| Import | HTML-Parsing (Chefkoch etc.) | JSON-Import von LifeHub |
+| Matching | Server-seitig (API) | App-seitig (Pure Function) |
+| Cook Mode | Web-UI (PWA) | Native UI |
+| Offline | Service Worker + IndexedDB | Vollständig offline-native |
 
-All external sources are transformed via import adapters:
-- **Chefkoch Adapter** (primary v1 target)
-- **Generic HTML Recipe Adapter**
-- **Future:** structured APIs (Mealie/Tandoor export)
+## Beziehung zum LifeHub-Gesamtsystem
+- Recipes-Domain ist ein Bounded Context im LifeHub DDD-Modell
+- Nutzt `shared/auth`, `shared/permissions`, `shared/audit`, `shared/events`
+- Verknüpft mit `shopping`-Domain (Einkaufslisten-Generierung)
+- Verknüpft mit `media`-Domain (Rezept-Bilder)
+- Nutzt `public.tags` für Tagging
 
-All imports result in:
-- normalized RecipeEntity
-- ontology mapping
-- optional variant expansion
-
-## Relationship to LifeHub
-- Recipes domain is a subsystem of LifeHub
-- LifeHub provides:
-  - NAS storage layer (future)
-  - cross-domain linking (shopping, calendar, health)
-- v1 operates independently but is structurally LifeHub-compatible
-
-## Design Philosophy
-- deterministic over dynamic
-- structured over flexible
-- explicit over inferred
-- offline over connected
-- extensible over optimized prematurely
+> **Stand:** Juli 2026  
+> **Referenz:** `recipes_lifehub_architecture.md` für die vollständige technische Architektur

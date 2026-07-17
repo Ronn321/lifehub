@@ -11,7 +11,7 @@
 import { sql, relations } from 'drizzle-orm';
 import {
   pgTable, uuid, text, timestamp, boolean, jsonb, inet, bigint, char, customType, integer, numeric, date as dateCol,
-  index, uniqueIndex,
+  index, uniqueIndex, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 // bytea-Spalten brauchen customType in Drizzle 0.36+
@@ -429,6 +429,94 @@ export const recipeTags = pgTable('recipe_tags', {
 }, (t) => [
   index('recipe_tags_recipe_idx').on(t.recipeId),
   index('recipe_tags_tag_idx').on(t.tagId),
+]);
+
+// ===================== ingredient_ontology =====================
+export const ingredientOntology = pgTable('ingredient_ontology', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  parentId: uuid('parent_id').references((): AnyPgColumn => ingredientOntology.id),
+  nameDe: text('name_de').notNull(),
+  nameEn: text('name_en'),
+  ontologyTags: text('ontology_tags').array(),
+  defaultUnit: text('default_unit'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('ingredient_ontology_parent_idx').on(t.parentId),
+]);
+
+// ===================== ontology_flags =====================
+export const ontologyFlags = pgTable('ontology_flags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').notNull().unique(),
+  category: text('category').notNull(),
+  nameDe: text('name_de').notNull(),
+  nameEn: text('name_en'),
+  description: text('description'),
+  isCompound: boolean('is_compound').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ===================== ontology_compound_flags =====================
+export const ontologyCompoundFlags = pgTable('ontology_compound_flags', {
+  compoundFlagId: uuid('compound_flag_id').notNull().references(() => ontologyFlags.id),
+  expandedFlagId: uuid('expanded_flag_id').notNull().references(() => ontologyFlags.id),
+}, (t) => [
+  uniqueIndex('ontology_compound_flags_uq').on(t.compoundFlagId, t.expandedFlagId),
+]);
+
+// ===================== import_jobs =====================
+export const importJobs = pgTable('import_jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  sourceUrl: text('source_url').notNull(),
+  status: text('status').notNull().default('pending'),
+  sourceType: text('source_type').notNull(),
+  rawHtml: text('raw_html'),
+  extractedDto: jsonb('extracted_dto'),
+  normalizedDto: jsonb('normalized_dto'),
+  draftRecipeId: uuid('draft_recipe_id').references(() => recipes.id),
+  errorMessage: text('error_message'),
+  errorDetails: jsonb('error_details'),
+  retryCount: integer('retry_count').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('import_jobs_owner_idx').on(t.ownerId, t.status),
+  index('import_jobs_status_idx').on(t.status),
+]);
+
+// ===================== import_history =====================
+export const importHistory = pgTable('import_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  sourceUrl: text('source_url').notNull(),
+  sourceType: text('source_type').notNull(),
+  recipeId: uuid('recipe_id').notNull().references(() => recipes.id),
+  success: boolean('success').notNull().default(true),
+  durationMs: integer('duration_ms'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('import_history_owner_idx').on(t.ownerId, t.createdAt),
+]);
+
+// ===================== dietary_profiles =====================
+export const dietaryProfiles = pgTable('dietary_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id).unique(),
+  avoidFlags: text('avoid_flags').array().notNull().default(sql`'{}'`),
+  avoidIngredientIds: text('avoid_ingredient_ids').array().notNull().default(sql`'{}'`),
+  requiredAttributes: text('required_attributes').array().notNull().default(sql`'{}'`),
+  calorieTarget: integer('calorie_target'),
+  calorieTolerance: integer('calorie_tolerance').notNull().default(100),
+  maxTimeMinutes: integer('max_time_minutes'),
+  preferredEffort: text('preferred_effort').default('medium'),
+  showVariantTags: boolean('show_variant_tags').notNull().default(true),
+  showCalorieInfo: boolean('show_calorie_info').notNull().default(true),
+  reduceMotion: boolean('reduce_motion').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('dietary_profiles_user_idx').on(t.userId),
 ]);
 
 // ===================== shopping_lists =====================

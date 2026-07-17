@@ -39,9 +39,20 @@ interface BookmarkItem {
   title: string | null;
 }
 
+const SEARXNG_HOST = '100.124.4.24:3121';
+
 const PROXY_BASE = typeof window !== 'undefined'
   ? `http://${window.location.hostname}:3007/api/v1/browser/proxy`
   : '/api/v1/browser/proxy';
+
+/** Check if a URL can be loaded directly in an iframe (no proxy needed) */
+function isDirectUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    // SearXNG is configured with frame-ancestors * — always embeddable
+    return u.host === SEARXNG_HOST;
+  } catch { return false; }
+}
 
 export function BrowserBlock({ blockId, pageId, content, onChange, extraOverlayControls, onUrlChange }: BrowserBlockProps) {
   const queryClient = useQueryClient();
@@ -73,6 +84,14 @@ export function BrowserBlock({ blockId, pageId, content, onChange, extraOverlayC
     if (!sessionId) initSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-navigate to startUrl when session is ready
+  useEffect(() => {
+    if (sessionId && startUrl && !currentUrl) {
+      navigate(startUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
 
   // ─── Tabs ─────────────────────────────────────────────────────────────────
   const { data: tabs } = useQuery({
@@ -160,6 +179,8 @@ export function BrowserBlock({ blockId, pageId, content, onChange, extraOverlayC
   }, []);
 
   const getProxyUrl = useCallback((target: string) => {
+    // Use direct URL for embeddable services (SearXNG), proxy for everything else
+    if (isDirectUrl(target)) return target;
     return `${PROXY_BASE}?url=${encodeURIComponent(target)}`;
   }, []);
 

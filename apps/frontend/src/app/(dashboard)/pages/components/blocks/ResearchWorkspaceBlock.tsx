@@ -245,7 +245,7 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
           <BrowserBlock
             blockId={browserBlockId}
             pageId={pageId}
-            content={{}}
+            content={{ startUrl: 'http://100.124.4.24:3121', title: '', sessionId: null }}
             onChange={() => {}}
             onUrlChange={(url) => setPinUrl(url)}
             extraOverlayControls={

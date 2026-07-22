@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
+import { SleepTimerButton } from '@/components/music/player/SleepTimerButton';
 
 /* ------------------------------------------------------------------ */
 /*  VolumeControl — icon toggle + 100px slider                         */
@@ -252,6 +253,9 @@ export function PlayerRight({
           )}
         </button>
       )}
+
+      {/* ── Sleep Timer ── */}
+      <SleepTimerButton />
 
       {/* ── Volume ── */}
       <VolumeControl

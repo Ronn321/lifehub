@@ -106,12 +106,28 @@ export function MusicPlayerWrapper() {
   /* ── Sync favorites from Jellyfin on load ── */
   const { data: favSongs } = useFavoriteSongs(server?.id);
   const syncFavorites = useMusicPlayerStore((s) => s.syncFavorites);
+  const pauseStore = useMusicPlayerStore((s) => s.pause);
+  const sleepTimerEnd = useMusicPlayerStore((s) => s.sleepTimerEnd);
+  const setSleepTimer = useMusicPlayerStore((s) => s.setSleepTimer);
+
   useEffect(() => {
     if (favSongs && accessToken && server?.id) {
       const tracks = favSongs.map((item) => jellyfinItemToTrack(item, accessToken, server.id));
       syncFavorites(tracks);
     }
   }, [favSongs, accessToken, server?.id, syncFavorites]);
+
+  /* ── Sleep timer: pause playback when timer expires ── */
+  useEffect(() => {
+    if (!sleepTimerEnd) return;
+    const interval = setInterval(() => {
+      if (Date.now() >= sleepTimerEnd) {
+        pauseStore();
+        setSleepTimer(null);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [sleepTimerEnd, pauseStore, setSleepTimer]);
 
   /* ── Tracks which HTMLAudioElement is currently "active" (feeds store) ── */
   const activeElementRef = useRef<HTMLAudioElement>(audio);

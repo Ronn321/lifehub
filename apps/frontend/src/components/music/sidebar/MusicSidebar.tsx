@@ -12,6 +12,7 @@ import {
   useJellyfinServer,
   useArtists,
   useRecentAlbums,
+  useRecentlyPlayed,
   getCoverUrl,
 } from '@/lib/music-api';
 import { useAuthStore } from '@/lib/auth-store';
@@ -81,6 +82,7 @@ export function MusicSidebar({
   const queryClient = useQueryClient();
   const { data: artists } = useArtists(server?.id);
   const { data: albums } = useRecentAlbums(server?.id, 20);
+  const { data: recentItems } = useRecentlyPlayed(server?.id, 5);
   // Manage tab state locally as fallback when no onTabChange from parent
   const [localTab, setLocalTab] = useState<LibraryTab>(activeTab);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -141,6 +143,43 @@ export function MusicSidebar({
           collapsed={collapsed}
         />
       </nav>
+
+      {/* ── Kürzlich gespielt ── */}
+      {!collapsed && recentItems && recentItems.length > 0 && (
+        <div className="flex flex-col gap-1 px-3 pb-2">
+          <h2
+            className="px-2 text-xs font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--music-text-secondary)' }}
+          >
+            Kürzlich gespielt
+          </h2>
+          {recentItems.slice(0, 5).map((item) => {
+            const albumId = (item as any).AlbumId ?? item.Id;
+            return (
+              <button
+                key={`recent-${item.Id}`}
+                onClick={() => router.push(`/jellyfin/music/album/${albumId}`)}
+                className="flex items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-[var(--music-bg-hover)]"
+              >
+                {accessToken && server?.id && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={getCoverUrl(accessToken, server.id, albumId, 64, 64)}
+                    className="h-8 w-8 rounded object-cover"
+                    alt=""
+                  />
+                )}
+                <span
+                  className="truncate text-xs"
+                  style={{ color: 'var(--music-text-primary)' }}
+                >
+                  {item.Name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Library Header + Filter Tabs ── */}
       {!collapsed && (

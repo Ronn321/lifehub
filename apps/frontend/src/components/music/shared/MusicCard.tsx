@@ -50,6 +50,7 @@ export function MusicCard({
   subtitle,
   coverUrl,
   onClick,
+  onDoubleClick,
   onPlay,
   rounded = false,
 }: {
@@ -57,12 +58,14 @@ export function MusicCard({
   subtitle?: string;
   coverUrl?: string;
   onClick?: () => void;
+  onDoubleClick?: () => void;
   onPlay?: () => void;
   rounded?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       className="group flex flex-col gap-2 rounded-lg p-3 text-left transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-[var(--music-bg-card)] w-full"
       data-testid="music-card"
     >

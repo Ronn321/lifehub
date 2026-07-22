@@ -138,6 +138,7 @@ interface MusicPlayerStore {
   /* ── UI state ── */
   isExpanded: boolean; // right sidebar 'Now Playing' visibility
   isMiniPlayer: boolean; // floating mini-player mode
+  sleepTimerEnd: number | null;
   miniPlayerPosition: { x: number; y: number }; // last drag position
 
   /* ── Favorites (persisted) ── */
@@ -198,6 +199,7 @@ interface MusicPlayerStore {
 
   /* ── UI Actions ── */
   toggleExpanded: () => void;
+  setSleepTimer: (ms: number | null) => void;
   toggleMiniPlayer: () => void;
   setMiniPlayerPosition: (pos: { x: number; y: number }) => void;
 
@@ -327,6 +329,7 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
       /* ── UI state ── */
       isExpanded: false,
       isMiniPlayer: false,
+      sleepTimerEnd: null,
       miniPlayerPosition: typeof window !== 'undefined' ? { x: window.innerWidth - 320, y: window.innerHeight - 200 } : { x: 200, y: 200 },
 
       /* ── Favorites (persisted) ── */
@@ -839,6 +842,9 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
       /* ── UI Actions ── */
 
       toggleExpanded: () => set((s) => ({ isExpanded: !s.isExpanded })),
+
+      setSleepTimer: (ms) =>
+        set({ sleepTimerEnd: ms ? Date.now() + ms : null }),
 
       toggleMiniPlayer: () =>
         set((s) => ({ isMiniPlayer: !s.isMiniPlayer })),

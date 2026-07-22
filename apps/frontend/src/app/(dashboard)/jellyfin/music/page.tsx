@@ -145,6 +145,7 @@ export default function MusicPage() {
                     <MusicCard title={item.Name} subtitle={item.Artist ?? item.AlbumArtist ?? item.Album}
                       coverUrl={getCoverUrl(accessToken!, server!.id, item.AlbumId ?? item.Id, 160, 160)}
                       onClick={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))}
+                      onDoubleClick={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))}
                       onPlay={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))} />
                   </div>
                 ))}</MusicScrollRow>}
@@ -162,6 +163,7 @@ export default function MusicPage() {
                     <MusicCard title={item.Name} subtitle={item.Artist ?? item.AlbumArtist ?? item.Album}
                       coverUrl={getCoverUrl(accessToken!, server!.id, item.AlbumId ?? item.Id, 160, 160)}
                       onClick={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))}
+                      onDoubleClick={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))}
                       onPlay={() => recentTracks && handlePlayRecent(recentTracks, recentTracks.indexOf(item))} />
                   </div>
                 ))}</MusicScrollRow>}
@@ -178,7 +180,8 @@ export default function MusicPage() {
                   <div key={item.Id} className="w-44 shrink-0">
                     <MusicCard title={item.Name} subtitle={item.AlbumArtist}
                       coverUrl={getCoverUrl(accessToken!, server!.id, item.Id, 160, 160)}
-                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
+                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)}
+                      onDoubleClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
                   </div>
                 ))}</MusicScrollRow>}
             </MusicSection>
@@ -194,7 +197,8 @@ export default function MusicPage() {
                   <div key={item.Id} className="w-44 shrink-0">
                     <MusicCard title={item.Name} subtitle={item.AlbumArtist}
                       coverUrl={getCoverUrl(accessToken!, server!.id, item.Id, 160, 160)}
-                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
+                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)}
+                      onDoubleClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
                   </div>
                 ))}</MusicScrollRow>}
             </MusicSection>
@@ -210,7 +214,8 @@ export default function MusicPage() {
                   <div key={item.Id} className="w-44 shrink-0">
                     <MusicCard title={item.Name} subtitle={item.AlbumArtist}
                       coverUrl={getCoverUrl(accessToken!, server!.id, item.Id, 160, 160)}
-                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
+                      onClick={() => router.push(`/jellyfin/music/album/${item.Id}`)}
+                      onDoubleClick={() => router.push(`/jellyfin/music/album/${item.Id}`)} />
                   </div>
                 ))}</MusicScrollRow>}
             </MusicSection>
@@ -226,7 +231,8 @@ export default function MusicPage() {
                   <div key={item.Id} className="w-44 shrink-0">
                     <MusicCard title={item.Name} rounded
                       coverUrl={getCoverUrl(accessToken!, server!.id, item.Id, 160, 160)}
-                      onClick={() => router.push(`/jellyfin/music/artist/${item.Id}`)} />
+                      onClick={() => router.push(`/jellyfin/music/artist/${item.Id}`)}
+                      onDoubleClick={() => router.push(`/jellyfin/music/artist/${item.Id}`)} />
                   </div>
                 ))}</MusicScrollRow>}
             </MusicSection>

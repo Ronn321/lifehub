@@ -8,6 +8,7 @@ import { formatTime, useJellyfinServer, useToggleFavorite } from '@/lib/music-ap
 import { useAuthStore } from '@/lib/auth-store';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { useSongContextMenu } from './ContextMenu';
+import { PlayingIndicator } from './PlayingIndicator';
 import type { MusicTrack } from '@/lib/music-player-store';
 
 /* ------------------------------------------------------------------ */
@@ -46,6 +47,7 @@ function SongRowImpl({
   const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
   const addToQueueNext = useMusicPlayerStore((s) => s.addToQueueNext);
   const isFav = useMusicPlayerStore((s) => s.isFavorite);
+  const playbackStatus = useMusicPlayerStore((s) => s.status);
   const toggleFavoriteAPI = useToggleFavorite();
   const onSongContextMenu = useSongContextMenu({ serverId: server?.id });
 
@@ -119,6 +121,8 @@ function SongRowImpl({
               <Play className="h-4 w-4 fill-white text-white" />
             )}
           </button>
+        ) : isPlaying && playbackStatus === 'playing' ? (
+          <PlayingIndicator />
         ) : (
           <span
             className={

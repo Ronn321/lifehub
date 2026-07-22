@@ -171,10 +171,9 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
 
   /* ── Sidebar Mode (320px right sidebar) ── */
   return (
-    <aside
-      className="flex h-full flex-col border-l border-[rgba(255,255,255,0.08)] overflow-hidden"
+    <div
+      className="flex h-full w-full flex-col overflow-hidden"
       style={{
-        width: 'var(--music-right-sidebar-width, 360px)',
         background: `linear-gradient(to bottom, ${sidebarGradientColor} 0%, transparent 50%, var(--music-bg-base) 100%)`,
         transition: 'background 500ms ease-out',
       }}
@@ -229,7 +228,7 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
           />
         )}
       </div>
-    </aside>
+    </div>
   );
 }
 

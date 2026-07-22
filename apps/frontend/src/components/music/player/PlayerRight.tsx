@@ -29,6 +29,7 @@ function VolumeControl({
   onToggleMute: () => void;
 }) {
   const effectiveVolume = isMuted ? 0 : volume;
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
@@ -41,7 +42,12 @@ function VolumeControl({
   );
 
   return (
-    <div className="flex items-center gap-1.5" onWheel={handleWheel}>
+    <div
+      className="flex items-center gap-1.5"
+      onWheel={handleWheel}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <button
         onClick={onToggleMute}
         className="flex items-center justify-center w-8 h-8 rounded-full text-[var(--music-text-secondary)] hover:text-[var(--music-text-primary)] transition-colors"
@@ -61,7 +67,7 @@ function VolumeControl({
         step={0.02}
         value={effectiveVolume}
         onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-        className="volume-slider"
+        className={`volume-slider transition-all duration-200 ${isHovered ? 'w-28' : 'w-16'}`}
         aria-label="Lautstärke"
         title="Lautstärke"
       />

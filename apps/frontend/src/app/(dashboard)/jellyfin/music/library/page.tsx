@@ -16,6 +16,7 @@ import {
   useArtists,
   useGenres,
   usePlayTracks,
+  useFavoriteSongs,
   jellyfinItemToTrack,
   getCoverUrl,
 } from '@/lib/music-api';
@@ -34,7 +35,7 @@ import { useSelection } from '@/components/music/shared/useSelection';
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
 
-type TabKey = 'songs' | 'albums' | 'artists' | 'genres';
+type TabKey = 'songs' | 'albums' | 'artists' | 'genres' | 'favorites';
 type SortField = 'Name' | 'Album' | 'DateCreated' | 'RunTimeTicks';
 
 const TABS: { key: TabKey; label: string }[] = [
@@ -42,6 +43,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'albums', label: 'Alben' },
   { key: 'artists', label: 'Künstler' },
   { key: 'genres', label: 'Genres' },
+  { key: 'favorites', label: 'Lieblingssongs' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -108,6 +110,15 @@ export default function MusicLibraryPage() {
   const albumsQuery = useRecentAlbums(server?.id, 50);
   const artistsQuery = useArtists(server?.id);
   const genresQuery = useGenres(server?.id);
+  const favQuery = useFavoriteSongs(server?.id);
+
+  // Convert favorite songs to tracks
+  const favTracks = useMemo((): MusicTrack[] => {
+    if (!favQuery.data || !accessToken || !server?.id) return [];
+    return favQuery.data.map((item) =>
+      jellyfinItemToTrack(item, accessToken, server.id),
+    );
+  }, [favQuery.data, accessToken, server?.id]);
 
   // Convert songs to tracks
   const tracks = useMemo((): MusicTrack[] => {
@@ -292,6 +303,29 @@ export default function MusicLibraryPage() {
               selectedIds={selection.selectedIds}
               onRowClick={handleRowClick}
             />
+          </>
+        )}
+
+        {/* ═══════════════════════ Favorites ═══════════════════════ */}
+        {activeTab === 'favorites' && (
+          <>
+            {favQuery.isLoading ? (
+              <SongRowSkeleton />
+            ) : favTracks.length === 0 ? (
+              <MusicEmptyState
+                title="Keine Lieblingssongs"
+                description="Markiere Songs mit dem Herz-Symbol als Favorit."
+              />
+            ) : (
+              <TrackTable
+                tracks={favTracks}
+                isLoading={favQuery.isLoading}
+                currentTrackId={currentTrack?.id ?? undefined}
+                onPlay={handlePlaySong}
+                serverId={server?.id ?? undefined}
+                accessToken={accessToken ?? undefined}
+              />
+            )}
           </>
         )}
 

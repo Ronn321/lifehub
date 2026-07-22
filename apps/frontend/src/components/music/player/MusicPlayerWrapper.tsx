@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
-import { useJellyfinServer, getStreamUrl, useReportPlaybackStart, useReportPlaybackProgress, useReportPlaybackStop } from '@/lib/music-api';
+import { useJellyfinServer, getStreamUrl, useReportPlaybackStart, useReportPlaybackProgress, useReportPlaybackStop, useFavoriteSongs, jellyfinItemToTrack } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import type { RepeatMode, QueueItem } from '@/lib/music-player-store';
 import { MusicPlayerBar } from '@/components/music/player/MusicPlayerBar';
@@ -102,6 +102,16 @@ export function MusicPlayerWrapper() {
 
   useEffect(() => { accessTokenRef.current = accessToken; }, [accessToken]);
   useEffect(() => { serverRef.current = server; }, [server]);
+
+  /* ── Sync favorites from Jellyfin on load ── */
+  const { data: favSongs } = useFavoriteSongs(server?.id);
+  const syncFavorites = useMusicPlayerStore((s) => s.syncFavorites);
+  useEffect(() => {
+    if (favSongs && accessToken && server?.id) {
+      const tracks = favSongs.map((item) => jellyfinItemToTrack(item, accessToken, server.id));
+      syncFavorites(tracks);
+    }
+  }, [favSongs, accessToken, server?.id, syncFavorites]);
 
   /* ── Tracks which HTMLAudioElement is currently "active" (feeds store) ── */
   const activeElementRef = useRef<HTMLAudioElement>(audio);

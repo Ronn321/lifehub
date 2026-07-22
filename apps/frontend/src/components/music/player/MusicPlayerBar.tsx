@@ -332,6 +332,31 @@ export function MusicPlayerBar({
           handleFullscreen();
           break;
         }
+        case 'KeyQ': {
+          e.preventDefault();
+          useMusicPlayerStore.getState().toggleExpanded();
+          break;
+        }
+        case 'KeyL': {
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="Was möchtest"]');
+            searchInput?.focus();
+          }
+          break;
+        }
+        case 'KeyN': {
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            window.dispatchEvent(new CustomEvent('music:create-playlist'));
+          }
+          break;
+        }
+        case 'Escape': {
+          const s = useMusicPlayerStore.getState();
+          if (s.isExpanded) s.toggleExpanded();
+          break;
+        }
       }
     };
 

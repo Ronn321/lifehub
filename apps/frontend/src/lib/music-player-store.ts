@@ -209,10 +209,11 @@ interface MusicPlayerStore {
   updateDevice: (deviceId: string, updates: Partial<DeviceInfo>) => void;
 
   /* ── Favorites Actions ── */
-  toggleFavorite: (track: MusicTrack) => void;
-  isFavorite: (trackId: string) => boolean;
-  getFavoriteTracks: () => MusicTrack[];
-}
+    toggleFavorite: (track: MusicTrack) => void;
+    isFavorite: (trackId: string) => boolean;
+    getFavoriteTracks: () => MusicTrack[];
+    syncFavorites: (tracks: MusicTrack[]) => void;
+  }
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -873,6 +874,13 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
         return favoriteIds
           .map((id) => favoriteTracks[id])
           .filter((t): t is MusicTrack => t !== undefined);
+      },
+
+      syncFavorites: (tracks) => {
+        const ids = tracks.map((t) => t.id);
+        const trackMap: Record<string, MusicTrack> = {};
+        for (const t of tracks) trackMap[t.id] = t;
+        set({ favoriteIds: ids, favoriteTracks: trackMap });
       },
 
       /* ── Device Actions ── */

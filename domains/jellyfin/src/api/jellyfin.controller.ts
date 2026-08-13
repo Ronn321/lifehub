@@ -1,6 +1,6 @@
 import {
   Body, Controller, Delete, Get, HttpCode, Inject,
-  Param, Post, Query, UseGuards,
+  Param, Patch, Post, Query, UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard, CurrentUser, type JwtPayload } from '@lifehub/auth';
@@ -469,5 +469,107 @@ export class JellyfinController {
     @Param('serverId') serverId: string,
   ) {
     return this.jellyfin.getWatchlist(user.sub, serverId);
+  }
+
+  // =================== Watchlists (LifeHub-eigene Listen) ===================
+
+  @Get('servers/:serverId/watchlists')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Eigene Watchlists auflisten (mit Item-Anzahl)' })
+  async listWatchlists(@CurrentUser() user: JwtPayload, @Param('serverId') serverId: string) {
+    return this.jellyfin.listWatchlists(user.sub, serverId);
+  }
+
+  @Post('servers/:serverId/watchlists')
+  @RequirePermission('jellyfin', 'create')
+  @ApiOperation({ summary: 'Neue Watchlist erstellen' })
+  async createWatchlist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Body() body: { name: string },
+  ) {
+    return this.jellyfin.createWatchlist(user.sub, serverId, body.name);
+  }
+
+  @Patch('servers/:serverId/watchlists/:listId')
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Watchlist umbenennen' })
+  async renameWatchlist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('listId') listId: string,
+    @Body() body: { name: string },
+  ) {
+    return this.jellyfin.renameWatchlist(user.sub, serverId, listId, body.name);
+  }
+
+  @Delete('servers/:serverId/watchlists/:listId')
+  @HttpCode(204)
+  @RequirePermission('jellyfin', 'delete')
+  @ApiOperation({ summary: 'Watchlist löschen' })
+  async deleteWatchlist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('listId') listId: string,
+  ) {
+    await this.jellyfin.deleteWatchlist(user.sub, serverId, listId);
+  }
+
+  @Get('servers/:serverId/watchlists/:listId/items')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Items einer Watchlist auflisten' })
+  async listWatchlistItems(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('listId') listId: string,
+  ) {
+    return this.jellyfin.listWatchlistItems(user.sub, serverId, listId);
+  }
+
+  @Post('servers/:serverId/watchlists/:listId/items')
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Item zu einer Watchlist hinzufügen' })
+  async addToWatchlist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('listId') listId: string,
+    @Body() body: { externalItemId: string; itemType: string; name: string },
+  ) {
+    return this.jellyfin.addToWatchlist(user.sub, serverId, listId, body);
+  }
+
+  @Delete('servers/:serverId/watchlists/:listId/items/:externalItemId')
+  @HttpCode(204)
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Item aus einer Watchlist entfernen' })
+  async removeFromWatchlist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('listId') listId: string,
+    @Param('externalItemId') externalItemId: string,
+  ) {
+    await this.jellyfin.removeFromWatchlist(user.sub, serverId, listId, externalItemId);
+  }
+
+  @Get('servers/:serverId/watchlists/status/:externalItemId')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Watchlist-Status eines Items abrufen' })
+  async getWatchlistStatus(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('externalItemId') externalItemId: string,
+  ) {
+    return this.jellyfin.getWatchlistStatus(user.sub, serverId, externalItemId);
+  }
+
+  @Post('servers/:serverId/items/:externalId/toggle-watched')
+  @RequirePermission('jellyfin', 'update')
+  @ApiOperation({ summary: 'Watch-Status gegen Jellyfin umschalten' })
+  async toggleWatchedExternal(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('externalId') externalId: string,
+  ) {
+    return this.jellyfin.toggleWatchedExternal(user.sub, serverId, externalId);
   }
 }

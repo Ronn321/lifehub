@@ -822,6 +822,24 @@ export class JellyfinService {
     );
   }
 
+  /** Watch-Status gegen die echte Jellyfin-API umschalten (Server of Record = Jellyfin). */
+  async toggleWatchedExternal(ownerId: string, serverId: string, externalId: string): Promise<{ watched: boolean }> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const authHeaders = { 'Authorization': `MediaBrowser Token=${server.apiKey}` };
+
+    const current = await this.fetchFromJellyfin(server, `/Users/${userId}/Items/${externalId}?Fields=UserData`);
+    const played = current?.UserData?.Played ?? false;
+
+    const res = await fetch(`${baseUrl}/Users/${userId}/PlayedItems/${externalId}`, {
+      method: played ? 'DELETE' : 'POST',
+      headers: authHeaders,
+    });
+    if (!res.ok) throw new Error(`PlayedItems update failed: ${res.status}`);
+    return { watched: !played };
+  }
+
   async getContinueWatching(ownerId: string, serverId: string, limit = 20): Promise<any[]> {
     const server = await this.findServerOrFallback(serverId, ownerId);
     const userId = await this.getJellyfinUserId(server);
@@ -1048,5 +1066,68 @@ export class JellyfinService {
       }
     }
     throw new Error('No Jellyfin user found');
+  }
+
+  // =================== Watchlists (LifeHub-eigene Listen) ===================
+
+  async listWatchlists(ownerId: string, serverId: string): Promise<any[]> {
+    await this.findServerOrFallback(serverId, ownerId);
+    const lists = await this.repo.listWatchlists(ownerId);
+    const counts = await this.repo.doCountWatchlistItemsByOwner(ownerId);
+    return lists.map((l) => ({ ...l, itemCount: counts.get(l.id) ?? 0 }));
+  }
+
+  async createWatchlist(ownerId: string, serverId: string, name: string): Promise<any> {
+    await this.findServerOrFallback(serverId, ownerId);
+    return this.repo.createWatchlist(ownerId, name.trim());
+  }
+
+  async renameWatchlist(ownerId: string, serverId: string, listId: string, name: string): Promise<any> {
+    await this.findServerOrFallback(serverId, ownerId);
+    const list = await this.repo.findWatchlistById(listId);
+    if (!list || list.ownerId !== ownerId) throw new NotFoundException('Watchlist nicht gefunden');
+    return this.repo.renameWatchlist(listId, name.trim());
+  }
+
+  async deleteWatchlist(ownerId: string, serverId: string, listId: string): Promise<void> {
+    await this.findServerOrFallback(serverId, ownerId);
+    const list = await this.repo.findWatchlistById(listId);
+    if (!list || list.ownerId !== ownerId) throw new NotFoundException('Watchlist nicht gefunden');
+    await this.repo.deleteWatchlist(listId);
+  }
+
+  async listWatchlistItems(ownerId: string, serverId: string, listId: string): Promise<any[]> {
+    await this.findServerOrFallback(serverId, ownerId);
+    const list = await this.repo.findWatchlistById(listId);
+    if (!list || list.ownerId !== ownerId) throw new NotFoundException('Watchlist nicht gefunden');
+    return this.repo.listWatchlistItems(listId);
+  }
+
+  async addToWatchlist(
+    ownerId: string,
+    serverId: string,
+    listId: string,
+    item: { externalItemId: string; itemType: string; name: string },
+  ): Promise<any> {
+    await this.findServerOrFallback(serverId, ownerId);
+    const list = await this.repo.findWatchlistById(listId);
+    if (!list || list.ownerId !== ownerId) throw new NotFoundException('Watchlist nicht gefunden');
+    return this.repo.addWatchlistItem(listId, item.externalItemId, item.itemType, item.name);
+  }
+
+  async removeFromWatchlist(ownerId: string, serverId: string, listId: string, externalItemId: string): Promise<void> {
+    await this.findServerOrFallback(serverId, ownerId);
+    const list = await this.repo.findWatchlistById(listId);
+    if (!list || list.ownerId !== ownerId) throw new NotFoundException('Watchlist nicht gefunden');
+    await this.repo.removeWatchlistItem(listId, externalItemId);
+  }
+
+  async getWatchlistStatus(ownerId: string, serverId: string, externalItemId: string): Promise<{ inWatchlist: boolean; lists: { id: string; name: string }[] }> {
+    await this.findServerOrFallback(serverId, ownerId);
+    const memberships = await this.repo.findWatchlistMemberships(ownerId, externalItemId);
+    return {
+      inWatchlist: memberships.length > 0,
+      lists: memberships.map((m) => ({ id: m.list.id, name: m.list.name })),
+    };
   }
 }

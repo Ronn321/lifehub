@@ -6,11 +6,12 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   Plus, FolderOpen, Image, Loader2, AlertCircle, Hash, Tag, FileText, X,
-  FolderSearch, Star, MapPin, ChevronLeft, ChevronRight, Camera, Video,
+  FolderSearch, Star, MapPin, ChevronLeft, ChevronRight, Camera,
   Heart, Filter, Globe, ScanSearch, Search, Check,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import dynamic from 'next/dynamic';
+import { VideoPreviewTile } from './components/VideoPreviewTile';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -695,25 +696,22 @@ function AlbumDetailView({
                     className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
                   >
                     {/* Thumbnail — original via stream for 100% quality */}
-                    {isImage(file.mimeType) || isVideo(file.mimeType) ? (
+                    {isImage(file.mimeType) ? (
                       <img
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
                         loading="lazy"
                       />
+                    ) : isVideo(file.mimeType) ? (
+                      <VideoPreviewTile
+                        src={getStreamUrl(file.id)}
+                        alt={file.filename}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <div className="flex h-full items-center justify-center bg-bg-raised">
                         <FileText className="h-10 w-10 opacity-30" />
-                      </div>
-                    )}
-
-                    {/* Video overlay indicator */}
-                    {isVideo(file.mimeType) && file.thumbnailPath && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="rounded-full bg-black/50 p-2">
-                          <Video className="h-5 w-5 text-white" />
-                        </div>
                       </div>
                     )}
 
@@ -1008,7 +1006,7 @@ function GalleryTab() {
                       </div>
                     )}
                     {/* Thumbnail — original via stream for 100% quality */}
-                    {isImage(file.mimeType) || isVideo(file.mimeType) ? (
+                    {isImage(file.mimeType) ? (
                       <img
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
@@ -1016,18 +1014,15 @@ function GalleryTab() {
                         loading="lazy"
                         style={{ imageRendering: 'crisp-edges' }}
                       />
+                    ) : isVideo(file.mimeType) ? (
+                      <VideoPreviewTile
+                        src={getStreamUrl(file.id)}
+                        alt={file.filename}
+                        className="h-full w-full object-contain bg-bg-raised"
+                      />
                     ) : (
                       <div className="flex h-full items-center justify-center bg-bg-raised">
                         <FileText className="h-10 w-10 opacity-30" />
-                      </div>
-                    )}
-
-                    {/* Video overlay indicator */}
-                    {isVideo(file.mimeType) && file.thumbnailPath && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="rounded-full bg-black/50 p-2">
-                          <Video className="h-5 w-5 text-white" />
-                        </div>
                       </div>
                     )}
 
@@ -1222,12 +1217,12 @@ function Lightbox({
           />
         )}
 
-        {/* Info bar — opaque on hover for video, always visible for images */}
+        {/* Info bar — TOP for videos so it never covers the player controls, bottom for images */}
         <div className={cn(
-          'absolute left-0 right-0 rounded-b-lg bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity',
+          'absolute left-0 right-0 p-4 transition-opacity pointer-events-none',
           isVideo(file.mimeType)
-            ? 'bottom-0 opacity-0 group-hover:opacity-100 pointer-events-none'
-            : 'bottom-0',
+            ? 'top-0 rounded-t-lg bg-gradient-to-b from-black/80 to-transparent'
+            : 'bottom-0 rounded-b-lg bg-gradient-to-t from-black/80 to-transparent',
         )}>
           <div className="flex items-center justify-between">
             <div className="text-sm text-white">

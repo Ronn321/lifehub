@@ -37,6 +37,8 @@ Unified-Media-System für Fotos, Videos, Alben. NAS-Indexierung, Timeline, Karte
 - Perceptual-Hash vor Speicherung berechnen, um Duplikate zu erkennen.
 - Globe-View in MVP optional — UI-Code dafür vorbereiten, Rendering kann in V1 fertig werden.
 - Performance-Ziel: 1000 Fotos Galerie rendert < 2.5s LCP, infinite-scroll ohne Ruckeln.
+- Video-Tiles (Galerie + Album) nutzen `VideoPreviewTile` (`components/VideoPreviewTile.tsx`): Standbild aus der Video-Mitte (seek bei `loadedMetadata`), Hover spielt 5s-Snippet aus der Mitte in Schleife (`onTimeUpdate`-Window), Verlassen → zurück zum Standbild. Nutzt den Range-fähigen Stream-Endpoint.
+- Lightbox-Info-Bar (Titel, Maße, Datum, Favorit): bei VIDEOS oben (`top-0`, `pointer-events-none`, nur Button klickbar) — überdeckt nie die Player-Controls; bei Bildern unten.
 
 ## 5. Verification
 

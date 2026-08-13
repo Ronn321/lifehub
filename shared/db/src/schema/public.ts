@@ -10,8 +10,8 @@
 
 import { sql, relations } from 'drizzle-orm';
 import {
-  pgTable, uuid, text, timestamp, boolean, jsonb, inet, bigint, char, customType, integer, numeric, date as dateCol,
-  index, uniqueIndex, type AnyPgColumn,
+  pgTable, pgSchema, uuid, text, timestamp, boolean, jsonb, inet, bigint, char, customType, integer, numeric,
+  real, date as dateCol, index, uniqueIndex, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 // bytea-Spalten brauchen customType in Drizzle 0.36+
@@ -1129,6 +1129,7 @@ export const calendarEvents = pgTable('calendar_events', {
   category: text('category'),
   calendarSource: text('calendar_source').notNull().default('local'),
   externalId: text('external_id'),
+  calendarId: uuid('calendar_id').references(() => calendars.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -1151,6 +1152,42 @@ export const calendars = pgTable('calendars', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (t) => [
   index('calendars_owner_idx').on(t.ownerId, t.deletedAt),
+]);
+
+// ===================== user_settings (calendar personalization) =====================
+export const calendarUserSettings = pgTable('user_settings', {
+  ownerId: uuid('owner_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  accentColor: text('accent_color'),
+  backgroundUrl: text('background_url'),
+  backgroundOverlay: real('background_overlay').notNull().default(0.85),
+  backgroundBlur: integer('background_blur').notNull().default(12),
+  defaultView: text('default_view').notNull().default('month'),
+  weekStart: text('week_start').notNull().default('monday'),
+  showWeekNumbers: boolean('show_week_numbers').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ===================== INTEGRATIONS DOMAIN =====================
+
+// ===================== google_connections (integrations schema) =====================
+export const integrationsSchema = pgSchema('integrations');
+export const googleConnections = integrationsSchema.table('google_connections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  googleEmail: text('google_email').notNull(),
+  displayName: text('display_name'),
+  avatarUrl: text('avatar_url'),
+  accessTokenEnc: text('access_token_enc').notNull(),
+  refreshTokenEnc: text('refresh_token_enc').notNull(),
+  tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+  grantedScopes: text('granted_scopes').array().notNull().default(sql`'{}'`),
+  lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('google_connections_owner_idx').on(t.ownerId).where(sql`${t.deletedAt} IS NULL`),
 ]);
 
 // ===================== event_attendees =====================

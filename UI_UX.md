@@ -248,11 +248,12 @@ Max-Content-Width: 1440px.
 - Domain-Items mit Icon + Label
 - Aktives Item: 2px Brand-Akzent links, leicht erhöhter Hintergrund
 - Sub-Items ausklappbar mit `Accordion`
-- Footer: User-Status, Settings, Logout
+- Footer: Theme-Toggle + Einstellungen (User-Status/Logout seit 08/2026 unter `Einstellungen → Allgemein → Konto`)
 
 **Music-Sidebar (Jellyfin):** Stil der eingeklappten Sidebar ist unter `Einstellungen → Darstellung` wählbar (persistiert in `jellyfin-layout`-Store):
 - **Klassisch** — eingeklappt: Icons sichtbar, runder Toggle-Knopf an der Sidebar-Grenze (`absolute -right-3`)
 - **Spotify** — eingeklappt: Toggle-Button oben in der Sidebar
+- **Kollisionsschutz:** Ist die LifeHub-Sidebar eingeklappt (Event `lifehub:sidebar-collapse`), rutscht der Music-Toggle auf `top-16`/`pt-16` — beide Grenz-Knöpfe überlappen sich nie.
 
 ### 4.4 Mobile (<768px)
 
@@ -473,6 +474,68 @@ Widgets per Drag & Drop umsortierbar, Layout wird pro User persistiert.
 - Cast-Chips, Rating, Genres
 - „Weiterschauen"-Hero auf Mediathek-Startseite
 
+### 6.10 Kalender (Outlook-/Google-Stil)
+
+Redesign nach Google-Calendar/Outlook-Vorbild. **Vier Ansichten**, Kalender-Sidebar mit Sichtbarkeits-Toggles, konfigurierbarer Akzent + Hintergrundbild.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ ← Heute     [Monat][Woche][Tag][Agenda]          ⚙  Google-Sync  │
+│ ┌──────────┬─────────────────────────────────────────────────────┐│
+│ │ Meine    │  Mo 10        Di 11        Mi 12        Do 13       ││
+│ │ ☑ Mein   │  ┌────────┐   ┌────────┐                 ┌────────┐ ││
+│ │   Kalender│  │ ▍Arzt  │   │ ▍Standup│                 │ ▍Geburt.│ ││
+│ │ ☑ Familie │  │ 09:00  │   │ 10:00  │                 │ 14:00  │ ││
+│ │          │  └────────┘   └────────┘                 └────────┘ ││
+│ │ Google   │                                                 ││
+│ │ ☑ Arbeit │  (Chips: 2px links farbiger Balken, bg Farbe+1F) ││
+│ └──────────┴─────────────────────────────────────────────────────┘│
+│  Einstellungen-Panel: Akzentfarbe · Hintergrundbild · Sync-Status │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+- **Toolbar:** „Heute" (springt zu aktuellem Datum), View-Switcher (Monat/Woche/Tag/Agenda), Kalender-Einstellungen (Zahnrad), Google-Sync-Status/Aktion.
+- **View-Switcher:** Monat (Grid), Woche (7 Spalten, Stundenraster), Tag (Tages-Raster), Agenda (chronologische Liste). Default `default_view` aus User-Settings.
+- **Kalender-Sidebar:** alle Kalender mit Sichtbarkeits-Toggle (PATCH `/calendar/calendars/:id`), pro Kalender Farb-Dot; „Mein Kalender" wird automatisch als lokaler Default angelegt.
+- **Event-Chip-Regeln:**
+  - `borderLeft: 2px solid` in der Kalender-Farbe (farbiger Balken links).
+  - Hintergrund = Kalenderfarbe mit **+1F-Alpha** (z.B. `rgb(var(--cal-500) / 0.12)`), Text in neutral-Farbe.
+  - Ganztägig: voller Chip über die Tagesbreite; zeitgebunden: Chip an Position der Startzeit im Stundenraster.
+  - Klick öffnet `EventDetailModal`; „Neu" öffnet `EventDialog` mit Kalender-Auswahl.
+- **Akzentfarbe:** Kalender nutzt `--cal-*`-CSS-Variablen; **Default ist der Hub-Brand-Akzent** (Kein expliziter Akzent gesetzt → `--cal-*` folgt `--brand-*`).
+- **Hintergrundbild-Semantik** (`CalendarBackground`):
+  - `background_url` optional; gerendert als fixierter Layer hinter dem Raster.
+  - `backgroundOverlay` (0.85 Default) = Opacity eines **Lesbarkeits-Overlays** `rgb(var(--bg) / overlay)` über dem Bild — höher = dunkler/gedämpfter, Text bleibt lesbar.
+  - `backgroundBlur` (12px Default) = CSS `blur()` auf das Bild. Overlay + Blur zusammen garantieren Kontrast, ohne den Inhalt zu überstrahlen.
+- **Google-Sync:** Verbindungsstatus, „Jetzt synchronisieren", Auswahl der zu importierenden Google-Kalender; siehe `features/calendar.feature.md`.
+- **Responsive:** Monat/Woche-Ansichten auf Mobile → Agenda/Tag; Sidebar klappt zu Sheet.
+
+### 6.11 E-Mail
+
+Gmail-Live-Proxy im Hub (`/email`). **3-Spalten-Layout**, Ordner-Navigation, Lesebereich als sandboxed iframe.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ E-Mail                          [Verfassen]        badge 4       │
+│ ┌─────────┬────────────────────┬────────────────────────────────┐ │
+│ │ Posteingang│ ▍4              │  Betreff …           ⋮         │ │
+│ │ Gelesen   │  ┌─────────────┐ │  Von / An / Datum              │ │
+│ │ Mit Stern │  │ Absender    │ │ ┌────────────────────────────┐ │ │
+│ │ Archiv    │  │ Betreff     │ │ │ sandboxed iframe (HTML)    │ │ │
+│ │ Papierkorb│  │ Snippet ▍   │ │ │                            │ │ │
+│ │           │  └─────────────┘ │ └────────────────────────────┘ │ │
+│ │           │  [Antworten][Weiterleiten] Anhänge: 📎 2           │ │
+│ └─────────┴────────────────────┴────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+- **Layout:** 3 Spalten — links Ordner-Liste, mittig Thread-Liste, rechts Lesebereich. Auf Mobile kollabieren die Spalten in Sheets.
+- **Ordner:** Posteingang, Gelesen, Archiv, Papierkorb, Gesendet (Label-Mapping INBOX/ARCHIVE/TRASH/SENT → Gmail-Query).
+- **Aktionen:** Verfassen, Antworten (einfach/alle), Weiterleiten, Archivieren, Papierkorb, Als gelesen markieren. Badge mit ungelesener Posteingang-Zahl im Sidebar-Item.
+- **Lesebereich:** HTML-Body in **sandboxed iframe** (`sandbox="allow-same-origin"` ohne `allow-scripts`), damit Tracking-/Schad-Skripte der Mail nicht laufen.
+- **Anhänge:** Download-Link via `GET /email/messages/:id/attachments/:att`; Anzeige von Dateiname + Größe.
+- **Kopplung:** erfordert verbundenes Google-Konto (Settings → Google-Konto); ohne Verbindung Empty-State mit „Jetzt verbinden".
+
 ---
 
 ## 7. Interaktions-Pattern
@@ -534,6 +597,8 @@ Pro Instanz in Admin-Settings änderbar:
 - Rose
 - Violet
 - Custom (HEX-Picker)
+
+**Umsetzung (implementiert):** `Einstellungen → Darstellung` — Theme (Hell/Dunkel/System) + Akzent. Die Akzentfarbe ist Hub-weit konfigurierbar via `lib/accent.ts` (`useAccentStore`, Zustand + `persist` im `lifehub-accent`-Key): 5 Presets (Amber/Blau/Grün/Rosé/Violett) **oder** Custom-HEX-Picker. Default ist **Amber**. Das Store wird über `useAccentSync()` in `layout.tsx` angewendet: `applyAccent()` setzt die `--brand-500/400/600`-CSS-Variablen auf `:root`/`.dark` (Custom-HEX wird in ein RGB-Triplett umgewandelt; die übrigen Stufen 50–900 fallen auf Amber zurück). Tailwind-`brand`-Skala liest die CSS-Vars (`rgb(var(--brand-N) / <alpha-value>)`). Kalender nutzt einen eigenen `--cal-*`-Satelliten, der ohne explizite Einstellung dem Brand-Akzent folgt.
 
 ### 8.3 Implementation
 

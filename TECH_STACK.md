@@ -24,6 +24,8 @@ Quelle der Wahrheit für alle Technologie-Entscheidungen. ARCHITECTURE.md und RO
 | Backend Framework | **NestJS 10 (TypeScript)** | Modulares DDD, DI, OpenAPI out-of-the-box |
 | ORM / DB-Layer | **Drizzle ORM** | SQL-nah, typsicher, leichtgewichtig |
 | Auth | **JWT (RS256) + Refresh-Cookie** | Stateless, Tailscale-kompatibel |
+| Google-API | **googleapis** (OAuth2/Gmail/Calendar-Client) | Google-Konto-Integration (integrations/email/calendar) |
+| Scheduling | **@nestjs/schedule** (Cron) | In-Process-Cron (z.B. Google-Kalender-Sync alle 15 min) |
 | Hashing | **Argon2id** | OWASP-Empfehlung |
 | Vault-Krypto | **AES-256-GCM** | Authenticated Encryption |
 | Datenbank | **PostgreSQL 16** | Stabil, JSONB, RLS, Full-Text |
@@ -207,6 +209,19 @@ Jeder Bounded Context ist ein NestJS-Modul, registriert in `app.module.ts`.
   - E-Mail-Versand
   - Webhook-Dispatch
 - Worker läuft als separater Container (`worker`)
+
+### 3.6 Google-API (googleapis) & Scheduling (@nestjs/schedule)
+
+Für die Google-Konto-Integration (`integrations`, `email`, `calendar`):
+
+- **`googleapis`** — offizielle Google-API-Client-Bibliothek:
+  - `OAuth2Client` (`google-auth-library`) für den OAuth2-Flow (auth-url, code-exchange, Token-Refresh, `tokens`-Event)
+  - `google.gmail({ version: 'v3' })` — Gmail-Live-Proxy (email-Domain)
+  - `google.calendar({ version: 'v3' })` — Google-Kalender-Sync (calendar-Domain)
+- **`@nestjs/schedule`** — In-Process-Cron via `@Cron()`-Decorator (kein separater Worker nötig): Google-Kalender-Sync alle 15 min (`*/15 * * * *`).
+- **OAuth-Token-Krypto:** Access-/Refresh-Tokens AES-256-GCM via `lib/token-crypto.ts` (in `integrations`-Domain), Key aus `GOOGLE_TOKEN_ENCRYPTION_KEY`.
+- **Env:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `FRONTEND_URL`.
+- **Zeitzonen:** naive lokale Timestamps (Europe/Berlin); Konversionen zentral in `calendar-timezone.ts`.
 
 ---
 

@@ -34,6 +34,16 @@ Vault
 Calendar
  ├── Travel (events)
  ├── Finance (billing reminders)
+ ├── Integrations (Google OAuth2 + Calendar client)
+ ├── Users
+
+Integrations
+ ├── Calendar (Google Calendar client)
+ ├── Email (Gmail client)
+
+Email
+ ├── Integrations (Gmail client)
+ ├── Users
 
 Search
  ├── ALL DOMAINS

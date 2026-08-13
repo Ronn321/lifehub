@@ -36,7 +36,8 @@ postgres
 ├── insurance        (insurance_policies, insurance_documents, insurance_contacts)
 ├── vault            (vault_entries, vault_attachments, totp_secrets, cards)
 ├── documents        (documents, document_tags, document_ocr, document_refs)
-├── calendar         (calendars, events, event_attendees, event_reminders)
+├── calendar         (calendars, calendar_events, event_attendees, event_reminders, user_settings)
+├── integrations     (google_connections)   — Email: keine Tabellen (Live-Proxy)
 ├── it_inventory     (devices, network_interfaces, device_credentials, locations)
 ├── jellyfin         (jellyfin_servers, jellyfin_libraries, jellyfin_items, jellyfin_watchlists, jellyfin_watchlist_items)
 ├── dashboard        (dashboard_layouts, widgets, widget_instances)
@@ -166,8 +167,12 @@ INSERT INTO public.permissions (domain, action) VALUES
   ('jellyfin','read'),('jellyfin','create'),('jellyfin','update'),('jellyfin','delete'),('jellyfin','share'),('jellyfin','admin'),
   ('search','read'),('search','create'),('search','update'),('search','delete'),('search','share'),('search','admin'),
   ('dashboard','read'),('dashboard','create'),('dashboard','update'),('dashboard','delete'),('dashboard','share'),('dashboard','admin'),
-  ('plugins','read'),('plugins','create'),('plugins','update'),('plugins','delete'),('plugins','share'),('plugins','admin');
+  ('plugins','read'),('plugins','create'),('plugins','update'),('plugins','delete'),('plugins','share'),('plugins','admin'),
+  ('email','read'),('email','create'),('email','update'),('email','delete'),('email','share'),('email','admin'),
+  ('integrations','read'),('integrations','create'),('integrations','update'),('integrations','delete'),('integrations','share'),('integrations','admin');
 ```
+
+> 18 Domains × 6 Aktionen = 108 Permissions (inkl. `email`, `integrations`).
 
 ### 4.5 `user_roles`
 
@@ -807,20 +812,24 @@ CREATE SCHEMA calendar;
 CREATE TABLE calendar.calendars (
   id            UUID PRIMARY KEY,
   owner_id      UUID NOT NULL REFERENCES public.users(id),
-  title         TEXT NOT NULL,
+  name          TEXT NOT NULL,                            -- Titel des Kalenders (Spalte heißt `name`)
   color         TEXT,
   source        TEXT NOT NULL DEFAULT 'local',        -- 'local' | 'google' | 'caldav' | 'ics'
-  source_url    TEXT,
-  sync_token    TEXT,
-  last_sync_at  TIMESTAMPTZ,
-  is_visible    BOOLEAN NOT NULL DEFAULT TRUE,
+  external_id   TEXT,                                -- Google-Kalender-ID (für Re-Sync)
+  sync_token    TEXT,                                -- Google nextSyncToken (inkrementeller Sync)  [Migration 0019]
+  last_sync_at  TIMESTAMPTZ,                          -- [Migration 0019]
+  is_visible    BOOLEAN NOT NULL DEFAULT TRUE,        -- [Migration 0019]
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at    TIMESTAMPTZ
 );
+-- Idempotenter Upsert pro User+Quelle+Google-Kalender:  [Migration 0018]
+CREATE UNIQUE INDEX calendars_source_unique
+  ON calendar.calendars (owner_id, source, external_id) WHERE deleted_at IS NULL;
 
 CREATE TABLE calendar.events (
   id            UUID PRIMARY KEY,
-  calendar_id   UUID NOT NULL REFERENCES calendar.calendars(id) ON DELETE CASCADE,
+  calendar_id   UUID REFERENCES calendar.calendars(id) ON DELETE SET NULL,  -- Multi-Kalender [Migration 0018]
   owner_id      UUID NOT NULL REFERENCES public.users(id),
   title         TEXT NOT NULL,
   description   TEXT,
@@ -828,14 +837,15 @@ CREATE TABLE calendar.events (
   starts_at     TIMESTAMPTZ NOT NULL,
   ends_at       TIMESTAMPTZ NOT NULL,
   all_day       BOOLEAN NOT NULL DEFAULT FALSE,
-  rrule         TEXT,                                 -- RFC 5545
-  external_uid  TEXT,                                 -- ID aus Google/ICS für Re-Sync
+  rrule         TEXT,                                 -- RFC 5545 (Follow-up)
+  external_uid  TEXT,                                 -- Google-Event-ID für Re-Sync-Idempotenz
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at    TIMESTAMPTZ,
   UNIQUE (calendar_id, external_uid)
 );
 CREATE INDEX events_time_idx ON calendar.events(calendar_id, starts_at) WHERE deleted_at IS NULL;
+CREATE INDEX calendar_events_calendar_idx ON calendar.events (calendar_id);   -- [Migration 0018]
 
 CREATE TABLE calendar.event_attendees (
   event_id  UUID NOT NULL REFERENCES calendar.events(id) ON DELETE CASCADE,
@@ -850,7 +860,55 @@ CREATE TABLE calendar.event_reminders (
   minutes_before INT NOT NULL,
   channel     TEXT NOT NULL DEFAULT 'email'           -- 'email' | 'push'
 );
+
+-- Calendar-Personalisierung (User-Settings, pro User 1:1).  [Migration 0018]
+CREATE TABLE calendar.user_settings (
+  owner_id            uuid PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
+  accent_color        text,                           -- NULL = Hub-Brand-Akzent
+  background_url      text,                           -- Hintergrundbild-URL der Kalender-Seite
+  background_overlay  real NOT NULL DEFAULT 0.85,     -- Lesbarkeits-Overlay-Opacity (0.5..0.95)
+  background_blur     integer NOT NULL DEFAULT 12,    -- CSS blur px (0..24)
+  default_view        text NOT NULL DEFAULT 'month',  -- 'month' | 'week' | 'day' | 'agenda'
+  week_start          text NOT NULL DEFAULT 'monday', -- 'monday' | 'sunday'
+  show_week_numbers   boolean NOT NULL DEFAULT TRUE,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now()
+);
 ```
+
+> **Hinweis zur tatsächlichen Implementierung:** Die Calendar-Tabellen liegen im **public-Schema** (`shared/db/src/schema/public.ts`), nicht als eigenes `calendar`-Schema. Die Tabellennamen sind `calendars`, `calendar_events`, `event_attendees`, `event_reminders`, `user_settings` (ohne Schema-Präfix). Die Spalte heißt **`name`** (nicht `title`). Die Migrationen `0017_calendar.sql` (Basis), `0018_google_integrations.sql` (user_settings, calendar_id auf events, unique index) und `0019_calendar_sync_columns.sql` (sync_token/last_sync_at/is_visible) bilden den Ist-Zustand ab.
+
+---
+
+## 14a. Schema: `integrations`
+
+Google-Konto-Verbindungen (OAuth2). Eigentümer ist der LifeHub-User. Tokens werden **AES-256-GCM verschlüsselt** gespeichert (Key via `GOOGLE_TOKEN_ENCRYPTION_KEY`).
+
+```sql
+CREATE SCHEMA IF NOT EXISTS integrations;
+
+CREATE TABLE integrations.google_connections (
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id          uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  google_email      text NOT NULL,
+  display_name      text,
+  avatar_url        text,
+  access_token_enc  text NOT NULL,                   -- AES-256-GCM verschlüsselt
+  refresh_token_enc text NOT NULL,                   -- AES-256-GCM verschlüsselt
+  token_expires_at  timestamptz,
+  granted_scopes    text[] NOT NULL DEFAULT '{}',
+  last_sync_at      timestamptz,
+  created_at        timestamptz NOT NULL DEFAULT now(),
+  updated_at        timestamptz NOT NULL DEFAULT now(),
+  deleted_at        timestamptz
+);
+CREATE INDEX google_connections_owner_idx
+  ON integrations.google_connections (owner_id) WHERE deleted_at IS NULL;
+```
+
+Drizzle-Definition: `shared/db/src/schema/public.ts` via `integrationsSchema = pgSchema('integrations')`, Tabelle `googleConnections`.
+
+**Email-Domain:** **keine eigenen Tabellen** — Live-Proxy auf Gmail über `integrations.google_connections`. (Siehe `features/email.feature.md`.)
 
 ---
 

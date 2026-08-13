@@ -69,7 +69,7 @@ export default function RecipesPage() {
         <h1 className="text-2xl font-bold mb-6">Rezepte</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="animate-pulse bg-muted rounded-lg h-48" />
+            <div key={i} className="animate-pulse bg-muted rounded-lg h-64" />
           ))}
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function RecipesPage() {
               )}
 
               {/* Recipe image */}
-              <div className="relative w-full h-32 -mx-4 -mt-4 mb-3 overflow-hidden first:rounded-t-lg" style={{width: 'calc(100% + 2rem)'}}>
+              <div className="relative w-full h-64 -mx-4 -mt-4 mb-3 overflow-hidden first:rounded-t-lg" style={{width: 'calc(100% + 2rem)'}}>
                 <img
                   src={`/api/v1/recipes/image/${recipe.id}`}
                   alt={recipe.title}

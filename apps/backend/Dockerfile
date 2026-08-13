@@ -27,8 +27,10 @@ COPY shared/storage/package.json ./shared/storage/
 COPY domains/calendar/package.json ./domains/calendar/
 COPY domains/dashboard/package.json ./domains/dashboard/
 COPY domains/documents/package.json ./domains/documents/
+COPY domains/email/package.json ./domains/email/
 COPY domains/finance/package.json ./domains/finance/
 COPY domains/insurance/package.json ./domains/insurance/
+COPY domains/integrations/package.json ./domains/integrations/
 COPY domains/it-inventory/package.json ./domains/it-inventory/
 COPY domains/jellyfin/package.json ./domains/jellyfin/
 COPY domains/media/package.json ./domains/media/
@@ -55,22 +57,16 @@ RUN npm install -g @nestjs/cli@10
 
 # Alle Workspace-Packages bauen (shared + domains), damit Node.js zur Laufzeit
 # die dist/index.js findet. Verwendet die tsconfig jedes Packages (NodeNext).
-RUN for pkg in shared/db shared/auth shared/permissions shared/audit shared/events shared/storage \
-               domains/calendar domains/dashboard domains/documents domains/finance \
-               domains/insurance domains/it-inventory domains/jellyfin domains/media \
-               domains/pages domains/plugins domains/projects domains/recipes \
-               domains/search domains/shopping domains/travel domains/users domains/vault; do \
-      if [ -f "$pkg/src/index.ts" ]; then \
-        echo "Building $pkg..." && \
-        cd /app/$pkg && \
-        npx tsc --outDir dist --declaration false --skipLibCheck || true && \
-        cd /app; \
-      fi; \
-    done
+# Alle Workspace-Packages werden NICHT mehr im Image kompiliert:
+# tsc segfaultet in der kleinen Docker-VM (WSL2-Limit). Stattdessen werden
+# die auf dem HOST gebauten dist/-Ordner via `COPY . .` mitgenommen.
+# Host-Build: for pkg in ...; do (cd $pkg && npx tsc --outDir dist --declaration false --skipLibCheck); done
+#             + pnpm --filter @lifehub/backend build
+RUN echo "skip in-image build — host-built dists are copied via COPY . ."
 
 # Backend bauen (nest build kompiliert auch shared/* und domains/* via tsconfig paths)
 WORKDIR /app/apps/backend
-RUN nest build
+RUN echo "skip in-image nest build — apps/backend/dist comes from host build"
 
 # --- Stage 3: Production ---
 FROM node:20-alpine AS runner
@@ -96,8 +92,10 @@ COPY shared/storage/package.json ./shared/storage/
 COPY domains/calendar/package.json ./domains/calendar/
 COPY domains/dashboard/package.json ./domains/dashboard/
 COPY domains/documents/package.json ./domains/documents/
+COPY domains/email/package.json ./domains/email/
 COPY domains/finance/package.json ./domains/finance/
 COPY domains/insurance/package.json ./domains/insurance/
+COPY domains/integrations/package.json ./domains/integrations/
 COPY domains/it-inventory/package.json ./domains/it-inventory/
 COPY domains/jellyfin/package.json ./domains/jellyfin/
 COPY domains/media/package.json ./domains/media/
@@ -138,6 +136,8 @@ COPY --from=builder /app/domains/jellyfin/dist ./domains/jellyfin/dist
 COPY --from=builder /app/domains/pages/dist ./domains/pages/dist
 COPY --from=builder /app/domains/calendar/dist ./domains/calendar/dist
 COPY --from=builder /app/domains/documents/dist ./domains/documents/dist
+COPY --from=builder /app/domains/email/dist ./domains/email/dist
+COPY --from=builder /app/domains/integrations/dist ./domains/integrations/dist
 COPY --from=builder /app/domains/it-inventory/dist ./domains/it-inventory/dist
 COPY --from=builder /app/domains/plugins/dist ./domains/plugins/dist
 COPY --from=builder /app/domains/search/dist ./domains/search/dist

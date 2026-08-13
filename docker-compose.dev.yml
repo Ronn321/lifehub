@@ -91,6 +91,12 @@ services:
       JWT_PUBLIC_KEY_BASE64: ${JWT_PUBLIC_KEY_BASE64:-}
       CORS_ORIGINS: http://localhost:${FRONTEND_PORT:-3001},http://localhost:3001
       TZ: Europe/Berlin
+      # Google-Konto Integration (Werte in .env)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3007/api/v1/integrations/google/callback}
+      GOOGLE_TOKEN_ENCRYPTION_KEY: ${GOOGLE_TOKEN_ENCRYPTION_KEY:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
     volumes:
       - ./apps/backend/src:/app/apps/backend/src
       - ./shared:/app/shared

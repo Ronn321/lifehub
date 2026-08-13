@@ -21,6 +21,13 @@ services:
       MEILI_URL: http://search:7700
       REDIS_URL: redis://:lifehub@cache:6379
       STORAGE_BASE_PATH: /data/storage
+      TZ: Europe/Berlin
+      # Google-Konto Integration (Werte in .env)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3007/api/v1/integrations/google/callback}
+      GOOGLE_TOKEN_ENCRYPTION_KEY: ${GOOGLE_TOKEN_ENCRYPTION_KEY:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3100}
     image: lifehub-backend:local
     build:
       context: .

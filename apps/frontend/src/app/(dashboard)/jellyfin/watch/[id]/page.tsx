@@ -66,10 +66,25 @@ export default function WatchPage() {
     ? `${item?.SeriesName ?? ''} – ${item?.Name ?? ''}`
     : item?.Name ?? '';
 
+  // Same-route pushes (watch/A → watch/B) can be swallowed by the router in
+  // production. Fallback: force a full navigation if the URL didn't change.
+  const goToEpisode = (episodeId: string) => {
+    try {
+      router.push(`/jellyfin/watch/${episodeId}`);
+    } catch (e) {
+      console.error('Episode navigation failed', e);
+    }
+    window.setTimeout(() => {
+      if (!window.location.pathname.includes(episodeId)) {
+        window.location.href = `/jellyfin/watch/${episodeId}`;
+      }
+    }, 800);
+  };
+
   // Auto-advance to next episode, or back to series page at season end
   const handleEnded = () => {
     if (nextEpisode) {
-      router.push(`/jellyfin/watch/${nextEpisode.Id}`);
+      goToEpisode(nextEpisode.Id);
     } else if (isEpisode && seriesId) {
       router.push(`/jellyfin/series/${seriesId}`);
     }
@@ -132,7 +147,7 @@ export default function WatchPage() {
             {prevEpisode && (
               <button
                 type="button"
-                onClick={() => router.push(`/jellyfin/watch/${prevEpisode.Id}`)}
+                onClick={() => goToEpisode(prevEpisode.Id)}
                 aria-label="Vorherige Folge"
                 className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 hover:text-white transition-colors"
               >
@@ -143,7 +158,7 @@ export default function WatchPage() {
             {nextEpisode && (
               <button
                 type="button"
-                onClick={() => router.push(`/jellyfin/watch/${nextEpisode.Id}`)}
+                onClick={() => goToEpisode(nextEpisode.Id)}
                 aria-label="Nächste Folge"
                 className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 hover:text-white transition-colors"
               >

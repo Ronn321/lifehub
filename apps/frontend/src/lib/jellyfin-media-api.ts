@@ -33,6 +33,7 @@ export interface JellyfinMediaItem {
   UserData?: {
     PlaybackPositionTicks: number;
     Played: boolean;
+    IsFavorite?: boolean;
     LastPlayedDate: string;
   };
 }
@@ -151,8 +152,8 @@ export async function fetchChildren(serverId: string, externalId: string): Promi
   return api.get<JellyfinMediaItem[]>(`/jellyfin/servers/${serverId}/items/${externalId}/children`);
 }
 
-export async function toggleWatched(itemId: string): Promise<{ watched: boolean }> {
-  return api.post<{ watched: boolean }>(`/jellyfin/items/${itemId}/toggle-watched`);
+export async function toggleWatched(serverId: string, itemId: string): Promise<{ watched: boolean }> {
+  return api.post<{ watched: boolean }>(`/jellyfin/servers/${serverId}/items/${itemId}/toggle-watched`);
 }
 
 export async function toggleFavorite(ownerId: string, serverId: string, externalId: string): Promise<{ isFavorite: boolean }> {
@@ -177,4 +178,73 @@ export async function fetchFavoriteMedia(serverId: string): Promise<JellyfinMedi
 
 export async function fetchWatchlist(serverId: string): Promise<JellyfinMediaItem[]> {
   return api.get<JellyfinMediaItem[]>(`/jellyfin/servers/${serverId}/watchlist`);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Watchlist Types                                                   */
+/* ------------------------------------------------------------------ */
+
+export interface JellyfinWatchlist {
+  id: string;
+  name: string;
+  itemCount: number;
+  position: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface WatchlistItem {
+  id: string;
+  externalItemId: string;
+  itemType: string;
+  name: string;
+  position: number;
+  addedAt?: string;
+}
+
+export interface WatchlistStatus {
+  inWatchlist: boolean;
+  lists: { id: string; name: string }[];
+}
+
+/* ------------------------------------------------------------------ */
+/*  Watchlist API Functions                                           */
+/* ------------------------------------------------------------------ */
+
+export async function fetchWatchlists(serverId: string): Promise<JellyfinWatchlist[]> {
+  return api.get<JellyfinWatchlist[]>(`/jellyfin/servers/${serverId}/watchlists`);
+}
+
+export async function createWatchlist(serverId: string, name: string): Promise<JellyfinWatchlist> {
+  return api.post<JellyfinWatchlist>(`/jellyfin/servers/${serverId}/watchlists`, { name });
+}
+
+export async function renameWatchlist(serverId: string, listId: string, name: string): Promise<JellyfinWatchlist> {
+  return api.patch<JellyfinWatchlist>(`/jellyfin/servers/${serverId}/watchlists/${listId}`, { name });
+}
+
+export async function deleteWatchlist(serverId: string, listId: string): Promise<void> {
+  return api.delete<void>(`/jellyfin/servers/${serverId}/watchlists/${listId}`);
+}
+
+export async function fetchWatchlistItems(serverId: string, listId: string): Promise<WatchlistItem[]> {
+  return api.get<WatchlistItem[]>(`/jellyfin/servers/${serverId}/watchlists/${listId}/items`);
+}
+
+export async function addToWatchlist(
+  serverId: string,
+  listId: string,
+  externalItemId: string,
+  itemType: string,
+  name: string,
+): Promise<void> {
+  return api.post<void>(`/jellyfin/servers/${serverId}/watchlists/${listId}/items`, { externalItemId, itemType, name });
+}
+
+export async function removeFromWatchlist(serverId: string, listId: string, externalItemId: string): Promise<void> {
+  return api.delete<void>(`/jellyfin/servers/${serverId}/watchlists/${listId}/items/${externalItemId}`);
+}
+
+export async function fetchWatchlistStatus(serverId: string, externalItemId: string): Promise<WatchlistStatus> {
+  return api.get<WatchlistStatus>(`/jellyfin/servers/${serverId}/watchlists/status/${externalItemId}`);
 }

@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
-import { Play, Plus, Check, Heart, ArrowLeft } from 'lucide-react';
+import { Play, Heart, ArrowLeft } from 'lucide-react';
 import type { JellyfinMediaItem } from '@/lib/jellyfin-media-api';
 import { getImageUrl, getBackdropUrl, formatRuntime, formatYear } from '@/lib/jellyfin-media-api';
+import { useJellyfinLayout } from '@/lib/jellyfin-layout-store';
+import { WatchlistButton } from './WatchlistButton';
 
 /* ------------------------------------------------------------------ */
 /*  DetailHeader — Cinematic header with backdrop, poster, metadata   */
@@ -16,18 +18,17 @@ interface DetailHeaderProps {
   serverId: string;
   onPlay?: () => void;
   onResume?: () => void;
-  onToggleFavorite?: () => void;
-  onToggleWatchlist?: () => void;
   isFavorite?: boolean;
-  inWatchlist?: boolean;
+  onToggleFavorite?: () => void;
   resumePositionTicks?: number | null;
 }
 
 export function DetailHeader({
-  item, serverId, onPlay, onResume, onToggleFavorite, onToggleWatchlist,
-  isFavorite, inWatchlist, resumePositionTicks,
+  item, serverId, onPlay, onResume, onToggleFavorite,
+  isFavorite, resumePositionTicks,
 }: DetailHeaderProps) {
   const router = useRouter();
+  const fullWidth = useJellyfinLayout((s) => s.fullWidth);
   const [backdropError, setBackdropError] = useState(false);
   const [posterError, setPosterError] = useState(false);
   const isMovie = item.Type === 'Movie';
@@ -38,9 +39,9 @@ export function DetailHeader({
   const rating = item.OfficialRating ?? '';
 
   return (
-    <div className="relative -mx-6 lg:-mx-8 -mt-6 lg:-mt-8">
+    <div className="relative">
       {/* Backdrop container */}
-      <div className="relative h-[55vh] min-h-[420px] overflow-hidden">
+      <div className={cn('relative overflow-hidden', fullWidth ? 'h-[72vh] min-h-[520px]' : 'h-[60vh] min-h-[440px]')}>
         {/* Backdrop image or gradient fallback */}
         {!backdropError ? (
           <img
@@ -54,10 +55,12 @@ export function DetailHeader({
           <div className="h-full w-full bg-gradient-to-br from-brand-900/60 to-bg-surface" />
         )}
 
-        {/* Gradient: bottom fade to surface */}
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-surface via-bg-surface/20 to-transparent" />
-        {/* Gradient: top fade from black (for back button readability) */}
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/40 to-transparent" />
+        {/* 1. Content-Scrim: always dark for readability on light AND dark theme */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+        {/* 2. Page-Blend: soft edge transition to the page color (theme-adaptive) — narrow bottom band only, below the content area so the scrim keeps text readable in light theme */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_top,rgb(var(--bg-surface))_0%,rgb(var(--bg-surface)/0.75)_7%,rgb(var(--bg-surface)/0.3)_15%,transparent_24%)]" />
+        {/* 3. Top-Fade for back button (replaces the previous one) */}
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/50 to-transparent" />
 
         {/* Back button */}
         <div className="absolute top-4 left-4 z-20">
@@ -102,7 +105,7 @@ export function DetailHeader({
               </h1>
 
               {/* Meta row */}
-              <div className="flex flex-wrap items-center gap-2 text-sm text-white/80">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-white/90">
                 {year && <span>{year}</span>}
                 {rating && (
                   <span className="rounded border border-white/20 px-1.5 py-0.5 text-xs font-semibold">
@@ -124,7 +127,7 @@ export function DetailHeader({
                   {item.Genres.slice(0, 5).map((genre) => (
                     <span
                       key={genre}
-                      className="rounded-full bg-white/10 px-3 py-0.5 text-xs font-medium text-white/70 backdrop-blur-sm"
+                      className="rounded-full bg-black/25 px-3 py-0.5 text-xs font-medium text-white/90 backdrop-blur-sm"
                     >
                       {genre}
                     </span>
@@ -158,8 +161,8 @@ export function DetailHeader({
                     className={cn(
                       'flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all',
                       isFavorite
-                        ? 'border-red-500 bg-red-500/20 text-red-400'
-                        : 'border-white/30 text-white/70 hover:border-white/60 hover:text-white',
+                        ? 'border-red-500 bg-red-500/25 text-red-300'
+                        : 'border-white/45 bg-black/25 text-white/90 backdrop-blur-sm hover:border-white/70 hover:text-white',
                     )}
                     aria-label={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
                   >
@@ -167,20 +170,7 @@ export function DetailHeader({
                   </button>
                 )}
 
-                {onToggleWatchlist && (
-                  <button
-                    onClick={onToggleWatchlist}
-                    className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all',
-                      inWatchlist
-                        ? 'border-brand-500 bg-brand-500/20 text-brand-400'
-                        : 'border-white/30 text-white/70 hover:border-white/60 hover:text-white',
-                    )}
-                    aria-label={inWatchlist ? 'Aus Watchlist entfernen' : 'Zur Watchlist hinzufügen'}
-                  >
-                    {inWatchlist ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                  </button>
-                )}
+                <WatchlistButton item={item} serverId={serverId} />
               </div>
             </div>
           </div>

@@ -14,10 +14,11 @@ interface EpisodeListProps {
   episodes: JellyfinMediaItem[];
   serverId: string;
   onPlay?: (episode: JellyfinMediaItem) => void;
+  onToggleWatched?: (episode: JellyfinMediaItem) => void;
   className?: string;
 }
 
-export function EpisodeList({ episodes, serverId, onPlay, className }: EpisodeListProps) {
+export function EpisodeList({ episodes, serverId, onPlay, onToggleWatched, className }: EpisodeListProps) {
   const sorted = [...episodes].sort((a, b) => (a.IndexNumber ?? 0) - (b.IndexNumber ?? 0));
 
   return (
@@ -67,7 +68,18 @@ export function EpisodeList({ episodes, serverId, onPlay, className }: EpisodeLi
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {watched ? (
+                  {onToggleWatched ? (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onToggleWatched(episode); }}
+                      aria-label={watched ? 'Als ungesehen markieren' : 'Als gesehen markieren'}
+                      className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-bg-muted/60 transition-colors"
+                    >
+                      {watched
+                        ? <CheckCircle className="h-5 w-5 text-green-400" />
+                        : <Circle className="h-5 w-5 text-fg-muted/50 hover:text-fg" />}
+                    </button>
+                  ) : watched ? (
                     <CheckCircle className="h-4 w-4 text-green-400" />
                   ) : (
                     <Circle className="h-4 w-4 text-fg-muted/30" />

@@ -15,10 +15,13 @@ Musik-Subdomain (v0.3 aktiv): Spotify-inspirierter Desktop-Musikplayer mit Jelly
 
 ## 2. Scope
 
-- Schema `jellyfin`: `jellyfin_servers`, `jellyfin_libraries`, `jellyfin_items`, `jellyfin_watchstate`
+- Schema `jellyfin`: `jellyfin_servers`, `jellyfin_libraries`, `jellyfin_items`, `jellyfin_watchlists`, `jellyfin_watchlist_items`
 - Jellyfin-API-Adapter (`/Users`, `/Items`, `/Sessions`, `/Audio`, `/Playlists`)
 - Library-Sync (initial full, danach inkrementell via `LastModified`)
 - Watchstate bidirektional (User pausiert in Jellyfin → LifeHub sieht Resume-Marker)
+- **Watchstate-Toggles laufen gegen die Jellyfin-API** (`POST/DELETE /Users/{userId}/PlayedItems/{id}`) — NIE gegen LifeHub-DB-`jellyfin_items` (externe Jellyfin-IDs ≠ DB-uuids; die DB-basierte `toggleWatched` existiert nur noch für die Legacy-Route `POST /jellyfin/items/:id/toggle-watched`)
+- Favoriten via Jellyfin `FavoriteItems` (POST/DELETE); Status via `UserData.IsFavorite` (Detail-Fields müssen `UserData` enthalten)
+- **Custom Watchlists** (LifeHub-eigen, Migration `0018`): CRUD unter `/jellyfin/servers/:serverId/watchlists`, Items per external Jellyfin-ID + Name/Type-Snapshot; Detail-Fields müssen `SeasonId,SeriesId,SeriesName` enthalten (Episode-Navigation + Auto-Advance)
 - Trailer via YouTube-Embed (gleiche Sanitisierung wie `projects`)
 - Fallback: direkter NAS-Scan (Plex-kompatible Struktur), falls kein Jellyfin
 - **Musik-Subdomain:** Audio-Streaming (`/Audio/{id}/stream`), Playback-Reporting (`/Sessions/Playing`), Playlisten, Genres, Favoriten, Search — eigene Spec unter `docs/domains/jellyfin/music/`

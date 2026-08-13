@@ -9,7 +9,9 @@ Integrate Jellyfin as primary media library backend with native fallback.
 
 - Jellyfin API connection
 - libraries, movies, series
-- watch state sync
+- watch state sync (gegen Jellyfin `PlayedItems`-API — Jellyfin ist Server of Record)
+- Favoriten (Jellyfin `FavoriteItems`)
+- Benutzerdefinierte Watchlists (LifeHub-eigen: anlegen, benennen, verwalten, Filme/Serien hinzufügen)
 - native fallback for direct NAS sources
 
 ---
@@ -18,6 +20,8 @@ Integrate Jellyfin as primary media library backend with native fallback.
 
 - JellyfinLibrary
 - JellyfinItem
+- JellyfinWatchlist (name, owner, position)
+- JellyfinWatchlistItem (externalItemId, itemType, name-Snapshot)
 
 ---
 
@@ -27,4 +31,13 @@ Integrate Jellyfin as primary media library backend with native fallback.
 GET    /jellyfin/libraries
 GET    /jellyfin/items
 GET    /jellyfin/items/{id}
+GET    /jellyfin/servers/{serverId}/watchlists
+POST   /jellyfin/servers/{serverId}/watchlists            { name }
+PATCH  /jellyfin/servers/{serverId}/watchlists/{listId}   { name }
+DELETE /jellyfin/servers/{serverId}/watchlists/{listId}
+GET    /jellyfin/servers/{serverId}/watchlists/{listId}/items
+POST   /jellyfin/servers/{serverId}/watchlists/{listId}/items    { externalItemId, itemType, name }
+DELETE /jellyfin/servers/{serverId}/watchlists/{listId}/items/{externalItemId}
+GET    /jellyfin/servers/{serverId}/watchlists/status/{externalItemId}
+POST   /jellyfin/servers/{serverId}/items/{externalId}/toggle-watched
 ```

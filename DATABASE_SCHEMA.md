@@ -38,7 +38,7 @@ postgres
 ├── documents        (documents, document_tags, document_ocr, document_refs)
 ├── calendar         (calendars, events, event_attendees, event_reminders)
 ├── it_inventory     (devices, network_interfaces, device_credentials, locations)
-├── jellyfin         (jellyfin_servers, jellyfin_libraries, jellyfin_items, jellyfin_watchstate)
+├── jellyfin         (jellyfin_servers, jellyfin_libraries, jellyfin_items, jellyfin_watchlists, jellyfin_watchlist_items)
 ├── dashboard        (dashboard_layouts, widgets, widget_instances)
 ├── plugins          (plugins, plugin_permissions, plugin_data)
 └── search           (search_queries, search_clicks) -- nur Analytics, Indizes sind extern
@@ -977,6 +977,27 @@ CREATE TABLE jellyfin.jellyfin_watchstate (
   played_at   TIMESTAMPTZ,
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (user_id, item_id)
+);
+
+-- Benutzerdefinierte Watchlists (LifeHub-eigen; implementiert in public-Schema, Migration 0018)
+CREATE TABLE jellyfin.jellyfin_watchlists (
+  id          UUID PRIMARY KEY,
+  owner_id    UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  position    INT NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE jellyfin.jellyfin_watchlist_items (
+  id               UUID PRIMARY KEY,
+  watchlist_id     UUID NOT NULL REFERENCES jellyfin.jellyfin_watchlists(id) ON DELETE CASCADE,
+  external_item_id TEXT NOT NULL,                    -- Jellyfin-Item-ID
+  item_type        TEXT NOT NULL,                    -- 'Movie' | 'Series' | …
+  name             TEXT NOT NULL,                    -- Titel-Snapshot
+  position         INT NOT NULL DEFAULT 0,
+  added_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (watchlist_id, external_item_id)
 );
 ```
 

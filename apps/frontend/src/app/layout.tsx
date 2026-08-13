@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
+import { AccentSync } from '@/lib/accent';
 
 export const metadata: Metadata = {
   title: 'LifeHub',
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen font-sans">
+        <AccentSync />
         <Providers>{children}</Providers>
       </body>
     </html>

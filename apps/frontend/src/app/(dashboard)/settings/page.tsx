@@ -6,17 +6,19 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   Loader2, AlertCircle, Settings, FolderOpen, Globe,
-  Save, Check, ArrowLeft, RefreshCw, Palette, Sun, Moon, Monitor,
+  Save, Check, ArrowLeft, RefreshCw, Palette, Sun, Moon, Monitor, Chrome,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useJellyfinLayout, type SidebarStyle } from '@/lib/jellyfin-layout-store';
 import { useThemeStore, type Accent } from '@/lib/theme-store';
+import { ACCENT_PRESETS, useAccentStore, type AccentKey } from '@/lib/accent';
+import { GoogleAccountCard } from '@/components/integrations/GoogleAccountCard';
 
 interface SystemSettings {
   [key: string]: unknown;
 }
 
-type Tab = 'general' | 'appearance' | 'paths' | 'network';
+type Tab = 'general' | 'appearance' | 'google' | 'paths' | 'network';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -55,6 +57,10 @@ export default function SettingsPage() {
           className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${activeTab === 'appearance' ? 'bg-bg-raised text-fg' : 'text-fg-muted hover:text-fg'}`}>
           <Palette className="h-4 w-4 inline mr-1.5" /> Darstellung
         </button>
+        <button onClick={() => setActiveTab('google')}
+          className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${activeTab === 'google' ? 'bg-bg-raised text-fg' : 'text-fg-muted hover:text-fg'}`}>
+          <Chrome className="h-4 w-4 inline mr-1.5" /> Google-Konto
+        </button>
         <button onClick={() => setActiveTab('paths')}
           className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${activeTab === 'paths' ? 'bg-bg-raised text-fg' : 'text-fg-muted hover:text-fg'}`}>
           <FolderOpen className="h-4 w-4 inline mr-1.5" /> Pfade
@@ -67,6 +73,7 @@ export default function SettingsPage() {
 
       {activeTab === 'general' && <GeneralSettings />}
       {activeTab === 'appearance' && <AppearanceSettings />}
+      {activeTab === 'google' && <GoogleAccountCard />}
       {activeTab === 'paths' && <PathSettings />}
       {activeTab === 'network' && <NetworkSettings />}
     </div>
@@ -316,9 +323,45 @@ function AppearanceSettings() {
   const setAccent = useThemeStore((s) => s.setAccent);
   const sidebarStyle = useJellyfinLayout((s) => s.sidebarStyle);
   const setSidebarStyle = useJellyfinLayout((s) => s.setSidebarStyle);
+  const hubAccent = useAccentStore((s) => s.accent);
+  const hubCustomHex = useAccentStore((s) => s.customHex);
+  const hubSetAccent = useAccentStore((s) => s.setAccent);
 
   return (
     <div className="space-y-4">
+      {/* Hub-Akzentfarbe (calendar/hub-wide, additive to jellyfin theme-store accent) */}
+      <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
+        <h2 className="text-lg font-medium">Akzentfarbe</h2>
+        <div className="flex flex-wrap gap-2">
+          {ACCENT_PRESETS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => hubSetAccent(p.key)}
+              title={p.label}
+              aria-label={p.label}
+              className={cn(
+                'h-8 w-8 rounded-full border-2 transition-all',
+                hubAccent === p.key ? 'border-fg scale-110' : 'border-transparent hover:scale-105',
+              )}
+              style={{ backgroundColor: `rgb(${p.dark[500]})` }}
+            />
+          ))}
+          <label
+            className="h-8 w-8 rounded-full border-2 border-dashed border-fg-subtle cursor-pointer grid place-items-center text-xs"
+            title="Eigene Farbe"
+          >
+            <input
+              type="color"
+              className="sr-only"
+              value={hubCustomHex ?? '#d97706'}
+              onChange={(e) => hubSetAccent('custom', e.target.value)}
+            />
+            +
+          </label>
+        </div>
+        <p className="text-xs text-fg-subtle mt-1">Standard: Amber — die Akzentfarbe des Hubs.</p>
+      </div>
+
       {/* Theme */}
       <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
         <h2 className="text-lg font-medium">Design</h2>

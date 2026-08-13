@@ -95,6 +95,21 @@
     --brand-900: 237 233 254;
   }
 
+  /* Light-mode brand scale (UI_UX.md §2.1) — default amber when no data-accent override.
+     Kept additive: the data-accent blocks above stay intact for jellyfin accent selection. */
+  :root:not([data-accent]):not(.dark) {
+    --brand-50: 255 248 235;
+    --brand-100: 254 235 199;
+    --brand-200: 251 211 141;
+    --brand-300: 246 173 85;
+    --brand-400: 237 137 54;
+    --brand-500: 221 107 32;
+    --brand-600: 192 86 33;
+    --brand-700: 156 66 33;
+    --brand-800: 123 52 30;
+    --brand-900: 101 43 25;
+  }
+
   body {
     @apply antialiased;
     background-color: rgb(var(--bg));

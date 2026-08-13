@@ -19,6 +19,12 @@ const config: Config = {
           800: 'rgb(var(--brand-800) / <alpha-value>)',
           900: 'rgb(var(--brand-900) / <alpha-value>)',
         },
+        // Calendar accent palette (falls back to brand-* per step when not overridden)
+        cal: {
+          400: 'rgb(var(--cal-400, var(--brand-400)) / <alpha-value>)',
+          500: 'rgb(var(--cal-500, var(--brand-500)) / <alpha-value>)',
+          600: 'rgb(var(--cal-600, var(--brand-600)) / <alpha-value>)',
+        },
         // Theme-aware tokens (resolved from CSS variables in :root/.dark)
         bg: {
           DEFAULT: 'rgb(var(--bg) / <alpha-value>)',

@@ -22,6 +22,7 @@ import { PagesModule } from '@lifehub/pages-domain';
 import { JellyfinModule } from '@lifehub/jellyfin-domain';
 import { CalendarModule } from '@lifehub/calendar-domain';
 import { IntegrationsModule } from '@lifehub/integrations-domain';
+import { EmailModule } from '@lifehub/email-domain';
 import { SystemModule } from './system/system.module.js';
 
 @Module({
@@ -75,6 +76,7 @@ import { SystemModule } from './system/system.module.js';
     JellyfinModule,
     CalendarModule,
     IntegrationsModule,
+    EmailModule,
     SystemModule,
   ],
   controllers: [HealthController],

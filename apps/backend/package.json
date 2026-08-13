@@ -25,6 +25,7 @@
     "@lifehub/auth": "workspace:*",
     "@lifehub/dashboard-domain": "workspace:*",
     "@lifehub/db": "workspace:*",
+    "@lifehub/email-domain": "workspace:*",
     "@lifehub/events": "workspace:*",
     "@lifehub/finance-domain": "workspace:*",
     "@lifehub/integrations-domain": "workspace:*",

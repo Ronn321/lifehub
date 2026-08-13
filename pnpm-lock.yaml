@@ -29,6 +29,9 @@ importers:
       '@lifehub/db':
         specifier: workspace:*
         version: link:../../shared/db
+      '@lifehub/email-domain':
+        specifier: workspace:*
+        version: link:../../domains/email
       '@lifehub/events':
         specifier: workspace:*
         version: link:../../shared/events
@@ -307,6 +310,9 @@ importers:
       '@lifehub/events':
         specifier: workspace:*
         version: link:../../shared/events
+      '@lifehub/integrations-domain':
+        specifier: workspace:^
+        version: link:../integrations
       '@lifehub/permissions':
         specifier: workspace:*
         version: link:../../shared/permissions
@@ -316,12 +322,18 @@ importers:
       '@nestjs/core':
         specifier: ^10.4.0
         version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@10.4.22)(@nestjs/platform-express@10.4.22)(@nestjs/websockets@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/schedule':
+        specifier: ^6.1.3
+        version: 6.1.3(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.6
       drizzle-orm:
         specifier: ^0.36.0
         version: 0.36.4(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)
+      googleapis:
+        specifier: ^144.0.0
+        version: 144.0.0
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -332,6 +344,9 @@ importers:
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.21)(terser@5.48.0)
 
   domains/dashboard:
     dependencies:
@@ -396,6 +411,49 @@ importers:
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
+
+  domains/email:
+    dependencies:
+      '@lifehub/auth':
+        specifier: workspace:*
+        version: link:../../shared/auth
+      '@lifehub/db':
+        specifier: workspace:*
+        version: link:../../shared/db
+      '@lifehub/integrations-domain':
+        specifier: workspace:*
+        version: link:../integrations
+      '@lifehub/permissions':
+        specifier: workspace:*
+        version: link:../../shared/permissions
+      '@nestjs/common':
+        specifier: ^10.4.0
+        version: 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^10.4.0
+        version: 10.4.22(@nestjs/common@10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@10.4.22)(@nestjs/platform-express@10.4.22)(@nestjs/websockets@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@types/express':
+        specifier: ^5.0.0
+        version: 5.0.6
+      drizzle-orm:
+        specifier: ^0.36.0
+        version: 0.36.4(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)
+      googleapis:
+        specifier: ^144.0.0
+        version: 144.0.0
+      zod:
+        specifier: 3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@types/node':
+        specifier: ^22.7.0
+        version: 22.19.21
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.21)(terser@5.48.0)
 
   domains/finance:
     dependencies:

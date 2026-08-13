@@ -64,7 +64,7 @@ export function SleepTimerButton() {
             className="absolute bottom-full right-0 mb-2 min-w-[160px] rounded-lg shadow-xl border overflow-hidden z-50"
             style={{
               background: 'var(--music-bg-elevated)',
-              borderColor: 'rgba(255,255,255,0.1)',
+              borderColor: 'var(--music-border)',
             }}
           >
             {sleepTimerEnd && remaining > 0 && (
@@ -72,7 +72,7 @@ export function SleepTimerButton() {
                 className="px-3 py-2 text-xs font-bold uppercase tracking-wider border-b"
                 style={{
                   color: 'var(--music-accent)',
-                  borderColor: 'rgba(255,255,255,0.06)',
+                  borderColor: 'var(--music-border-weak)',
                 }}
               >
                 Aktiv: {formatRemaining(remaining)}
@@ -97,7 +97,7 @@ export function SleepTimerButton() {
                   setShowPopover(false);
                 }}
                 className="flex w-full items-center px-3 py-2 text-xs font-medium text-[var(--music-text-secondary)] transition-colors hover:bg-[var(--music-bg-hover)] border-t"
-                style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+                style={{ borderColor: 'var(--music-border-weak)' }}
               >
                 Aus
               </button>

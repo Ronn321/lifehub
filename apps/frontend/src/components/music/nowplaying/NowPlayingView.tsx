@@ -179,7 +179,7 @@ export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps)
       }}
     >
       {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.1)] px-1">
+      <div className="flex items-center justify-between border-b border-[var(--music-border)] px-1">
         <div className="flex overflow-x-auto music-scroll" style={{ scrollbarWidth: 'none' }}>
           {TABS.map((tab) => (
             <button
@@ -401,7 +401,7 @@ function NowPlayingTab({
         <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--music-text-secondary)]">
           Songinformationen
         </h3>
-        <div className="divide-y divide-[rgba(255,255,255,0.06)]">
+        <div className="divide-y divide-[var(--music-border-weak)]">
           {infoRows.map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between py-2.5">
               <span className="text-xs text-[var(--music-text-tertiary)]">{label}</span>
@@ -756,7 +756,7 @@ function MiniPlayer({
 }) {
   return (
     <div
-      className="fixed bottom-[100px] right-4 z-50 flex w-80 items-center gap-3 rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] px-4 py-3 shadow-2xl backdrop-blur-xl"
+      className="fixed bottom-[100px] right-4 z-50 flex w-80 items-center gap-3 rounded-lg border border-[var(--music-border)] bg-[var(--music-bg-elevated)] px-4 py-3 shadow-2xl backdrop-blur-xl"
       style={{ height: '80px' }}
     >
       <div className="h-12 w-12 shrink-0 overflow-hidden rounded">
@@ -891,7 +891,7 @@ function FullscreenNowPlaying({
             </span>
             <div
               ref={progressRef}
-              className="relative h-1.5 flex-1 cursor-pointer rounded-full bg-[rgba(255,255,255,0.15)]"
+              className="relative h-1.5 flex-1 cursor-pointer rounded-full bg-[var(--music-slider-track)]"
               onClick={handleSeek}
             >
               <div

@@ -69,6 +69,7 @@ function VolumeControl({
         value={effectiveVolume}
         onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
         className={`volume-slider transition-all duration-200 ${isHovered ? 'w-28' : 'w-16'}`}
+        style={{ '--fill': `${effectiveVolume * 100}%` } as React.CSSProperties}
         aria-label="Lautstärke"
         title="Lautstärke"
       />
@@ -94,12 +95,12 @@ function DeviceDropdown({
       className="absolute bottom-full right-0 mb-2 min-w-[180px] rounded-lg shadow-xl border overflow-hidden"
       style={{
         background: 'var(--music-bg-elevated)',
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: 'var(--music-border)',
       }}
     >
       <div
         className="px-3 py-2 text-xs font-semibold text-[var(--music-text-tertiary)] uppercase tracking-wider border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+        style={{ borderColor: 'var(--music-border-weak)' }}
       >
         Geräte
       </div>
@@ -139,7 +140,7 @@ function DeviceDropdown({
       </div>
       <div
         className="px-3 py-2 border-t text-xs text-[var(--music-text-tertiary)]"
-        style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+        style={{ borderColor: 'var(--music-border-weak)' }}
       >
         <button
           onClick={() => {
@@ -307,71 +308,6 @@ export function PlayerRight({
       >
         <Maximize2 className="h-4 w-4" />
       </button>
-
-      {/* ── volume-slider styles ── */}
-      <style jsx>{`
-        .volume-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 100px;
-          height: 4px;
-          border-radius: 2px;
-          background: rgba(255, 255, 255, 0.2);
-          outline: none;
-          cursor: pointer;
-          accent-color: var(--music-accent, #1db954);
-          transition: height 0.1s ease;
-        }
-        .volume-slider:hover {
-          height: 6px;
-        }
-        .volume-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: #fff;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-          opacity: 0;
-          transition: opacity 0.15s ease;
-        }
-        .volume-slider:hover::-webkit-slider-thumb,
-        .volume-slider:active::-webkit-slider-thumb {
-          opacity: 1;
-        }
-        .volume-slider::-moz-range-thumb {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: #fff;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-          opacity: 0;
-          transition: opacity 0.15s ease;
-        }
-        .volume-slider:hover::-moz-range-thumb,
-        .volume-slider:active::-moz-range-thumb {
-          opacity: 1;
-        }
-        .volume-slider::-webkit-slider-runnable-track {
-          height: 4px;
-          border-radius: 2px;
-        }
-        .volume-slider::-moz-range-track {
-          height: 4px;
-          border-radius: 2px;
-          background: rgba(255, 255, 255, 0.2);
-        }
-        .volume-slider::-moz-range-progress {
-          height: 4px;
-          border-radius: 2px;
-          background-color: var(--music-accent, #1db954);
-        }
-      `}</style>
     </div>
   );
 }

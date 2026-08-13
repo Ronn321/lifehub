@@ -158,7 +158,7 @@ export function ContextMenuProvider({ children }: { children: React.ReactNode })
       {menu && (
         <div
           ref={menuRef}
-          className="fixed z-[var(--music-z-context-menu)] min-w-[200px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl"
+          className="fixed z-[var(--music-z-context-menu)] min-w-[200px] rounded-lg border border-[var(--music-border)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl"
           style={{ left: menu.x, top: menu.y, animation: 'context-menu-fade-in 150ms ease-out' }}
           role="menu"
         >
@@ -170,7 +170,7 @@ export function ContextMenuProvider({ children }: { children: React.ReactNode })
               onMouseEnter={() => handleItemMouseEnter(i, !!item.submenu)}
               onMouseLeave={() => handleItemMouseLeave(!!item.submenu)}
             >
-              {item.separator && <div className="my-1 border-t border-[rgba(255,255,255,0.1)]" />}
+              {item.separator && <div className="my-1 border-t border-[var(--music-border)]" />}
               <button
                 onClick={() => {
                   if (!item.disabled && !item.submenu) {
@@ -197,7 +197,7 @@ export function ContextMenuProvider({ children }: { children: React.ReactNode })
               {/* Submenu */}
               {submenuIndex === i && item.submenu && (
                 <div
-                  className="absolute left-full top-0 z-[calc(var(--music-z-context-menu)+1)] min-w-[180px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl ml-1"
+                  className="absolute left-full top-0 z-[calc(var(--music-z-context-menu)+1)] min-w-[180px] rounded-lg border border-[var(--music-border)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl ml-1"
                   style={{ animation: 'submenu-fade-in 120ms ease-out' }}
                   onMouseEnter={handleSubmenuMouseEnter}
                   onMouseLeave={handleSubmenuMouseLeave}

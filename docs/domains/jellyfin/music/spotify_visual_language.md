@@ -458,3 +458,10 @@ Dieses Dokument wird später detailliert beschreiben
 - Custom-Theme-Editor für User
 - Seasonal Themes (Weihnachten, Halloween)
 - Cover-basierte dynamische Themes
+
+## v0.3 — Theme-aware + System-Akzent (implementiert 13.08.2026)
+
+- **Theme:** Music-Design-Tokens (`music-theme.css`) folgen jetzt dem System-Theme: `:root` = hell, `:root.dark/.dark` = dunkel (Spotify-Look). Vorher immer schwarz.
+- **Akzent:** `--music-accent` = `rgb(var(--brand-500))` — alle Musik-Symbole, Buttons und Slider folgen der System-Akzentfarbe (Einstellungen → Darstellung). Kein festes Spotify-Grün mehr.
+- **Slider:** `.volume-slider`/`.mini-volume-slider` in `music-theme.css` (global) — Webkit-Füllung via `--fill`-CSS-Var (styled-jsx greift bei `<input type="range">` nicht zuverlässig).
+- **Borders:** harte `rgba(255,255,255,…)` durch `--music-border` / `--music-border-weak` ersetzt (theme-aware).

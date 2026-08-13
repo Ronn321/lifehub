@@ -231,11 +231,11 @@ export function PlaylistHeader({
               </button>
 
               {contextOpen && (
-                <div className="absolute left-0 top-full mt-2 z-50 min-w-[200px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] py-1 shadow-xl">
+                <div className="absolute left-0 top-full mt-2 z-50 min-w-[200px] rounded-lg border border-[var(--music-border)] bg-[var(--music-bg-elevated)] py-1 shadow-xl">
                   <ContextMenuItem icon={<Edit className="h-4 w-4" />} label="Bearbeiten" />
                   <ContextMenuItem icon={<Share2 className="h-4 w-4" />} label="Teilen" />
                   <ContextMenuItem icon={<Copy className="h-4 w-4" />} label="Duplizieren" />
-                  <div className="my-1 border-t border-[rgba(255,255,255,0.08)]" />
+                  <div className="my-1 border-t border-[var(--music-border-weak)]" />
                   <ContextMenuItem
                     icon={<Trash2 className="h-4 w-4 text-red-400" />}
                     label="Löschen"

@@ -494,7 +494,7 @@ export function PlaylistSongTable({
       </div>
 
       {/* ── Footer ── */}
-      <div className="mt-3 border-t border-[rgba(255,255,255,0.08)] px-4 pt-3 text-xs text-[var(--music-text-secondary)]">
+      <div className="mt-3 border-t border-[var(--music-border-weak)] px-4 pt-3 text-xs text-[var(--music-text-secondary)]">
         <span>{displayedTracks.length} Songs</span>
       </div>
 
@@ -502,7 +502,7 @@ export function PlaylistSongTable({
       {contextMenu.visible && contextMenu.track && (
         <div
           data-context-menu
-          className="fixed z-[var(--music-z-context-menu)] min-w-[200px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] py-1 shadow-2xl"
+          className="fixed z-[var(--music-z-context-menu)] min-w-[200px] rounded-lg border border-[var(--music-border)] bg-[var(--music-bg-elevated)] py-1 shadow-2xl"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={() => setContextMenu((prev) => ({ ...prev, visible: false }))}
         >
@@ -527,7 +527,7 @@ export function PlaylistSongTable({
               if (contextMenu.track) addToQueue(contextMenu.track);
             }}
           />
-          <div className="my-1 border-t border-[rgba(255,255,255,0.08)]" />
+          <div className="my-1 border-t border-[var(--music-border-weak)]" />
           <SongContextItem
             icon={<Heart className="h-4 w-4" />}
             label="Favorit"
@@ -556,7 +556,7 @@ export function PlaylistSongTable({
               }}
             />
           )}
-          <div className="my-1 border-t border-[rgba(255,255,255,0.08)]" />
+          <div className="my-1 border-t border-[var(--music-border-weak)]" />
           <SongContextItem
             icon={<Trash2 className="h-4 w-4 text-red-400" />}
             label="Aus Playlist entfernen"
@@ -591,7 +591,7 @@ function SortableHeader({
 
   return (
     <div
-      className="flex items-center gap-3 border-b border-[rgba(255,255,255,0.1)] px-4 pb-2"
+      className="flex items-center gap-3 border-b border-[var(--music-border)] px-4 pb-2"
       style={{ height: '40px' }}
     >
       {columns.map((col) => (

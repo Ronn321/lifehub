@@ -372,10 +372,10 @@ export function MusicPlayerBar({
         className="w-full relative"
         style={{
           height: 'var(--music-player-bar-height, 90px)',
-          background: 'rgba(18,18,18,0.95)',
+          background: 'var(--music-bg-elevated)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid var(--music-border)',
         }}
       >
         <div className="flex items-center h-full px-4 max-w-screen-2xl mx-auto gap-2">

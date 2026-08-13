@@ -1,29 +1,30 @@
 /* Music Domain v0.2 — Spotify-style Design Tokens */
 /* Spec: docs/domains/jellyfin/music/spotify_visual_language.md */
+/* v0.3: theme-aware (light/dark) + accent follows system brand color (--brand-*) */
 
+/* ── Light mode (default) ── */
 :root {
   /* Backgrounds */
-  --music-bg-base: #121212;
-  --music-bg-elevated: #181818;
-  --music-bg-card: #242424;
-  --music-bg-hover: #2a2a2a;
-  --music-bg-modal: #282828;
+  --music-bg-base: #ffffff;
+  --music-bg-elevated: #f6f6f6;
+  --music-bg-card: #ececec;
+  --music-bg-hover: #e2e2e2;
+  --music-bg-modal: #f0f0f0;
 
   /* Text */
-  --music-text-primary: #ffffff;
-  --music-text-secondary: #b3b3b3;
-  --music-text-tertiary: #727272;
-  --music-text-disabled: #535353;
+  --music-text-primary: #181818;
+  --music-text-secondary: #6e6e6e;
+  --music-text-tertiary: #9c9c9c;
+  --music-text-disabled: #c4c4c4;
 
-  /* Accent (Spotify green) */
-  --music-accent: #1db954;
-  --music-accent-hover: #1ed760;
-  --music-accent-pressed: #169c46;
+  /* Borders & tracks (theme-aware) */
+  --music-border: rgba(0, 0, 0, 0.12);
+  --music-border-weak: rgba(0, 0, 0, 0.08);
+  --music-slider-track: rgba(0, 0, 0, 0.15);
 
   /* Status */
   --music-error: #e91429;
   --music-warning: #ffa42b;
-  --music-success: #1db954;
 
   /* Layout */
   --music-sidebar-width: 240px;
@@ -44,9 +45,9 @@
   --music-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Shadows */
-  --music-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --music-shadow-player: 0 -2px 8px rgba(0, 0, 0, 0.5);
-  --music-shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --music-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --music-shadow-player: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  --music-shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.12);
 
   /* Z-Index System */
   --music-z-base: 0;
@@ -57,6 +58,179 @@
   --music-z-toast: 3000;
 }
 
+/* ── Dark mode (Spotify-style) ── */
+:root.dark,
+.dark {
+  /* Backgrounds */
+  --music-bg-base: #121212;
+  --music-bg-elevated: #181818;
+  --music-bg-card: #242424;
+  --music-bg-hover: #2a2a2a;
+  --music-bg-modal: #282828;
+
+  /* Text */
+  --music-text-primary: #ffffff;
+  --music-text-secondary: #b3b3b3;
+  --music-text-tertiary: #727272;
+  --music-text-disabled: #535353;
+
+  /* Borders & tracks (theme-aware) */
+  --music-border: rgba(255, 255, 255, 0.1);
+  --music-border-weak: rgba(255, 255, 255, 0.06);
+  --music-slider-track: rgba(255, 255, 255, 0.2);
+
+  /* Status */
+  --music-error: #e91429;
+  --music-warning: #ffa42b;
+
+  /* Shadows */
+  --music-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --music-shadow-player: 0 -2px 8px rgba(0, 0, 0, 0.5);
+  --music-shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Accent: follows the system brand accent (Settings → Darstellung) ── */
+:root,
+:root.dark,
+.dark {
+  --music-accent: rgb(var(--brand-500));
+  --music-accent-hover: rgb(var(--brand-600));
+  --music-accent-pressed: rgb(var(--brand-400));
+  --music-success: rgb(var(--brand-500));
+}
+
+/* Volume sliders (global — styled-jsx scoped styles don't reliably apply to <input>) */
+.volume-slider,
+.mini-volume-slider {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider {
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--music-slider-track);
+  transition: height 0.1s ease;
+}
+.volume-slider:hover {
+  height: 6px;
+}
+.volume-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  /* Filled part follows the music accent (system brand color) */
+  background: linear-gradient(
+    to right,
+    var(--music-accent) var(--fill, 50%),
+    var(--music-slider-track) var(--fill, 50%)
+  );
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--music-text-primary);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.volume-slider:hover::-webkit-slider-thumb,
+.volume-slider:active::-webkit-slider-thumb {
+  opacity: 1;
+}
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--music-text-primary);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.volume-slider:hover::-moz-range-thumb,
+.volume-slider:active::-moz-range-thumb {
+  opacity: 1;
+}
+.volume-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--music-slider-track);
+}
+.volume-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--music-accent);
+}
+
+.mini-volume-slider {
+  width: 52px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--music-slider-track);
+}
+.mini-volume-slider::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  /* Filled part follows the music accent (system brand color) */
+  background: linear-gradient(
+    to right,
+    var(--music-accent) var(--fill, 50%),
+    var(--music-slider-track) var(--fill, 50%)
+  );
+}
+.mini-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--music-text-primary);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.mini-volume-slider:hover::-webkit-slider-thumb,
+.mini-volume-slider:active::-webkit-slider-thumb {
+  opacity: 1;
+}
+.mini-volume-slider::-moz-range-thumb {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--music-text-primary);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.mini-volume-slider:hover::-moz-range-thumb,
+.mini-volume-slider:active::-moz-range-thumb {
+  opacity: 1;
+}
+.mini-volume-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--music-slider-track);
+}
+.mini-volume-slider::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background-color: var(--music-accent);
+}
+
 /* Custom scrollbar for music domain */
 .music-scroll::-webkit-scrollbar {
   width: 12px;
@@ -65,13 +239,13 @@
   background: transparent;
 }
 .music-scroll::-webkit-scrollbar-thumb {
-  background: #535353;
+  background: var(--music-text-disabled);
   border-radius: 6px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 .music-scroll::-webkit-scrollbar-thumb:hover {
-  background: #727272;
+  background: var(--music-text-tertiary);
 }
 
 /* Keyframes */

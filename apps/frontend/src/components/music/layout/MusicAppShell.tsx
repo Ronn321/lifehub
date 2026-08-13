@@ -74,7 +74,7 @@ export function MusicAppShell({
               )}
               style={{
                 height: 'var(--music-topbar-height)',
-                background: isScrolled ? 'rgba(18,18,18,0.8)' : 'transparent',
+                background: isScrolled ? 'color-mix(in srgb, var(--music-bg-base) 80%, transparent)' : 'transparent',
                 backdropFilter: isScrolled ? 'blur(12px)' : 'none',
                 WebkitBackdropFilter: isScrolled ? 'blur(12px)' : 'none',
                 zIndex: 'var(--music-z-sticky)',
@@ -98,7 +98,7 @@ export function MusicAppShell({
 
         {/* Right Sidebar */}
         <aside
-          className={`flex-shrink-0 overflow-hidden border-l border-[rgba(255,255,255,0.08)] transition-[width] duration-200 ease-out`}
+          className={`flex-shrink-0 overflow-hidden border-l border-[var(--music-border-weak)] transition-[width] duration-200 ease-out`}
           style={{
             width: hasRightSidebar ? 'var(--music-right-sidebar-width, 320px)' : '0px',
             background: 'var(--music-bg-elevated)',

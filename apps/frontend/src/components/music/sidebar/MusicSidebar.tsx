@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { Home, Search, PanelLeftClose, PanelLeftOpen, Mic2, Disc3 } from 'lucide-react';
@@ -89,6 +89,21 @@ export function MusicSidebar({
   // Manage tab state locally as fallback when no onTabChange from parent
   const [localTab, setLocalTab] = useState<LibraryTab>(activeTab);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  // LifeHub main sidebar collapsed? If yes, shift the toggle down so both
+  // edge buttons never overlap (they sit at the same y otherwise).
+  const [lhCollapsed, setLhCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('lifehub-sidebar-collapsed') === 'true';
+  });
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const collapsed = (e as CustomEvent<{ collapsed: boolean }>).detail?.collapsed;
+      if (typeof collapsed === 'boolean') setLhCollapsed(collapsed);
+    };
+    window.addEventListener('lifehub:sidebar-collapse', handler);
+    return () => window.removeEventListener('lifehub:sidebar-collapse', handler);
+  }, []);
+  const toggleTop = lhCollapsed ? 'top-16' : 'top-5';
   const effectiveTab = onTabChange ? activeTab : localTab;
   const handleTabClick = (tab: LibraryTab) => {
     if (onTabChange) {
@@ -116,13 +131,16 @@ export function MusicSidebar({
         /* Classic: round button on the sidebar edge (like the main LifeHub sidebar) */
         <button
           onClick={onToggleCollapse}
-          className="absolute -right-3 top-5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-bg-surface text-fg-muted shadow-sm transition-colors hover:bg-bg hover:text-fg"
+          className={cn(
+            'absolute -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-bg-surface text-fg-muted shadow-sm transition-colors hover:bg-bg hover:text-fg',
+            toggleTop,
+          )}
           title="Sidebar erweitern"
         >
           <PanelLeftOpen className="h-3.5 w-3.5" />
         </button>
       ) : (
-        <div className={cn('flex items-center px-3 pt-6 pb-2', collapsed && 'justify-center')}>
+        <div className={cn('flex items-center px-3 pb-2', collapsed && 'justify-center', lhCollapsed && collapsed ? 'pt-16' : 'pt-6')}>
           <button
             onClick={onToggleCollapse}
             className={cn(

@@ -415,7 +415,7 @@ function ColumnVisibilityDropdown({
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-1 min-w-[180px] rounded-lg border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl"
+          className="absolute right-0 top-full mt-1 min-w-[180px] rounded-lg border border-[var(--music-border)] bg-[var(--music-bg-modal)] py-1 shadow-2xl backdrop-blur-xl"
           style={{ maxHeight: '320px', overflowY: 'auto' }}
         >
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--music-text-secondary)]">
@@ -530,7 +530,7 @@ function FilterBar({
             value={filters.search}
             onChange={(e) => update('search', e.target.value)}
             placeholder="Suchen…"
-            className="w-full rounded-md border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] py-1.5 pl-8 pr-8 text-xs text-[var(--music-text-primary)] placeholder-[var(--music-text-disabled)] outline-none transition-colors focus:border-[var(--music-accent)]"
+            className="w-full rounded-md border border-[var(--music-border)] bg-[var(--music-bg-elevated)] py-1.5 pl-8 pr-8 text-xs text-[var(--music-text-primary)] placeholder-[var(--music-text-disabled)] outline-none transition-colors focus:border-[var(--music-accent)]"
           />
           {filters.search && (
             <button
@@ -597,7 +597,7 @@ function FilterBar({
           <select
             value={filters.artist}
             onChange={(e) => update('artist', e.target.value)}
-            className="rounded-md border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] px-2.5 py-1.5 text-xs text-[var(--music-text-primary)] outline-none transition-colors focus:border-[var(--music-accent)]"
+            className="rounded-md border border-[var(--music-border)] bg-[var(--music-bg-elevated)] px-2.5 py-1.5 text-xs text-[var(--music-text-primary)] outline-none transition-colors focus:border-[var(--music-accent)]"
           >
             <option value="">Alle Interpreten</option>
             {uniqueArtists.map((a) => (
@@ -607,7 +607,7 @@ function FilterBar({
           <select
             value={filters.year}
             onChange={(e) => update('year', e.target.value)}
-            className="rounded-md border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] px-2.5 py-1.5 text-xs text-[var(--music-text-primary)] outline-none transition-colors focus:border-[var(--music-accent)]"
+            className="rounded-md border border-[var(--music-border)] bg-[var(--music-bg-elevated)] px-2.5 py-1.5 text-xs text-[var(--music-text-primary)] outline-none transition-colors focus:border-[var(--music-accent)]"
           >
             <option value="">Alle Jahre</option>
             {uniqueYears.map((y) => (
@@ -619,7 +619,7 @@ function FilterBar({
             value={filters.album}
             onChange={(e) => update('album', e.target.value)}
             placeholder="Album filtern…"
-            className="rounded-md border border-[rgba(255,255,255,0.1)] bg-[var(--music-bg-elevated)] px-2.5 py-1.5 text-xs text-[var(--music-text-primary)] placeholder-[var(--music-text-disabled)] outline-none transition-colors focus:border-[var(--music-accent)]"
+            className="rounded-md border border-[var(--music-border)] bg-[var(--music-bg-elevated)] px-2.5 py-1.5 text-xs text-[var(--music-text-primary)] placeholder-[var(--music-text-disabled)] outline-none transition-colors focus:border-[var(--music-accent)]"
           />
         </div>
       )}
@@ -834,7 +834,7 @@ export function TrackTable({
 
       {/* Table header */}
       <div
-        className={`flex items-center gap-3 border-b border-[rgba(255,255,255,0.1)] px-4 pb-2 text-xs uppercase tracking-wide text-[var(--music-text-secondary)] ${
+        className={`flex items-center gap-3 border-b border-[var(--music-border)] px-4 pb-2 text-xs uppercase tracking-wide text-[var(--music-text-secondary)] ${
           compact ? 'py-0' : ''
         }`}
         style={{ height: compact ? '32px' : '40px' }}

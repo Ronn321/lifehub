@@ -241,7 +241,7 @@ export const SongRow = memo(SongRowImpl);
 export function TracklistHeader({ showAlbum = true }: { showAlbum?: boolean }) {
   return (
     <div
-      className="flex items-center gap-3 border-b border-[rgba(255,255,255,0.1)] px-4 pb-2"
+      className="flex items-center gap-3 border-b border-[var(--music-border)] px-4 pb-2"
       style={{ height: '40px' }}
     >
       <div className="w-8 shrink-0 text-center text-xs text-[var(--music-text-secondary)]">#</div>

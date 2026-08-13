@@ -6,10 +6,11 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   Loader2, AlertCircle, Settings, FolderOpen, Globe,
-  Save, Check, ArrowLeft, RefreshCw, Palette,
+  Save, Check, ArrowLeft, RefreshCw, Palette, Sun, Moon, Monitor,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useJellyfinLayout, type SidebarStyle } from '@/lib/jellyfin-layout-store';
+import { useThemeStore, type Accent } from '@/lib/theme-store';
 
 interface SystemSettings {
   [key: string]: unknown;
@@ -88,7 +89,7 @@ function GeneralSettings() {
   useEffect(() => {
     if (settings) {
       setBrandName(String(settings['general.brand_name'] ?? 'LifeHub'));
-      setTimezone(String(settings['general.timezone'] ?? 'Europe/Berlin'));
+      setTimezone(String(settings['general.timezone'] ?? ''));
     }
   }, [settings]);
 
@@ -116,11 +117,13 @@ function GeneralSettings() {
       <Field label="Zeitzone">
         <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
           className="input-field">
+          <option value="">Automatisch (System)</option>
           <option value="Europe/Berlin">Europe/Berlin</option>
           <option value="Europe/Vienna">Europe/Vienna</option>
           <option value="Europe/Zurich">Europe/Zurich</option>
           <option value="UTC">UTC</option>
         </select>
+        <p className="text-xs text-fg-subtle mt-1">„Automatisch (System)" übernimmt die Zeitzone des Servers.</p>
       </Field>
 
       <div className="flex items-center gap-3 pt-2">
@@ -279,6 +282,20 @@ function NetworkSettings() {
 
 // ========== APPEARANCE TAB ==========
 
+const THEME_OPTIONS: { value: 'light' | 'dark' | 'system'; icon: typeof Sun; label: string }[] = [
+  { value: 'light', icon: Sun, label: 'Hell' },
+  { value: 'dark', icon: Moon, label: 'Dunkel' },
+  { value: 'system', icon: Monitor, label: 'System' },
+];
+
+const ACCENT_OPTIONS: { key: Accent; label: string; swatch: string }[] = [
+  { key: 'amber', label: 'Amber', swatch: '#D97706' },
+  { key: 'blue', label: 'Blau', swatch: '#3B82F6' },
+  { key: 'green', label: 'Grün', swatch: '#22C55E' },
+  { key: 'rose', label: 'Rose', swatch: '#F43F5E' },
+  { key: 'violet', label: 'Violett', swatch: '#8B5CF6' },
+];
+
 const SIDEBAR_STYLE_OPTIONS: { key: SidebarStyle; title: string; desc: string }[] = [
   {
     key: 'classic',
@@ -293,61 +310,130 @@ const SIDEBAR_STYLE_OPTIONS: { key: SidebarStyle; title: string; desc: string }[
 ];
 
 function AppearanceSettings() {
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
+  const accent = useThemeStore((s) => s.accent);
+  const setAccent = useThemeStore((s) => s.setAccent);
   const sidebarStyle = useJellyfinLayout((s) => s.sidebarStyle);
   const setSidebarStyle = useJellyfinLayout((s) => s.setSidebarStyle);
 
   return (
-    <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
-      <h2 className="text-lg font-medium">Darstellung</h2>
-      <p className="text-sm text-fg-muted">
-        Wähle den Stil der eingeklappten Musik-Sidebar (Jellyfin). Die Auswahl wird automatisch gespeichert.
-      </p>
+    <div className="space-y-4">
+      {/* Theme */}
+      <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
+        <h2 className="text-lg font-medium">Design</h2>
+        <p className="text-sm text-fg-muted">
+          Wähle das Theme und die Akzentfarbe. Die Auswahl wird automatisch gespeichert.
+        </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {SIDEBAR_STYLE_OPTIONS.map((opt) => {
-          const active = sidebarStyle === opt.key;
-          return (
-            <button
-              key={opt.key}
-              onClick={() => setSidebarStyle(opt.key)}
-              className={cn(
-                'relative rounded-lg border p-4 text-left transition-colors',
-                active
-                  ? 'border-brand-500 bg-brand-500/5'
-                  : 'border-border hover:border-fg-muted',
-              )}
-            >
-              {/* Miniatur-Vorschau */}
-              <div className="relative h-16 w-24 rounded border border-border bg-bg-raised">
-                {/* Sidebar-Leiste */}
-                <div className="absolute inset-y-0 left-0 w-10 rounded-l border-r border-border bg-bg-surface">
-                  <div className="flex flex-col items-center gap-2 pt-3">
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
-                  </div>
-                  {opt.key === 'classic' && (
-                    /* Toggle-Knopf an der Grenze (Klassisch) */
-                    <span className="absolute -right-1 top-3 h-2.5 w-2.5 rounded-full border border-border bg-bg-surface shadow-sm" />
+        <div>
+          <label className="block text-sm font-medium mb-2">Theme</label>
+          <div className="flex items-center gap-1 rounded-md border border-border bg-bg p-1 w-fit">
+            {THEME_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const active = theme === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setTheme(opt.value)}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium transition-colors',
+                    active
+                      ? 'bg-brand-500/10 text-brand-500'
+                      : 'text-fg-muted hover:text-fg hover:bg-bg-raised',
                   )}
-                </div>
-                {opt.key === 'spotify' && (
-                  /* Toggle oben in der Leiste (Spotify) */
-                  <span className="absolute left-4 top-2 h-2.5 w-2.5 rounded-full border border-border bg-bg-surface shadow-sm" />
-                )}
-                {/* Content-Andeutung */}
-                <div className="absolute left-[52px] top-4 right-2 h-2 rounded bg-bg-raised" />
-                <div className="absolute left-[52px] top-8 right-6 h-2 rounded bg-bg-raised" />
-              </div>
+                >
+                  <Icon className="h-4 w-4" />
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-sm font-medium">{opt.title}</span>
-                {active && <Check className="h-4 w-4 ml-auto text-brand-500" />}
-              </div>
-              <p className="mt-1 text-xs text-fg-muted">{opt.desc}</p>
-            </button>
-          );
-        })}
+        <div>
+          <label className="block text-sm font-medium mb-2">Akzentfarbe</label>
+          <div className="flex items-center gap-3">
+            {ACCENT_OPTIONS.map((opt) => {
+              const active = accent === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setAccent(opt.key)}
+                  title={opt.label}
+                  aria-label={opt.label}
+                  className={cn(
+                    'flex h-9 w-9 items-center justify-center rounded-full transition-all',
+                    active
+                      ? 'ring-2 ring-offset-2 ring-offset-bg-surface'
+                      : 'hover:scale-110',
+                  )}
+                  style={{
+                    backgroundColor: opt.swatch,
+                    ...(active ? { boxShadow: `0 0 0 2px ${opt.swatch}` } : {}),
+                  }}
+                >
+                  {active && <Check className="h-4 w-4 text-white" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Sidebar style */}
+      <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
+        <h2 className="text-lg font-medium">Musik-Sidebar</h2>
+        <p className="text-sm text-fg-muted">
+          Wähle den Stil der eingeklappten Musik-Sidebar (Jellyfin).
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {SIDEBAR_STYLE_OPTIONS.map((opt) => {
+            const active = sidebarStyle === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => setSidebarStyle(opt.key)}
+                className={cn(
+                  'relative rounded-lg border p-4 text-left transition-colors',
+                  active
+                    ? 'border-brand-500 bg-brand-500/5'
+                    : 'border-border hover:border-fg-muted',
+                )}
+              >
+                {/* Miniatur-Vorschau */}
+                <div className="relative h-16 w-24 rounded border border-border bg-bg-raised">
+                  {/* Sidebar-Leiste */}
+                  <div className="absolute inset-y-0 left-0 w-10 rounded-l border-r border-border bg-bg-surface">
+                    <div className="flex flex-col items-center gap-2 pt-3">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
+                    </div>
+                    {opt.key === 'classic' && (
+                      /* Toggle-Knopf an der Grenze (Klassisch) */
+                      <span className="absolute -right-1 top-3 h-2.5 w-2.5 rounded-full border border-border bg-bg-surface shadow-sm" />
+                    )}
+                  </div>
+                  {opt.key === 'spotify' && (
+                    /* Toggle oben in der Leiste (Spotify) */
+                    <span className="absolute left-4 top-2 h-2.5 w-2.5 rounded-full border border-border bg-bg-surface shadow-sm" />
+                  )}
+                  {/* Content-Andeutung */}
+                  <div className="absolute left-[52px] top-4 right-2 h-2 rounded bg-bg-raised" />
+                  <div className="absolute left-[52px] top-8 right-6 h-2 rounded bg-bg-raised" />
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-sm font-medium">{opt.title}</span>
+                  {active && <Check className="h-4 w-4 ml-auto text-brand-500" />}
+                </div>
+                <p className="mt-1 text-xs text-fg-muted">{opt.desc}</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

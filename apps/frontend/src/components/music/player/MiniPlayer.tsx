@@ -137,7 +137,7 @@ export function MiniPlayer() {
         left: pos.x,
         top: pos.y,
         background: 'var(--music-bg-elevated)',
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: 'var(--music-border)',
       }}
     >
       <div className="flex flex-col h-full p-2 gap-1">
@@ -275,69 +275,13 @@ export function MiniPlayer() {
               value={isMuted ? 0 : volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
               className="mini-volume-slider"
+              style={{ '--fill': `${(isMuted ? 0 : volume) * 100}%` } as React.CSSProperties}
               aria-label="Lautstärke"
               title="Lautstärke"
             />
           </div>
         </div>
       </div>
-
-      {/* ── Volume slider styles ── */}
-      <style jsx>{`
-        .mini-volume-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 52px;
-          height: 3px;
-          border-radius: 2px;
-          background: rgba(255, 255, 255, 0.2);
-          outline: none;
-          cursor: pointer;
-          accent-color: var(--music-accent, #1db954);
-        }
-        .mini-volume-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #fff;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-          opacity: 0;
-          transition: opacity 0.15s ease;
-        }
-        .mini-volume-slider:hover::-webkit-slider-thumb,
-        .mini-volume-slider:active::-webkit-slider-thumb {
-          opacity: 1;
-        }
-        .mini-volume-slider::-moz-range-thumb {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #fff;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-          opacity: 0;
-          transition: opacity 0.15s ease;
-        }
-        .mini-volume-slider:hover::-moz-range-thumb,
-        .mini-volume-slider:active::-moz-range-thumb {
-          opacity: 1;
-        }
-        .mini-volume-slider::-moz-range-track {
-          height: 3px;
-          border-radius: 2px;
-          background: rgba(255, 255, 255, 0.2);
-        }
-        .mini-volume-slider::-moz-range-progress {
-          height: 3px;
-          border-radius: 2px;
-          background-color: var(--music-accent, #1db954);
-        }
-      `}</style>
     </div>
   );
 }

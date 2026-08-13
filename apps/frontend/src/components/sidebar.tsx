@@ -83,6 +83,10 @@ export function Sidebar() {
   }, []);
   useEffect(() => {
     localStorage.setItem('lifehub-sidebar-collapsed', String(desktopCollapsed));
+    // Notify other components (e.g. music sidebar toggle position)
+    window.dispatchEvent(
+      new CustomEvent('lifehub:sidebar-collapse', { detail: { collapsed: desktopCollapsed } }),
+    );
   }, [desktopCollapsed]);
 
   // Externes Einklappen/Aufklappen (z.B. BrowserBlock-Vollbild-Modus)

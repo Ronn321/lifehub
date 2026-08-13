@@ -44,9 +44,10 @@ interface VideoPlayerProps {
   mediaInfoUrl?: string;
   title?: string;
   onError?: (msg: string) => void;
+  onEnded?: () => void;
 }
 
-export function VideoPlayer({ streamUrl, mediaInfoUrl, title, onError }: VideoPlayerProps) {
+export function VideoPlayer({ streamUrl, mediaInfoUrl, title, onError, onEnded }: VideoPlayerProps) {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(false);
   const [showAudioTracks, setShowAudioTracks] = useState(false);
@@ -412,6 +413,7 @@ export function VideoPlayer({ streamUrl, mediaInfoUrl, title, onError }: VideoPl
           playsInline
           className="w-full h-full"
           style={{ display: 'block', width: '100%', height: '100%' }}
+          onEnded={onEnded}
         />
       </GestureHandler>
 

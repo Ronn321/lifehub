@@ -37,15 +37,17 @@ export default function WatchPage() {
   /* -------- Series context (if episode) -------- */
   const isEpisode = item?.Type === 'Episode';
   const seriesId = item?.SeriesId;
+  // Season fallback: prefer SeasonId, else use ParentId (e.g. missing season metadata)
+  const seasonId = item?.SeasonId ?? item?.ParentId;
 
   // Fetch siblings (other episodes in same season) if episode
   const { data: siblings } = useQuery<JellyfinMediaItem[]>({
-    queryKey: ['jellyfin-watch-siblings', seriesId, item?.SeasonId],
+    queryKey: ['jellyfin-watch-siblings', seriesId, seasonId],
     queryFn: async () => {
-      if (!item?.SeasonId) return [];
-      return fetchChildren(serverId, item.SeasonId);
+      if (!seasonId) return [];
+      return fetchChildren(serverId, seasonId);
     },
-    enabled: hydrated && !!accessToken && isEpisode && !!item?.SeasonId,
+    enabled: hydrated && !!accessToken && isEpisode && !!seasonId,
     staleTime: 300_000,
   });
 
@@ -63,6 +65,15 @@ export default function WatchPage() {
   const title = isEpisode
     ? `${item?.SeriesName ?? ''} – ${item?.Name ?? ''}`
     : item?.Name ?? '';
+
+  // Auto-advance to next episode, or back to series page at season end
+  const handleEnded = () => {
+    if (nextEpisode) {
+      router.push(`/jellyfin/watch/${nextEpisode.Id}`);
+    } else if (isEpisode && seriesId) {
+      router.push(`/jellyfin/series/${seriesId}`);
+    }
+  };
 
   /* -------- Guard -------- */
   if (!hydrated) {
@@ -120,7 +131,9 @@ export default function WatchPage() {
           <div className="flex items-center gap-2">
             {prevEpisode && (
               <button
+                type="button"
                 onClick={() => router.push(`/jellyfin/watch/${prevEpisode.Id}`)}
+                aria-label="Vorherige Folge"
                 className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 hover:text-white transition-colors"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
@@ -129,7 +142,9 @@ export default function WatchPage() {
             )}
             {nextEpisode && (
               <button
+                type="button"
                 onClick={() => router.push(`/jellyfin/watch/${nextEpisode.Id}`)}
+                aria-label="Nächste Folge"
                 className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 hover:text-white transition-colors"
               >
                 {nextEpisode.Name}
@@ -156,10 +171,12 @@ export default function WatchPage() {
         ) : (
           <div className="w-full h-full max-h-screen">
             <VideoPlayer
+              key={externalId}
               streamUrl={streamUrl}
               mediaInfoUrl={mediaInfoUrl}
               title={title}
               onError={(msg) => setPlayerError(msg)}
+              onEnded={handleEnded}
             />
           </div>
         )}

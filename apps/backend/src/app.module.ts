@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { DbModule } from '@lifehub/db';
@@ -20,11 +21,14 @@ import { FinanceModule } from '@lifehub/finance-domain';
 import { PagesModule } from '@lifehub/pages-domain';
 import { JellyfinModule } from '@lifehub/jellyfin-domain';
 import { CalendarModule } from '@lifehub/calendar-domain';
+import { IntegrationsModule } from '@lifehub/integrations-domain';
 import { SystemModule } from './system/system.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
+    ScheduleModule.forRoot(),
 
     LoggerModule.forRoot({
       pinoHttp: {
@@ -70,6 +74,7 @@ import { SystemModule } from './system/system.module.js';
     PagesModule,
     JellyfinModule,
     CalendarModule,
+    IntegrationsModule,
     SystemModule,
   ],
   controllers: [HealthController],

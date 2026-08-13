@@ -14,6 +14,7 @@ const DOMAINS = [
   'users', 'media', 'travel', 'projects', 'recipes', 'shopping',
   'finance', 'insurance', 'vault', 'documents', 'calendar',
   'it_inventory', 'jellyfin', 'search', 'dashboard', 'plugins',
+  'email', 'integrations',
 ] as const;
 
 const ACTIONS = ['read', 'create', 'update', 'delete', 'share', 'admin'] as const;
@@ -94,10 +95,10 @@ async function seedRolesAndPermissions() {
   const rcountResult = await sql<{ count: string }[]>`SELECT count(*)::text FROM public.roles`;
   const pcount = pcountResult[0]?.count ?? '0';
   const rcount = rcountResult[0]?.count ?? '0';
-  console.log(`   Roles: ${rcount}, Permissions: ${pcount} (erwartet: 4, 96)`);
+  console.log(`   Roles: ${rcount}, Permissions: ${pcount} (erwartet: 4, 108)`);
 
-  if (Number(pcount) !== 96) {
-    throw new Error(`❌ Erwartet 96 Permissions, gefunden ${pcount}`);
+  if (Number(pcount) !== 108) {
+    throw new Error(`❌ Erwartet 108 Permissions, gefunden ${pcount}`);
   }
   if (Number(rcount) !== 4) {
     throw new Error(`❌ Erwartet 4 Rollen, gefunden ${rcount}`);

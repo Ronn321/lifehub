@@ -77,14 +77,14 @@ The grid automatically adapts to
 
 Supported sorting methods include
 
-- Title
-- Date Added
-- Release Date
-- Recently Watched
-- Rating
-- Runtime
-- Alphabetical
-- Random
+- Title → **✅ (via Jellyfin API SortBy=SortName)**
+- Date Added → ❌ Not exposed in UI
+- Release Date → ❌ Not exposed in UI
+- Recently Watched → ❌ Not exposed in UI
+- Rating → ❌ Not exposed in UI
+- Runtime → ❌ Not exposed in UI
+- Alphabetical → **✅ Default**
+- Random → ❌ Not exposed in UI
 
 ---
 
@@ -92,19 +92,19 @@ Supported sorting methods include
 
 Users can filter by
 
-- Genre
-- Year
-- Studio
-- Director
-- Actor
-- Language
-- Resolution
-- HDR
-- Dolby Vision
-- Dolby Atmos
-- Watched
-- Unwatched
-- Favorite
+- Genre → **✅ Implemented as chip-bar on Movies, Series, Browse pages**
+- Year → ❌ Not exposed in UI
+- Studio → ❌ Not exposed in UI
+- Director → ❌ Not exposed in UI
+- Actor → ❌ Not exposed in UI
+- Language → ❌ Not exposed in UI
+- Resolution → ❌ Not exposed in UI
+- HDR → ❌ Not exposed in UI
+- Dolby Vision → ❌ Not exposed in UI
+- Dolby Atmos → ❌ Not exposed in UI
+- Watched → ❌ Not exposed in UI
+- Unwatched → ❌ Not exposed in UI
+- Favorite → **✅ Separate `/jellyfin/favorites` page**
 
 ---
 

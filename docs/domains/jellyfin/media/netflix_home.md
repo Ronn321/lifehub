@@ -1,6 +1,7 @@
 # Home Page Specification
 
-**Status:** Draft v1
+**Status:** Draft v1 → Implemented v1.2
+**Implementation:** `/jellyfin/browse` (Netflix Home), `/jellyfin` (Hub)
 
 ---
 
@@ -9,6 +10,8 @@
 The Home page is the primary landing page after login.
 
 Its purpose is content discovery.
+
+**Implementation Note:** The Netflix-style Home is at `/jellyfin/browse`. The Hub at `/jellyfin` serves as a media-type overview (Filme & Serien, Musik, Bilder) with Continue Watching and Quick Links.
 
 ---
 
@@ -36,11 +39,13 @@ Contains
 - play action
 - details action
 
+**✅ Implemented:** `HeroBanner.tsx` — Rotating backdrops from top 5 latest items, 8s auto-rotation, gradient overlays, Play + Details buttons, slide indicators.
+
 Future versions define
 
-- transitions
-- automatic rotation
-- personalization
+- ~~transitions~~
+- automatic rotation (✅ implemented, 8s interval)
+- personalization (uses Latest instead of personalized recommendations)
 
 ---
 
@@ -55,6 +60,8 @@ Each card contains
 - remaining time
 - resume action
 
+**✅ Implemented:** `ContentRow` on Browse + Hub. Backend: `GET /servers/:sid/continue-watching` with `IncludeItemTypes=Movie,Series,Episode` filter.
+
 ---
 
 # Recently Added
@@ -66,6 +73,8 @@ Supports
 - movies
 - series
 - episodes
+
+**✅ Implemented:** `ContentRow "Zuletzt hinzugefügt"` on Browse. Backend: `GET /servers/:sid/latest` via Jellyfin `/Items/Latest`.
 
 ---
 
@@ -111,6 +120,8 @@ Examples
 - Science Fiction
 - Documentary
 - Horror
+
+**✅ Implemented:** `GenreContentRow` — Lazy-loaded rows per genre (IntersectionObserver, top 6 genres). Backend: `GET /servers/:sid/genres/media` + `GET /servers/:sid/genre/:name`. Also: Genre filter chips on Movies/Series pages.
 
 ---
 

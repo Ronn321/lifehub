@@ -818,7 +818,7 @@ export class JellyfinService {
     const userId = await this.getJellyfinUserId(server);
     return this.fetchFromJellyfin(
       server,
-      `/Users/${userId}/Items/${externalId}?Fields=Path,Overview,ProductionYear,Genres,People,Studios,ProviderIds,CommunityRating,VoteCount,RunTimeTicks,OfficialRating,ProductionLocations,Tags,MediaSources,MediaStreams,ParentId,DateCreated,Chapters,CriticRating`,
+      `/Users/${userId}/Items/${externalId}?Fields=UserData,SeasonId,SeriesId,SeriesName,Path,Overview,ProductionYear,Genres,People,Studios,ProviderIds,CommunityRating,VoteCount,RunTimeTicks,OfficialRating,ProductionLocations,Tags,MediaSources,MediaStreams,ParentId,DateCreated,Chapters,CriticRating`,
     );
   }
 
@@ -930,6 +930,56 @@ export class JellyfinService {
   }
 
   // =================== Playback Reporting ===================
+
+  async getWatchlist(ownerId: string, serverId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?Filters=IsUnplayed&IncludeItemTypes=Movie,Series&Recursive=true&Fields=PrimaryImageAspectRatio,Overview,ProductionYear,RunTimeTicks&SortBy=DatePlayed&SortOrder=Descending`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getLatestMedia(ownerId: string, serverId: string, limit = 20): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items/Latest?Limit=${limit}&IncludeItemTypes=Movie,Series&Fields=PrimaryImageAspectRatio,Overview,ProductionYear,RunTimeTicks,Genres&ImageTypeLimit=1&GroupItems=true`,
+    );
+    return data ?? [];
+  }
+
+  async getMediaByGenre(ownerId: string, serverId: string, genre: string, limit = 20): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?Recursive=true&IncludeItemTypes=Movie,Series&Genres=${encodeURIComponent(genre)}&Fields=PrimaryImageAspectRatio,Overview,ProductionYear,RunTimeTicks&Limit=${limit}&SortBy=DateCreated&SortOrder=Descending`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getMediaGenres(ownerId: string, serverId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Genres?UserId=${userId}&IncludeItemTypes=Movie,Series&Limit=100&SortBy=SortName&SortOrder=Ascending`,
+    );
+    return data.Items ?? [];
+  }
+
+  async getFavoriteMedia(ownerId: string, serverId: string): Promise<any[]> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const data = await this.fetchFromJellyfin(
+      server,
+      `/Users/${userId}/Items?Filters=IsFavorite&IncludeItemTypes=Movie,Series&Recursive=true&Fields=PrimaryImageAspectRatio,Overview,ProductionYear,RunTimeTicks&SortBy=SortName&SortOrder=Ascending`,
+    );
+    return data.Items ?? [];
+  }
 
   async reportPlaybackStart(
     ownerId: string,

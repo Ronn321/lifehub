@@ -6,11 +6,12 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   Film, Music, Monitor, Image as ImageIcon, Server, Loader2,
-  RefreshCw, Library, Search, Layers, Play, ArrowRight, Disc3, Mic2,
+  RefreshCw, Library, Search, Layers, Play, ArrowRight, Disc3, Mic2, Heart, Bookmark,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ContentRow } from '@/components/jellyfin/media/ContentRow';
 import { SearchOverlay, SearchTrigger } from '@/components/jellyfin/media/SearchOverlay';
+import { JellyfinPageWrapper } from '@/components/jellyfin/media/JellyfinPageWrapper';
 import {
   fetchContinueWatching,
   type ContinueWatchingItem,
@@ -286,6 +287,8 @@ export default function JellyfinHubPage() {
         <SearchTrigger onOpen={() => setSearchOpen(true)} />
         <QuickLink icon={Layers} label="Sammlungen" href="/jellyfin/collections" />
         <QuickLink icon={Monitor} label="Serien" href="/jellyfin/series" />
+        <QuickLink icon={Heart} label="Favoriten" href="/jellyfin/favorites" />
+        <QuickLink icon={Bookmark} label="Watchlist" href="/jellyfin/watchlist" />
       </div>
 
       {/* Continue Watching */}

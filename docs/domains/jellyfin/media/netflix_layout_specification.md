@@ -170,6 +170,8 @@ Content never overlaps.
 
 Scrolling remains predictable.
 
+**✅ Implemented:** Full-width toggle via `JellyfinPageWrapper` + Zustand store (`jellyfin-layout-store.ts`). Button: fixed top-right, toggles between max-w-7xl centered and full main width. Persists across sessions. Adapts when sidebar collapses/expands.
+
 ---
 
 # Future Expansion

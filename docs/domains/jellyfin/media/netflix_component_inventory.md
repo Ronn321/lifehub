@@ -14,15 +14,15 @@ Each component should exist only once as a reusable implementation.
 
 # Layout Components
 
-- Application Shell
-- Navigation Bar
-- Sidebar
-- Header
-- Footer
-- Content Area
-- Scroll Container
-- Overlay Layer
-- Modal Layer
+- Application Shell → **✅ Dashboard Layout**
+- Navigation Bar → **✅ Sidebar**
+- Sidebar → **✅ Collapsible (desktopCollapsed state)**
+- Header → **✅ Page-specific headers**
+- Footer → N/A
+- Content Area → **✅ `<main>` in Dashboard Layout**
+- Scroll Container → **✅ overflow-y-auto on main**
+- Overlay Layer → **✅ SearchOverlay**
+- Modal Layer → ❌ Not implemented
 
 ---
 
@@ -40,59 +40,59 @@ Each component should exist only once as a reusable implementation.
 
 # Home Components
 
-- Hero Banner
-- Content Row
-- Continue Watching Row
-- Recommendation Row
-- Trending Row
-- Genre Row
+- Hero Banner → **✅ `HeroBanner.tsx`**
+- Content Row → **✅ `ContentRow.tsx`**
+- Continue Watching Row → **✅ ContentRow with Continue Watching data**
+- Recommendation Row → **✅ "Zuletzt hinzugefügt" (Latest as proxy)**
+- Trending Row → ❌ Not implemented
+- Genre Row → **✅ `GenreContentRow.tsx` (lazy-loaded)**
 
 ---
 
 # Media Components
 
-- Movie Card
-- Series Card
-- Episode Card
-- Collection Card
-- Actor Card
-- Studio Card
-- Genre Card
+- Movie Card → **✅ `MediaCard.tsx`**
+- Series Card → **✅ `MediaCard.tsx` (Type badge: Serie)**
+- Episode Card → **✅ `MediaCard.tsx` (S/E badge) + `EpisodeList.tsx`**
+- Collection Card → **✅ `MediaCard.tsx` + Collections page**
+- Actor Card → **✅ `CastSection.tsx`**
+- Studio Card → ❌ Not implemented
+- Genre Card → ❌ Not implemented (Genre chips instead)
 
 ---
 
 # Detail Components
 
-- Detail Header
-- Metadata Panel
-- Description Panel
-- Cast List
-- Recommendation Grid
-- Technical Information Panel
+- Detail Header → **✅ `DetailHeader.tsx`**
+- Metadata Panel → **✅ Inside DetailHeader + technical info section**
+- Description Panel → **✅ Overview text on detail pages**
+- Cast List → **✅ `CastSection.tsx`**
+- Recommendation Grid → **✅ `SimilarSection.tsx`**
+- Technical Information Panel → **✅ Toggle on Movie Detail**
 
 ---
 
 # Player Components
 
-- Video Surface
-- Timeline
-- Playback Controls
-- Volume Control
-- Subtitle Selector
-- Audio Selector
-- Chapter Selector
-- Fullscreen Button
-- PiP Button
+- Video Surface → **✅ `<video>` element in `VideoPlayer.tsx`**
+- Timeline → **✅ `PlayerControls.tsx`**
+- Playback Controls → **✅ `PlayerControls.tsx`**
+- Volume Control → **✅ `PlayerControls.tsx`**
+- Subtitle Selector → **✅ `SubtitleSelector.tsx`**
+- Audio Selector → **✅ `AudioTrackSelector.tsx`**
+- Chapter Selector → ❌ Not implemented
+- Fullscreen Button → **✅ `PlayerControls.tsx`**
+- PiP Button → **✅ `PlayerControls.tsx`**
 
 ---
 
 # Search Components
 
-- Search Field
-- Search Suggestions
-- Search Results
-- Filter Panel
-- Sort Selector
+- Search Field → **✅ In SearchOverlay + Browse/Movies/Series pages**
+- Search Suggestions → **✅ Empty state in SearchOverlay**
+- Search Results → **✅ Categorized (Movies/Series/Episodes/Collections)**
+- Filter Panel → ❌ Not in search
+- Sort Selector → ❌ Not in search
 
 ---
 
@@ -115,11 +115,11 @@ Each component should exist only once as a reusable implementation.
 
 # Feedback Components
 
-- Toast Notification
-- Progress Indicator
-- Loading Spinner
-- Skeleton Loader
-- Status Badge
+- Toast Notification → ❌ Not implemented
+- Progress Indicator → **✅ Loading spinners (Loader2)**
+- Loading Spinner → **✅ `Loader2` from lucide-react**
+- Skeleton Loader → **✅ In MediaGrid + ContentRow loading states**
+- Status Badge → **✅ Watched/Film/Serie badges on MediaCard**
 
 ---
 

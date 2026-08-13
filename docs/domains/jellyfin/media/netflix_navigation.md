@@ -16,15 +16,15 @@ The user should never lose orientation.
 
 Primary destinations include
 
-- Home
-- Movies
-- Series
-- Collections
-- Continue Watching
-- Favorites
-- Watchlist
-- Search
-- Settings
+- Home → **✅ `/jellyfin/browse`**
+- Movies → **✅ `/jellyfin/movies`**
+- Series → **✅ `/jellyfin/series`**
+- Collections → **✅ `/jellyfin/collections`**
+- Continue Watching → **✅ ContentRow on Browse + Hub**
+- Favorites → **✅ `/jellyfin/favorites`**
+- Watchlist → ❌ Not implemented
+- Search → **✅ SearchOverlay (`/` key) + `/jellyfin/search`**
+- Settings → ❌ Not implemented
 
 ---
 
@@ -159,11 +159,13 @@ without returning to the home page.
 
 Navigation provides fast access to
 
-- Resume playback
-- Continue Watching
-- Recently Added
-- Random Movie
-- Random Series
+- Resume playback → **✅ Continue Watching row**
+- Continue Watching → **✅ ContentRow on Browse**
+- Recently Added → **✅ ContentRow "Zuletzt hinzugefügt"**
+- Random Movie → ❌ Not implemented
+- Random Series → ❌ Not implemented
+
+**✅ Implemented:** Quick Links on Hub (Sammlungen, Serien, Favoriten). Browse page quick buttons (Alle Titel, Favoriten, Nur Serien).
 
 ---
 
@@ -184,7 +186,7 @@ Future versions define
 
 - animations
 - focus movement
-- shortcuts
+- shortcuts → **✅ `/` and `Ctrl+K` for Search**
 - accessibility
 - controller behavior
 - navigation hierarchy diagrams

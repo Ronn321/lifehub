@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
-import { DbService, jellyfinServers, jellyfinLibraries, jellyfinItems, type Db } from '@lifehub/db';
+import { and, asc, count, eq, inArray } from 'drizzle-orm';
+import { DbService, jellyfinServers, jellyfinLibraries, jellyfinItems, jellyfinWatchlists, jellyfinWatchlistItems, type Db } from '@lifehub/db';
 import type { JellyfinServer, JellyfinLibrary, JellyfinItem } from '../entities/jellyfin';
 
 export class JellyfinRepository {

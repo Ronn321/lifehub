@@ -415,4 +415,59 @@ export class JellyfinController {
   ) {
     return this.jellyfin.getLyrics(user.sub, serverId, itemId);
   }
+
+  // =================== Media v0.4 API (Netflix Home) ===================
+
+  @Get('servers/:serverId/latest')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Zuletzt hinzugefügte Filme & Serien' })
+  async getLatestMedia(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.getLatestMedia(user.sub, serverId, limit ? parseInt(limit, 10) : 20);
+  }
+
+  @Get('servers/:serverId/genres/media')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Alle Genres für Filme & Serien' })
+  async getMediaGenres(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+  ) {
+    return this.jellyfin.getMediaGenres(user.sub, serverId);
+  }
+
+  @Get('servers/:serverId/genre/:genreName')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Filme & Serien eines Genres' })
+  async getMediaByGenre(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Param('genreName') genreName: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.jellyfin.getMediaByGenre(user.sub, serverId, genreName, limit ? parseInt(limit, 10) : 20);
+  }
+
+  @Get('servers/:serverId/favorites/media')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Favorisierte Filme & Serien' })
+  async getFavoriteMedia(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+  ) {
+    return this.jellyfin.getFavoriteMedia(user.sub, serverId);
+  }
+
+  @Get('servers/:serverId/watchlist')
+  @RequirePermission('jellyfin', 'read')
+  @ApiOperation({ summary: 'Watchlist: Ungesehene Filme & Serien' })
+  async getWatchlist(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+  ) {
+    return this.jellyfin.getWatchlist(user.sub, serverId);
+  }
 }

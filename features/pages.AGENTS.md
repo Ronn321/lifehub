@@ -40,6 +40,7 @@ Block-basiertes Seitensystem, das langfristig als universelle Darstellungsebene 
 - Block-Reihenfolge via `sortOrder` Integer — Reorder-API aktualisiert alle Positionen in einem Request
 - Parent-Child-Hierarchy: root pages haben `parentId = null`, Children werden als Tree ausgeliefert
 - Soft-Delete: `deletedAt` auf Page-Ebene, Blocks werden mit Page gelöscht (CASCADE)
+- `GET /pages/:id` akzeptiert sowohl UUID als auch Slug (Regex-Check im Controller, Fallback auf `getPageBySlug`). Clean URLs wie `/pages/barcelona` funktionieren damit ohne `by-slug`-Prefix — Fix für 500 `invalid input syntax for type uuid`
 
 ## 5. Verification
 

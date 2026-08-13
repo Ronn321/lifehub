@@ -6,14 +6,16 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   Loader2, AlertCircle, Settings, FolderOpen, Globe,
-  Save, Check, ArrowLeft, RefreshCw,
+  Save, Check, ArrowLeft, RefreshCw, Palette,
 } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import { useJellyfinLayout, type SidebarStyle } from '@/lib/jellyfin-layout-store';
 
 interface SystemSettings {
   [key: string]: unknown;
 }
 
-type Tab = 'general' | 'paths' | 'network';
+type Tab = 'general' | 'appearance' | 'paths' | 'network';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -48,6 +50,10 @@ export default function SettingsPage() {
           className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${activeTab === 'general' ? 'bg-bg-raised text-fg' : 'text-fg-muted hover:text-fg'}`}>
           <Settings className="h-4 w-4 inline mr-1.5" /> Allgemein
         </button>
+        <button onClick={() => setActiveTab('appearance')}
+          className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${activeTab === 'appearance' ? 'bg-bg-raised text-fg' : 'text-fg-muted hover:text-fg'}`}>
+          <Palette className="h-4 w-4 inline mr-1.5" /> Darstellung
+        </button>
         <button onClick={() => setActiveTab('paths')}
           className={`rounded px-4 py-1.5 text-sm font-medium transition-colors ${activeTab === 'paths' ? 'bg-bg-raised text-fg' : 'text-fg-muted hover:text-fg'}`}>
           <FolderOpen className="h-4 w-4 inline mr-1.5" /> Pfade
@@ -59,6 +65,7 @@ export default function SettingsPage() {
       </div>
 
       {activeTab === 'general' && <GeneralSettings />}
+      {activeTab === 'appearance' && <AppearanceSettings />}
       {activeTab === 'paths' && <PathSettings />}
       {activeTab === 'network' && <NetworkSettings />}
     </div>
@@ -265,6 +272,82 @@ function NetworkSettings() {
           {saved ? <><Check className="h-4 w-4" /> Gespeichert</> : mutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Speichert …</> : <><Save className="h-4 w-4" /> Speichern</>}
         </button>
         {mutation.isError && <p className="text-sm text-danger">{(mutation.error as Error).message}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ========== APPEARANCE TAB ==========
+
+const SIDEBAR_STYLE_OPTIONS: { key: SidebarStyle; title: string; desc: string }[] = [
+  {
+    key: 'classic',
+    title: 'Klassisch',
+    desc: 'Eingeklappt: Icons sichtbar, Toggle-Knopf an der Sidebar-Grenze',
+  },
+  {
+    key: 'spotify',
+    title: 'Spotify',
+    desc: 'Eingeklappt: Toggle-Button oben in der Sidebar',
+  },
+];
+
+function AppearanceSettings() {
+  const sidebarStyle = useJellyfinLayout((s) => s.sidebarStyle);
+  const setSidebarStyle = useJellyfinLayout((s) => s.setSidebarStyle);
+
+  return (
+    <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
+      <h2 className="text-lg font-medium">Darstellung</h2>
+      <p className="text-sm text-fg-muted">
+        Wähle den Stil der eingeklappten Musik-Sidebar (Jellyfin). Die Auswahl wird automatisch gespeichert.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {SIDEBAR_STYLE_OPTIONS.map((opt) => {
+          const active = sidebarStyle === opt.key;
+          return (
+            <button
+              key={opt.key}
+              onClick={() => setSidebarStyle(opt.key)}
+              className={cn(
+                'relative rounded-lg border p-4 text-left transition-colors',
+                active
+                  ? 'border-brand-500 bg-brand-500/5'
+                  : 'border-border hover:border-fg-muted',
+              )}
+            >
+              {/* Miniatur-Vorschau */}
+              <div className="relative h-16 w-24 rounded border border-border bg-bg-raised">
+                {/* Sidebar-Leiste */}
+                <div className="absolute inset-y-0 left-0 w-10 rounded-l border-r border-border bg-bg-surface">
+                  <div className="flex flex-col items-center gap-2 pt-3">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-fg-muted" />
+                  </div>
+                  {opt.key === 'classic' && (
+                    /* Toggle-Knopf an der Grenze (Klassisch) */
+                    <span className="absolute -right-1 top-3 h-2.5 w-2.5 rounded-full border border-border bg-bg-surface shadow-sm" />
+                  )}
+                </div>
+                {opt.key === 'spotify' && (
+                  /* Toggle oben in der Leiste (Spotify) */
+                  <span className="absolute left-4 top-2 h-2.5 w-2.5 rounded-full border border-border bg-bg-surface shadow-sm" />
+                )}
+                {/* Content-Andeutung */}
+                <div className="absolute left-[52px] top-4 right-2 h-2 rounded bg-bg-raised" />
+                <div className="absolute left-[52px] top-8 right-6 h-2 rounded bg-bg-raised" />
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-sm font-medium">{opt.title}</span>
+                {active && <Check className="h-4 w-4 ml-auto text-brand-500" />}
+              </div>
+              <p className="mt-1 text-xs text-fg-muted">{opt.desc}</p>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

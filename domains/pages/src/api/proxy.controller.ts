@@ -1,58 +1,53 @@
-import { Controller, Get, Post, Query, Body, BadRequestException, Res, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body, BadRequestException, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
+import { JwtGuard } from '@lifehub/auth';
+import { PermissionGuard, RequirePermission } from '@lifehub/permissions';
+import { getAllowedInternalBrowserHosts, validateBrowserUrl } from '../services/browser-url-policy';
 
+@UseGuards(JwtGuard, PermissionGuard)
 @Controller('proxy')
 export class ProxyController {
   @Get()
+  @RequirePermission('pages', 'read')
   async proxyGet(@Query('url') url: string, @Res() res: Response) {
-    if (!url || !url.startsWith('http')) {
-      throw new BadRequestException('Ungültige URL');
-    }
-    const response = await fetch(url, {
+    const target = await validateBrowserUrl(url, getAllowedInternalBrowserHosts());
+    const response = await fetch(target, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LifeHub/1.0)' },
+      signal: AbortSignal.timeout(30_000),
     });
+    if (!response.ok) throw new BadRequestException('Zielseite konnte nicht geladen werden');
     const text = await response.text();
-    await this.sendProxied(res, text, url);
+    this.sendProxied(res, text, target);
   }
 
   @Post()
-  async proxyPost(@Query('url') url: string, @Body() body: any, @Res() res: Response) {
-    if (!url || !url.startsWith('http')) {
-      throw new BadRequestException('Ungültige URL');
-    }
-    const response = await fetch(url, {
+  @RequirePermission('pages', 'update')
+  async proxyPost(@Query('url') url: string, @Body() body: Record<string, unknown>, @Res() res: Response) {
+    const target = await validateBrowserUrl(url, getAllowedInternalBrowserHosts());
+    const response = await fetch(target, {
       method: 'POST',
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; LifeHub/1.0)',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams(body || {}).toString(),
+      body: new URLSearchParams(body as Record<string, string>).toString(),
+      signal: AbortSignal.timeout(30_000),
     });
+    if (!response.ok) throw new BadRequestException('Zielseite konnte nicht geladen werden');
     const text = await response.text();
-    await this.sendProxied(res, text, url);
+    this.sendProxied(res, text, target);
   }
 
-  private async sendProxied(res: Response, text: string, originalUrl: string) {
-    const base = new URL(originalUrl);
-    const escapedOrigin = base.origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  private sendProxied(res: Response, text: string, originalUrl: URL) {
+    const base = originalUrl.origin;
+    const proxied = text
+      .replace(/src="\//g, `src="${base}/`)
+      .replace(/href="\//g, `href="${base}/`)
+      .replace(/src='\//g, `src='${base}/`)
+      .replace(/href='\//g, `href='${base}/`);
 
-    // Rewrite relative URLs + form actions to go through the proxy
-    let proxied = text
-      .replace(/src="\//g, `src="${base.origin}/`)
-      .replace(/href="\//g, `href="${base.origin}/`)
-      .replace(/src='\//g, `src='${base.origin}/`)
-      .replace(/href='\//g, `href='${base.origin}/`)
-      .replace(/action="\//g, `action="/api/v1/proxy?url=${base.origin}/`)
-      .replace(/action='\//g, `action='/api/v1/proxy?url=${base.origin}/`);
-
-    // Also rewrite absolute form actions pointing to the same host
-    const re = new RegExp(`action=["']${escapedOrigin}(/[^"']*)["']`, 'g');
-    proxied = proxied.replace(re, (match, path) =>
-      `action="/api/v1/proxy?url=${base.origin}${encodeURIComponent(path)}"`);
-
-    // Override helmet headers to allow iframe embedding
-    res.removeHeader('X-Frame-Options');
-    res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: data:; frame-ancestors *;");
+    res.setHeader('Content-Security-Policy', "default-src 'self' https: http: data:; frame-ancestors 'self';");
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(proxied);
   }

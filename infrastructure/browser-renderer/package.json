@@ -7,6 +7,9 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "puppeteer": "^24.0.0"
+    "@roamhq/wrtc": "^0.10.0",
+    "puppeteer": "^24.0.0",
+    "sharp": "^0.35.1",
+    "ws": "^8.18.0"
   }
 }

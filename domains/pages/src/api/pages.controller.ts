@@ -108,7 +108,10 @@ export class PagesController {
   @Get(':id')
   @RequirePermission('pages', 'read')
   async getPage(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    return this.pages.getPageWithBlocks(user.sub, id);
+    // Accept both UUID (legacy) and slug (clean URLs like /pages/barcelona)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isUuid) return this.pages.getPageWithBlocks(user.sub, id);
+    return this.pages.getPageBySlug(user.sub, id);
   }
 
   @Put(':id')
@@ -476,12 +479,61 @@ export class PagesController {
     return this.pages.updateBrowserSession(user.sub, sessionId, body);
   }
 
+  @Get('browser/sessions/:sessionId/tabs')
+  @RequirePermission('pages', 'read')
+  async getBrowserSessionTabs(@Param('sessionId') sessionId: string, @CurrentUser() user: JwtPayload) {
+    return this.pages.getBrowserTabsForSession(user.sub, sessionId);
+  }
+
+  @Post('browser/sessions/:sessionId/tabs')
+  @RequirePermission('pages', 'update')
+  async createBrowserSessionTab(
+    @Param('sessionId') sessionId: string,
+    @Body() body: { url?: string; title?: string },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.pages.createBrowserTabForSession(user.sub, sessionId, body);
+  }
+
+  @Put('browser/sessions/:sessionId/tabs/:tabId')
+  @RequirePermission('pages', 'update')
+  async updateBrowserSessionTab(
+    @Param('sessionId') sessionId: string,
+    @Param('tabId') tabId: string,
+    @Body() body: { url?: string; title?: string; isActive?: boolean },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.pages.updateBrowserTabForSession(user.sub, sessionId, tabId, body);
+  }
+
+  @Delete('browser/sessions/:sessionId/tabs/:tabId')
+  @HttpCode(204)
+  @RequirePermission('pages', 'update')
+  async deleteBrowserSessionTab(
+    @Param('sessionId') sessionId: string,
+    @Param('tabId') tabId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    await this.pages.deleteBrowserTabForSession(user.sub, sessionId, tabId);
+  }
+
+  @Post('browser/sessions/:sessionId/tabs/:tabId/activate')
+  @RequirePermission('pages', 'update')
+  async activateBrowserSessionTab(
+    @Param('sessionId') sessionId: string,
+    @Param('tabId') tabId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    await this.pages.setActiveBrowserTabForSession(user.sub, sessionId, tabId);
+    return { ok: true };
+  }
+
   // ========== BROWSER BOOKMARKS ==========
 
   @Get('browser/sessions/:sessionId/bookmarks')
   @RequirePermission('pages', 'read')
-  async getBrowserBookmarks(@Param('sessionId') sessionId: string) {
-    return this.pages.getBrowserBookmarks(sessionId);
+  async getBrowserBookmarks(@Param('sessionId') sessionId: string, @CurrentUser() user: JwtPayload) {
+    return this.pages.getBrowserBookmarks(user.sub, sessionId);
   }
 
   @Post('browser/sessions/:sessionId/bookmarks')
@@ -489,15 +541,16 @@ export class PagesController {
   async addBrowserBookmark(
     @Param('sessionId') sessionId: string,
     @Body() body: { url: string; title?: string; folder?: string },
+    @CurrentUser() user: JwtPayload,
   ) {
-    return this.pages.addBrowserBookmark(sessionId, body);
+    return this.pages.addBrowserBookmark(user.sub, sessionId, body);
   }
 
   @Delete('browser/bookmarks/:bookmarkId')
   @HttpCode(204)
   @RequirePermission('pages', 'update')
-  async deleteBrowserBookmark(@Param('bookmarkId') bookmarkId: string) {
-    await this.pages.removeBrowserBookmark(bookmarkId);
+  async deleteBrowserBookmark(@Param('bookmarkId') bookmarkId: string, @CurrentUser() user: JwtPayload) {
+    await this.pages.removeBrowserBookmark(user.sub, bookmarkId);
   }
 
 }

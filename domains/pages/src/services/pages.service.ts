@@ -552,6 +552,11 @@ export class PagesService {
   // ========== BROWSER SESSIONS ==========
 
   async getOrCreateBrowserSession(ownerId: string, blockId: string, startUrl?: string) {
+    const block = await this.repo.findBlockById(blockId);
+    if (!block) throw new NotFoundException('Browser-Block nicht gefunden');
+    const page = await this.repo.findPageById(block.pageId, ownerId);
+    if (!page) throw new NotFoundException('Browser-Block nicht gefunden');
+
     const existing = await this.repo.findBrowserSessionByBlock(blockId, ownerId);
     if (existing) return existing;
     const created = await this.repo.createBrowserSession({ blockId, ownerId, startUrl });
@@ -568,21 +573,77 @@ export class PagesService {
     settings: Record<string, unknown>;
   }>) {
     const session = await this.repo.findBrowserSessionById(sessionId);
-    if (!session) throw new NotFoundException('Browser-Session nicht gefunden');
+    if (!session || session.ownerId !== ownerId) throw new NotFoundException('Browser-Session nicht gefunden');
     return this.repo.updateBrowserSession(sessionId, data);
   }
 
   // ========== BROWSER BOOKMARKS ==========
 
-  async getBrowserBookmarks(sessionId: string) {
+  private async getOwnedBrowserSession(ownerId: string, sessionId: string) {
+    const session = await this.repo.findBrowserSessionById(sessionId);
+    if (!session || session.ownerId !== ownerId) {
+      throw new NotFoundException('Browser-Session nicht gefunden');
+    }
+    return session;
+  }
+
+  async getBrowserSessionForOwner(ownerId: string, sessionId: string) {
+    return this.getOwnedBrowserSession(ownerId, sessionId);
+  }
+
+  async getBrowserTabsForSession(ownerId: string, sessionId: string) {
+    await this.getOwnedBrowserSession(ownerId, sessionId);
+    return this.repo.findBrowserTabsByBrowserSession(sessionId);
+  }
+
+  async createBrowserTabForSession(ownerId: string, sessionId: string, data: { url?: string; title?: string }) {
+    await this.getOwnedBrowserSession(ownerId, sessionId);
+    const tabs = await this.repo.findBrowserTabsByBrowserSession(sessionId);
+    return this.repo.createBrowserTab({
+      browserSessionId: sessionId,
+      url: data.url,
+      title: data.title,
+      isActive: tabs.length === 0,
+      sortOrder: tabs.length,
+    });
+  }
+
+  async updateBrowserTabForSession(ownerId: string, sessionId: string, tabId: string, data: { url?: string; title?: string; isActive?: boolean }) {
+    await this.getOwnedBrowserSession(ownerId, sessionId);
+    const updated = await this.repo.updateBrowserTabForSession(tabId, sessionId, data);
+    if (!updated) throw new NotFoundException('Browser-Tab nicht gefunden');
+    if (data.isActive) await this.repo.setActiveBrowserTabForBrowserSession(sessionId, tabId);
+    return updated;
+  }
+
+  async deleteBrowserTabForSession(ownerId: string, sessionId: string, tabId: string) {
+    await this.getOwnedBrowserSession(ownerId, sessionId);
+    const tab = await this.repo.findBrowserTabById(tabId);
+    if (!tab || tab.browserSessionId !== sessionId) throw new NotFoundException('Browser-Tab nicht gefunden');
+    await this.repo.deleteBrowserTabForSession(tabId, sessionId);
+  }
+
+  async setActiveBrowserTabForSession(ownerId: string, sessionId: string, tabId: string) {
+    await this.getOwnedBrowserSession(ownerId, sessionId);
+    const tab = await this.repo.findBrowserTabById(tabId);
+    if (!tab || tab.browserSessionId !== sessionId) throw new NotFoundException('Browser-Tab nicht gefunden');
+    await this.repo.setActiveBrowserTabForBrowserSession(sessionId, tabId);
+  }
+
+  async getBrowserBookmarks(ownerId: string, sessionId: string) {
+    await this.getOwnedBrowserSession(ownerId, sessionId);
     return this.repo.findBrowserBookmarks(sessionId);
   }
 
-  async addBrowserBookmark(sessionId: string, data: { url: string; title?: string; folder?: string }) {
+  async addBrowserBookmark(ownerId: string, sessionId: string, data: { url: string; title?: string; folder?: string }) {
+    await this.getOwnedBrowserSession(ownerId, sessionId);
     return this.repo.createBrowserBookmark({ ...data, sessionId });
   }
 
-  async removeBrowserBookmark(bookmarkId: string) {
+  async removeBrowserBookmark(ownerId: string, bookmarkId: string) {
+    const bookmark = await this.repo.findBrowserBookmarkById(bookmarkId);
+    if (!bookmark) throw new NotFoundException('Lesezeichen nicht gefunden');
+    await this.getOwnedBrowserSession(ownerId, bookmark.sessionId);
     await this.repo.deleteBrowserBookmark(bookmarkId);
   }
 

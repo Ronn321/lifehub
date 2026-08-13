@@ -15,6 +15,10 @@ A page builder that replaces per-domain UIs with a universal, block-based docume
 - file-list integration with storage domain
 - drag & drop block reordering
 - page-level permissions (owner-based, share-ready)
+- page icons (emoji) + cover images
+- built-in cover gallery: 12 real photos (Berge, See, Wald, Strand, Stadt, Nordlicht, …) + 16 gradient covers, stored as `builtin:<id>` in `cover_media_id`
+- cover picker with tabs: Standard (built-in photos + gradients) / Eigene Medien (media library)
+- tab content scrolls independently (`overflow-y-auto` + `overscroll-contain` — wheel over a tab scrolls only that tab, not the whole page)
 
 ---
 

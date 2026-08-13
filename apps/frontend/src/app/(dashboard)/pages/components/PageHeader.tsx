@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
+import { BUILTIN_COVERS, getBuiltinCover, isBuiltinCover } from '@/lib/builtinCovers';
 import {
-  Image, Home, Loader2,
+  Image, Home, Loader2, Sparkles,
 } from 'lucide-react';
 
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
@@ -38,10 +39,12 @@ export function PageHeader({
   page,
   allPages,
   onNavigate,
+  wide = false,
 }: {
   page: Page;
   allPages: Page[];
   onNavigate: (id: string | null) => void;
+  wide?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -116,9 +119,9 @@ export function PageHeader({
         ))}
       </nav>
 
-      {/* Cover Image */}
+      {/* Cover Image — bei wide: volle Breite des Hauptbereichs (Notion-Stil) */}
       {page.coverMediaId ? (
-        <div className="relative w-full h-[200px] rounded-xl overflow-hidden mb-4 group">
+        <div className={`relative overflow-hidden mb-4 group ${wide ? '-mx-6 lg:-mx-8 h-[220px] rounded-none' : 'w-full h-[200px] rounded-xl'}`}>
           <CoverImage mediaId={page.coverMediaId} />
           <button
             onClick={() => updateMutation.mutate({ coverMediaId: null })}
@@ -130,7 +133,7 @@ export function PageHeader({
       ) : (
         <button
           onClick={() => setShowCoverPicker(true)}
-          className="w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-fg-subtle text-sm text-fg-muted hover:text-fg transition-colors flex items-center justify-center gap-2 mb-4"
+          className={`w-full h-12 rounded-xl border-2 border-dashed border-border hover:border-fg-subtle text-sm text-fg-muted hover:text-fg transition-colors flex items-center justify-center gap-2 mb-4 ${wide ? '-mx-6 lg:-mx-8 rounded-none w-[calc(100%+3rem)] lg:w-[calc(100%+4rem)]' : ''}`}
         >
           <Image className="h-4 w-4" />
           Cover hinzufügen
@@ -211,6 +214,21 @@ export function PageHeader({
 function CoverImage({ mediaId }: { mediaId: string }) {
   const [src, setSrc] = useState<string | null>(null);
 
+  // Built-in covers render directly (photo or gradient), no media lookup needed
+  if (isBuiltinCover(mediaId)) {
+    const cover = getBuiltinCover(mediaId);
+    if (cover?.image) {
+      return <img src={cover.image} alt={cover.name ?? 'Cover'} className="w-full h-full object-cover" />;
+    }
+    return (
+      <div
+        className="w-full h-full"
+        style={cover?.background ? { background: cover.background } : undefined}
+        aria-label={cover?.name ?? 'Cover'}
+      />
+    );
+  }
+
   useEffect(() => {
     async function load() {
       try {
@@ -241,6 +259,7 @@ function MediaPickerModal({
   onClose: () => void;
   onSelect: (mediaId: string) => void;
 }) {
+  const [tab, setTab] = useState<'builtin' | 'media'>('builtin');
   const { data: media, isLoading } = useQuery<MediaItem[]>({
     queryKey: ['media-files'],
     queryFn: () => api.get<MediaItem[]>('/media'),
@@ -252,8 +271,53 @@ function MediaPickerModal({
         className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-2xl p-6 mx-4 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold mb-4">Cover-Bild auswahlen</h2>
-        {isLoading ? (
+        <h2 className="text-lg font-semibold mb-4">Cover-Bild auswählen</h2>
+
+        {/* Tabs */}
+        <div className="flex gap-1 mb-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 w-fit">
+          <button
+            onClick={() => setTab('builtin')}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              tab === 'builtin'
+                ? 'bg-white dark:bg-zinc-700 text-fg shadow-sm'
+                : 'text-fg-muted hover:text-fg'
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Standard
+          </button>
+          <button
+            onClick={() => setTab('media')}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              tab === 'media'
+                ? 'bg-white dark:bg-zinc-700 text-fg shadow-sm'
+                : 'text-fg-muted hover:text-fg'
+            }`}
+          >
+            <Image className="h-3.5 w-3.5" /> Eigene Medien
+          </button>
+        </div>
+
+        {tab === 'builtin' ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            {BUILTIN_COVERS.map((cover) => (
+              <button
+                key={cover.id}
+                onClick={() => onSelect(cover.id)}
+                title={cover.name}
+                className="relative rounded-lg border-2 border-border overflow-hidden aspect-video hover:border-brand-500 transition-colors group"
+              >
+                {cover.image ? (
+                  <img src={cover.image} alt={cover.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full" style={{ background: cover.background }} />
+                )}
+                <span aria-hidden className="absolute bottom-0 inset-x-0 px-2 py-1 text-[10px] text-white bg-black/40 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                  {cover.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-fg-muted" />
           </div>

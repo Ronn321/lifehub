@@ -569,7 +569,8 @@ export class PagesRepository {
   // ========== BROWSER TABS ==========
 
   async createBrowserTab(data: {
-    sessionId: string;
+    sessionId?: string | null;
+    browserSessionId?: string | null;
     url?: string;
     title?: string;
     favicon?: string;
@@ -577,7 +578,8 @@ export class PagesRepository {
     sortOrder?: number;
   }) {
     const [row] = await this.db.insert(browserTabs).values({
-      sessionId: data.sessionId,
+      sessionId: data.sessionId ?? null,
+      browserSessionId: data.browserSessionId ?? null,
       url: data.url ?? 'about:blank',
       title: data.title ?? null,
       favicon: data.favicon ?? null,
@@ -664,8 +666,42 @@ export class PagesRepository {
 
   async findBrowserTabsByBrowserSession(browserSessionId: string) {
     return this.db.select().from(browserTabs)
-      .where(eq(browserTabs.browserSessionId as any, browserSessionId))
+      .where(eq(browserTabs.browserSessionId, browserSessionId))
       .orderBy(asc(browserTabs.sortOrder));
+  }
+
+  async findBrowserTabById(id: string) {
+    const [row] = await this.db.select().from(browserTabs)
+      .where(eq(browserTabs.id, id));
+    return row ?? null;
+  }
+
+  async updateBrowserTabForSession(id: string, browserSessionId: string, data: Partial<{
+    url: string;
+    title: string;
+    favicon: string;
+    isActive: boolean;
+    sortOrder: number;
+  }>) {
+    const [row] = await this.db.update(browserTabs)
+      .set({ ...data, updatedAt: sql`now()` })
+      .where(and(eq(browserTabs.id, id), eq(browserTabs.browserSessionId, browserSessionId)))
+      .returning();
+    return row ?? null;
+  }
+
+  async deleteBrowserTabForSession(id: string, browserSessionId: string) {
+    await this.db.delete(browserTabs)
+      .where(and(eq(browserTabs.id, id), eq(browserTabs.browserSessionId, browserSessionId)));
+  }
+
+  async setActiveBrowserTabForBrowserSession(browserSessionId: string, tabId: string) {
+    await this.db.update(browserTabs)
+      .set({ isActive: false, updatedAt: sql`now()` })
+      .where(eq(browserTabs.browserSessionId, browserSessionId));
+    await this.db.update(browserTabs)
+      .set({ isActive: true, updatedAt: sql`now()` })
+      .where(and(eq(browserTabs.id, tabId), eq(browserTabs.browserSessionId, browserSessionId)));
   }
 
   // ========== BROWSER BOOKMARKS ==========
@@ -691,6 +727,12 @@ export class PagesRepository {
     return this.db.select().from(browserBookmarks)
       .where(eq(browserBookmarks.sessionId, sessionId))
       .orderBy(asc(browserBookmarks.sortOrder));
+  }
+
+  async findBrowserBookmarkById(id: string) {
+    const [row] = await this.db.select().from(browserBookmarks)
+      .where(eq(browserBookmarks.id, id));
+    return row ?? null;
   }
 
   async deleteBrowserBookmark(id: string) {

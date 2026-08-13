@@ -9,6 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+import { getBuiltinCover } from '@/lib/builtinCovers';
 import { PageHeader } from './components/PageHeader';
 import { BlockHandle, type BlockType } from './components/BlockHandle';
 import { DragDropContainer } from './components/DragDropContainer';
@@ -40,7 +41,10 @@ import {
   Heading, Type, Image, Grid3X3, File, Minus, Check,
   ChevronRight, MessageSquare, Quote, Code, Bookmark, Table2, Link2,
   Calendar, PiggyBank, Server, History, Search, Globe,
+  Maximize2, Minimize2, FileText, ExternalLink, CheckSquare, Square,
+  CalendarClock, FolderUp,
 } from 'lucide-react';
+import { cn } from '@/lib/cn';
 
 interface Page {
   id: string;
@@ -342,6 +346,7 @@ function MediaPicker({ open, onClose, onSelect, multi }: {
 function TreeNode({ node, depth = 0, onSelect, onDelete }: {
   node: Page; depth?: number; onSelect: (id: string) => void; onDelete: (id: string) => void;
 }) {
+  const builtinCover = getBuiltinCover(node.coverMediaId);
   return (
     <div>
       <div
@@ -349,7 +354,24 @@ function TreeNode({ node, depth = 0, onSelect, onDelete }: {
         style={{ paddingLeft: `${12 + depth * 20}px` }}
         onClick={() => onSelect(node.id)}
       >
-        <Notebook className="h-4 w-4 text-fg-muted shrink-0" />
+        {builtinCover ? (
+          builtinCover.image ? (
+            <img
+              src={builtinCover.image}
+              alt={builtinCover.name}
+              className="h-6 w-9 rounded-md shrink-0 border border-border object-cover"
+              title={builtinCover.name}
+            />
+          ) : (
+            <div
+              className="h-6 w-9 rounded-md shrink-0 border border-border"
+              style={{ background: builtinCover.background }}
+              title={builtinCover.name}
+            />
+          )
+        ) : (
+          <Notebook className="h-4 w-4 text-fg-muted shrink-0" />
+        )}
         <span className="text-sm font-medium flex-1 truncate">{node.title}</span>
         {node.description && (
           <span className="text-xs text-fg-subtle hidden sm:block truncate max-w-[200px]">{node.description}</span>
@@ -699,6 +721,7 @@ function BlockEditor({ block, onUpdate, onBlockTypeChange, pageId, allPages, onN
   if (block.type === 'research_workspace') {
     return (
       <ResearchWorkspaceBlock
+        blockId={block.id}
         pageId={pageId}
         content={block.content}
         onChange={(data) => onUpdate({ content: { ...block.content, ...data } })}
@@ -814,6 +837,44 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
   const [error, setError] = useState('');
   const [showBlockHistory, setShowBlockHistory] = useState<string | null>(null);
   const [showPageHistory, setShowPageHistory] = useState(false);
+  // Seiten-Layout: 'normal' (max-w-3xl), 'wide' (volle Breite, wie Notion),
+  // 'fullscreen' (volle Breite + Sidebar eingeklappt, vom BrowserBlock)
+  const [pageLayout, setPageLayout] = useState<'normal' | 'wide' | 'fullscreen'>('normal');
+
+  // Vom BrowserBlock gesendete Layout-Modi übernehmen:
+  // 'medium' = volle Breite, Sidebar bleibt sichtbar
+  // 'fullscreen' = volle Breite + Sidebar eingeklappt
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const mode = (e as CustomEvent<{ mode?: string }>).detail?.mode;
+      if (mode === 'medium') {
+        setPageLayout('wide');
+      } else if (mode === 'fullscreen') {
+        setPageLayout('fullscreen');
+      } else if (mode === 'normal') {
+        setPageLayout((prev) => (prev === 'fullscreen' || prev === 'wide' ? 'normal' : prev));
+      }
+    };
+    window.addEventListener('lifehub:browser-layout', handler);
+    return () => window.removeEventListener('lifehub:browser-layout', handler);
+  }, []);
+
+  // Volle-Breite-Präferenz pro Seite merken (Notion-Stil)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`lifehub-page-wide:${pageId}`);
+      if (saved === '1' && pageLayout === 'normal') setPageLayout('wide');
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageId]);
+
+  const toggleWide = () => {
+    setPageLayout((prev) => {
+      const next = prev === 'wide' ? 'normal' : 'wide';
+      try { localStorage.setItem(`lifehub-page-wide:${pageId}`, next === 'wide' ? '1' : '0'); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   const { data: page, isLoading } = useQuery<PageDetail>({
     queryKey: ['page', pageId],
@@ -995,22 +1056,39 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
   const sortedBlocks = [...page.blocks].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className={cn('space-y-6', pageLayout === 'normal' ? 'max-w-3xl' : 'max-w-none')}>
       <Breadcrumbs
         currentPageId={pageId}
         allPages={allPages}
         onNavigate={(id) => id ? router.push(`/pages?open=${id}`) : onBack()}
         className="mb-0"
       />
-      <PageHeader page={page} allPages={allPages} onNavigate={(id) => id ? router.push(`/pages?open=${id}`) : onBack()} />
+      <PageHeader page={page} allPages={allPages} wide={pageLayout !== 'normal'} onNavigate={(id) => id ? router.push(`/pages?open=${id}`) : onBack()} />
+
+      {/* Notion-Stil Übersicht: Unterseiten, Übergeordnete Seiten, Dokumente, Aufgaben, Zeitraum */}
+      <PageOverview page={page} allPages={allPages} onNavigate={(id) => router.push(`/pages?open=${id}`)} />
 
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => setShowPageHistory(true)}
-          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg hover:bg-bg-surface transition-colors flex items-center gap-1.5"
-        >
-          <History className="h-3.5 w-3.5" /> Versionen
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPageHistory(true)}
+            className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm text-fg-muted hover:text-fg hover:bg-bg-surface transition-colors flex items-center gap-1.5"
+          >
+            <History className="h-3.5 w-3.5" /> Versionen
+          </button>
+          <button
+            onClick={toggleWide}
+            className={`px-3 py-1.5 rounded-lg border text-sm transition-colors flex items-center gap-1.5 ${
+              pageLayout !== 'normal'
+                ? 'border-amber-500/60 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                : 'border-zinc-300 dark:border-zinc-700 text-fg-muted hover:text-fg hover:bg-bg-surface'
+            }`}
+            title="Volle Breite ein/aus (wie Notion)"
+          >
+            {pageLayout !== 'normal' ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
+            {pageLayout !== 'normal' ? 'Volle Breite' : 'Volle Breite'}
+          </button>
+        </div>
         <button
           onClick={() => { if (window.confirm(`"${page.title}" löschen?`)) deletePageMutation.mutate(); }}
           className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors flex items-center gap-1.5"
@@ -1117,6 +1195,200 @@ function PageDetailView({ pageId, onBack, allPages }: { pageId: string; onBack: 
           onClose={() => setShowPageHistory(false)}
         />
       )}
+    </div>
+  );
+}
+
+/* ─── Seiten-Übersicht (Notion-Stil: Unterseiten, Übergeordnete Seiten, Dokumente, Aufgaben, Zeitraum) ─── */
+interface OverviewTask {
+  id: string;
+  text: string;
+  checked: boolean;
+}
+
+interface OverviewTimelineEntry {
+  id: string;
+  date: string;
+  title: string;
+  description: string;
+}
+
+function PageOverview({ page, allPages, onNavigate }: {
+  page: PageDetail; allPages: Page[]; onNavigate: (id: string) => void;
+}) {
+  // Unterseiten: Seiten, deren parentId auf diese Seite zeigt
+  const subpages = allPages.filter((p) => p.parentId === page.id);
+
+  // Übergeordnete Seiten: Parent-Kette nach oben
+  const parentChain: Page[] = [];
+  {
+    let current = allPages.find((p) => p.id === page.parentId);
+    let guard = 0;
+    while (current && guard < 20) {
+      parentChain.push(current);
+      current = allPages.find((p) => p.id === current!.parentId);
+      guard++;
+    }
+  }
+
+  // Dokumente: file-/link-/bookmark-Blöcke (automatisch aus den Blocks der Seite)
+  const docBlocks = page.blocks.filter((b) => {
+    if (b.type === 'file') return !!(b.content?.mediaId || b.content?.url);
+    if (b.type === 'link' || b.type === 'bookmark') return !!b.content?.url;
+    return false;
+  });
+
+  // Aufgaben: todo-Blöcke + Checklist-Items
+  const tasks: OverviewTask[] = page.blocks.flatMap((b) => {
+    if (b.type === 'todo') {
+      const text = String(b.content?.text ?? '').trim();
+      if (!text) return [];
+      return [{ id: b.id, text, checked: !!(b.content?.checked as boolean) }];
+    }
+    if (b.type === 'checklist') {
+      return ((b.content?.items as Array<{ id: string; text: string; checked: boolean }>) ?? [])
+        .filter((i) => i.text?.trim())
+        .map((i) => ({ id: i.id, text: i.text, checked: !!i.checked }));
+    }
+    return [];
+  });
+
+  // Zeitraum: Timeline-Entries der Seite (aufsteigend nach Datum sortiert)
+  const timelineEntries: OverviewTimelineEntry[] = page.blocks
+    .flatMap((b) => {
+      if (b.type !== 'timeline') return [];
+      return ((b.content?.entries as Array<{ id: string; date: string; title: string; description: string }>) ?? [])
+        .filter((e) => e.title?.trim() || e.date)
+        .map((e) => ({ id: e.id, date: e.date ?? '', title: e.title ?? '', description: e.description ?? '' }));
+    })
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  const hasContent = subpages.length > 0 || parentChain.length > 0 || docBlocks.length > 0 || tasks.length > 0 || timelineEntries.length > 0;
+  if (!hasContent) return null;
+
+  const formatDate = (date: string) => {
+    if (!date) return '';
+    try {
+      return new Date(date).toLocaleDateString('de-DE');
+    } catch {
+      return date;
+    }
+  };
+
+  const SectionTitle = ({ children, count }: { children: React.ReactNode; count: number }) => (
+    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
+      {children}
+      <span className="ml-1.5 rounded-full bg-bg px-1.5 py-0.5 text-[10px] font-medium text-fg-muted">{count}</span>
+    </p>
+  );
+
+  const PageChip = ({ target, icon }: { target: Page; icon?: React.ReactNode }) => (
+    <button
+      onClick={() => onNavigate(target.id)}
+      className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-fg-muted hover:text-fg hover:bg-bg transition-colors min-w-0"
+    >
+      <span className="shrink-0 text-xs leading-none">
+        {icon ?? target.icon ?? <Notebook className="h-3.5 w-3.5 text-fg-subtle" />}
+      </span>
+      <span className="truncate">{target.title || 'Unbenannt'}</span>
+      <ChevronRight className="ml-auto h-3 w-3 shrink-0 opacity-0 group-hover:opacity-100 text-fg-subtle" />
+    </button>
+  );
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-surface/50 p-4">
+      <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+        {/* Unterseiten */}
+        {subpages.length > 0 && (
+          <div>
+            <SectionTitle count={subpages.length}>Unterseiten</SectionTitle>
+            <div className="space-y-0.5">
+              {subpages.map((p) => <PageChip key={p.id} target={p} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Übergeordnete Seiten */}
+        {parentChain.length > 0 && (
+          <div>
+            <SectionTitle count={parentChain.length}>Übergeordnete Seiten</SectionTitle>
+            <div className="space-y-0.5">
+              {parentChain.map((p) => <PageChip key={p.id} target={p} icon={<FolderUp className="h-3.5 w-3.5 text-fg-subtle" />} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Dokumente */}
+        {docBlocks.length > 0 && (
+          <div>
+            <SectionTitle count={docBlocks.length}>Dokumente</SectionTitle>
+            <div className="space-y-0.5">
+              {docBlocks.map((b) => {
+                const url = String(b.content?.url ?? '');
+                const isFile = b.type === 'file';
+                const label = isFile
+                  ? String(b.content?.filename ?? '') || 'Datei'
+                  : String(b.content?.title ?? '') || url || 'Link';
+                const href = isFile && b.content?.mediaId
+                  ? `http://${window.location.hostname}:3007/api/v1/media/files/${b.content.mediaId}/stream`
+                  : url;
+                return (
+                  <a
+                    key={b.id}
+                    href={href}
+                    target={isFile && b.content?.mediaId ? undefined : '_blank'}
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-fg-muted hover:text-fg hover:bg-bg transition-colors min-w-0"
+                    title={url || label}
+                  >
+                    {isFile ? (
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-fg-subtle" />
+                    ) : (
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-fg-subtle" />
+                    )}
+                    <span className="truncate">{label}</span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Zeitraum */}
+        {timelineEntries.length > 0 && (
+          <div>
+            <SectionTitle count={timelineEntries.length}>Zeitraum</SectionTitle>
+            <div className="space-y-0.5">
+              {timelineEntries.map((e) => (
+                <div key={e.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-fg-muted min-w-0">
+                  <CalendarClock className="h-3.5 w-3.5 shrink-0 text-fg-subtle" />
+                  {e.date && <span className="shrink-0 font-medium tabular-nums">{formatDate(e.date)}</span>}
+                  {e.title && <span className="truncate">{e.title}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Aufgaben */}
+        {tasks.length > 0 && (
+          <div className={cn(subpages.length === 0 && parentChain.length === 0 && docBlocks.length === 0 && timelineEntries.length === 0 ? 'sm:col-span-2' : '')}>
+            <SectionTitle count={tasks.length}>Aufgaben</SectionTitle>
+            <div className="space-y-0.5">
+              {tasks.map((t) => (
+                <div key={t.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs min-w-0">
+                  {t.checked ? (
+                    <CheckSquare className="h-3.5 w-3.5 shrink-0 text-brand-500" />
+                  ) : (
+                    <Square className="h-3.5 w-3.5 shrink-0 text-fg-subtle" />
+                  )}
+                  <span className={cn('truncate', t.checked && 'line-through text-fg-subtle')}>{t.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1244,7 +1516,17 @@ function PagesPageInner() {
   // Register all block types once on mount
   useEffect(() => { registerAllBlocks(); }, []);
 
-  useEffect(() => { if (!accessToken) router.push('/login'); }, [accessToken, router]);
+  // Auf persist-Hydration warten, BEVOR der Auth-Guard routet — sonst
+  // bounced ein Reload auf /pages?open=... über /login nach /dashboard.
+  const [authHydrated, setAuthHydrated] = useState(false);
+  useEffect(() => {
+    if (useAuthStore.persist.hasHydrated()) { setAuthHydrated(true); return; }
+    const unsub = useAuthStore.persist.onFinishHydration(() => setAuthHydrated(true));
+    return unsub;
+  }, []);
+  useEffect(() => {
+    if (authHydrated && !accessToken) router.push('/login');
+  }, [authHydrated, accessToken, router]);
 
   useEffect(() => {
     const open = searchParams.get('open');

@@ -9,6 +9,7 @@ import {
 import { BrowserBlock } from './BrowserBlock';
 
 interface ResearchWorkspaceBlockProps {
+  blockId: string;
   pageId: string;
   content: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
@@ -42,7 +43,7 @@ interface ResearchCollection {
 
 type TabKind = 'sources' | 'collections' | 'notes' | 'browser';
 
-export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWorkspaceBlockProps) {
+export function ResearchWorkspaceBlock({ blockId, pageId, content, onChange }: ResearchWorkspaceBlockProps) {
   const queryClient = useQueryClient();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [showNewSession, setShowNewSession] = useState(false);
@@ -50,11 +51,6 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [newSourceTitle, setNewSourceTitle] = useState('');
   const [activeTab, setActiveTab] = useState<TabKind>('sources');
-
-  // ─── Research Session browser block ID (virtual, for BrowserBlock) ────────
-  // BrowserBlock needs a stable blockId for session management. We use the
-  // research session id prefixed with 'research-' as a virtual block ID.
-  const browserBlockId = activeSessionId ? `research-${activeSessionId}` : 'research-pending';
 
   // ─── Pin-as-source: runs when user clicks "pin" in BrowserBlock ───────────
   const pinSourceMutation = useMutation({
@@ -243,10 +239,10 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
       {activeTab === 'browser' ? (
         <div className="min-h-[400px]">
           <BrowserBlock
-            blockId={browserBlockId}
+            blockId={blockId}
             pageId={pageId}
-            content={{ startUrl: 'http://100.124.4.24:3121', title: '', sessionId: null }}
-            onChange={() => {}}
+            content={{ startUrl: 'http://searxng:8080', ...content }}
+            onChange={onChange}
             onUrlChange={(url) => setPinUrl(url)}
             extraOverlayControls={
               pinUrl ? (
@@ -267,7 +263,7 @@ export function ResearchWorkspaceBlock({ pageId, content, onChange }: ResearchWo
           />
         </div>
       ) : (
-        <div className="p-3">
+        <div className="p-3 max-h-[420px] overflow-y-auto overscroll-contain">
           {activeTab === 'sources' && (
             <div className="space-y-2">
               {/* Add Source */}

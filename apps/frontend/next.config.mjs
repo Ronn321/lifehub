@@ -7,9 +7,9 @@ const nextConfig = {
     typedRoutes: false,
   },
   async rewrites() {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001/api';
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3007/api/v1';
     return [
-      { source: '/api/proxy/:path*', destination: `${apiBase}/:path*` },
+      { source: '/api/v1/:path*', destination: `${apiBase}/:path*` },
     ];
   },
 };

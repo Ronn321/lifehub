@@ -35,6 +35,7 @@ Mehrere Kalender pro User, Familienkalender, externe Sync-Quellen (Google, CalDA
 - `external_uid` muss stabil sein: bei Re-Sync kein Duplikat, sondern Update.
 - `RRULE`-Parsing via `rrule.js` Bibliothek, nicht selbst implementieren.
 - Google OAuth2 Tokens verschlüsselt in `public.users`-Erweiterung oder separater Tabelle (Phase 3).
+- `CalendarModule` MUSS in `apps/backend/src/app.module.ts` registriert sein (war vergessen → Routen 404). Tabellen (`calendar_events`, `calendars`, `event_attendees`) legt Migration `0017_calendar.sql` an (1:1 nach `shared/db/src/schema/public.ts`). `GET /calendar/events` braucht Pflicht-Query `from`/`to` (ISO-Datum).
 
 ## 5. Verification
 

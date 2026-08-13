@@ -1,8 +1,10 @@
 # Dependencies (werden im Container neu installiert)
 node_modules/
 
-# Build outputs (werden im Container neu gebaut)
-dist/
+# Build outputs — ACHTUNG: dist/ bewusst NICHT ignoriert.
+# Der Dockerfile-tsc-Loop scheitert im Container (pnpm-hoisted typescript, `|| true`
+# verschluckt den Fehler) → stale dist im Image. Deshalb werden die lokal
+# vorkompilierten dists via COPY . . mitgenommen (siehe lifehub-docker-build Skill, LifeHub-8b).
 .turbo/
 *.tsbuildinfo
 

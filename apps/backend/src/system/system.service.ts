@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS: Record<string, unknown> = {
   'paths.storage': process.env.STORAGE_BASE_PATH ?? '/data/storage',
   'paths.thumbnails': '/mnt/media/thumbnails',
   'paths.vault': '/mnt/vault-blobs',
+  'paths.recipes_images': process.env.LIFEHUB_RECIPES_IMAGES_PATH ?? '/data/storage/recipes',
   'network.frontend_port': Number(process.env.FRONTEND_PORT ?? 3001),
   'network.backend_port': Number(process.env.LIFEHUB_API_PORT ?? 3007),
 };

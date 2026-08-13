@@ -49,6 +49,7 @@ export interface ContinueWatchingItem extends JellyfinMediaItem {
   UserData?: {
     PlaybackPositionTicks: number;
     Played: boolean;
+    IsFavorite?: boolean;
     LastPlayedDate: string;
   };
 }
@@ -156,4 +157,24 @@ export async function toggleWatched(itemId: string): Promise<{ watched: boolean 
 
 export async function toggleFavorite(ownerId: string, serverId: string, externalId: string): Promise<{ isFavorite: boolean }> {
   return api.post<{ isFavorite: boolean }>(`/jellyfin/servers/${serverId}/items/${externalId}/favorite`);
+}
+
+export async function fetchLatestMedia(serverId: string, limit = 20): Promise<JellyfinMediaItem[]> {
+  return api.get<JellyfinMediaItem[]>(`/jellyfin/servers/${serverId}/latest?limit=${limit}`);
+}
+
+export async function fetchMediaGenres(serverId: string): Promise<{ Name: string; Id: string }[]> {
+  return api.get<{ Name: string; Id: string }[]>(`/jellyfin/servers/${serverId}/genres/media`);
+}
+
+export async function fetchMediaByGenre(serverId: string, genre: string, limit = 20): Promise<JellyfinMediaItem[]> {
+  return api.get<JellyfinMediaItem[]>(`/jellyfin/servers/${serverId}/genre/${encodeURIComponent(genre)}?limit=${limit}`);
+}
+
+export async function fetchFavoriteMedia(serverId: string): Promise<JellyfinMediaItem[]> {
+  return api.get<JellyfinMediaItem[]>(`/jellyfin/servers/${serverId}/favorites/media`);
+}
+
+export async function fetchWatchlist(serverId: string): Promise<JellyfinMediaItem[]> {
+  return api.get<JellyfinMediaItem[]>(`/jellyfin/servers/${serverId}/watchlist`);
 }

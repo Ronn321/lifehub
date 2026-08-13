@@ -250,6 +250,10 @@ Max-Content-Width: 1440px.
 - Sub-Items ausklappbar mit `Accordion`
 - Footer: User-Status, Settings, Logout
 
+**Music-Sidebar (Jellyfin):** Stil der eingeklappten Sidebar ist unter `Einstellungen → Darstellung` wählbar (persistiert in `jellyfin-layout`-Store):
+- **Klassisch** — eingeklappt: Icons sichtbar, runder Toggle-Knopf an der Sidebar-Grenze (`absolute -right-3`)
+- **Spotify** — eingeklappt: Toggle-Button oben in der Sidebar
+
 ### 4.4 Mobile (<768px)
 
 - Sidebar wird zu **Bottom-Tab-Bar** (5 sichtbare Domains, Rest hinter „Mehr")
@@ -262,6 +266,35 @@ Max-Content-Width: 1440px.
 - Sidebar collapsed (Icons only, 64px)
 - Topbar voll
 - Content 2-Spalten wo sinnvoll
+
+### 4.6 Seiten-Layout-Modi (Pages-Domain, Notion-Stil)
+
+Seiten in `apps/frontend/src/app/(dashboard)/pages/` unterstützen drei Layout-Modi:
+
+| Modus | Container | Sidebar | Auslöser |
+|-------|-----------|---------|----------|
+| `normal` | `max-w-3xl` (768px) | sichtbar (256px) | Standard, Toggle „Volle Breite" aus |
+| `wide` | `max-w-none` (volle Hauptbereichs-Breite) | sichtbar (256px) | Toggle „Volle Breite" oder BrowserBlock „Medium" |
+| `fullscreen` | `max-w-none` | eingeklappt (64px) | BrowserBlock „Vollbild" |
+
+- „Volle Breite"-Toggle in der Seiten-Toolbar (neben „Versionen"), Persistenz pro Seite via `localStorage['lifehub-page-wide:<pageId>']`.
+- BrowserBlock-Modi „Medium"/„Vollbild" senden `lifehub:browser-layout`-CustomEvents; die Seite reagiert mit Layout-Wechsel, die Sidebar auf `lifehub:sidebar-collapse`.
+- Cover nimmt im wide/fullscreen-Modus die volle Hauptbereichs-Breite ein (negative Margins, ohne Rundung).
+
+### 4.7 Scroll-Isolation im Remote-Browser
+
+Der Browser-Viewport (`RemoteBrowserViewport`) nutzt einen **nativen non-passive `wheel`-Listener** (React-`onWheel` ist passiv → `preventDefault` greift nicht). Scrollen über dem Browser-Block scrollt **nur** den Remote-Browser, nie die LifeHub-Seite (`stopPropagation` + `preventDefault`).
+
+### 4.8 Seiten-Übersicht (Notion-Stil) & Sidebar-Navigation
+
+- **Sidebar „Seiten"**: Klick auf das Label navigiert zur Übersicht `/pages` (Chevron-Button links klappt nur die Seitenliste um). Aktiv-Zustand bei `pathname.startsWith('/pages')`.
+- **PageOverview** (`pages/page.tsx`, unter dem PageHeader): zeigt auf jeder Hauptseite automatisch eine Karte mit bis zu 5 Sektionen (nur bei vorhandenem Inhalt):
+  - **Unterseiten** — Seiten mit `parentId === aktuelle Seite` (klickbar, navigiert via `/pages?open=<id>`)
+  - **Übergeordnete Seiten** — Parent-Kette bis zur Root (klickbar)
+  - **Dokumente** — automatisch aus `file`-Blöcken (filename/mediaId) und `link`/`bookmark`-Blöcken (url)
+  - **Aufgaben** — aus `todo`-Blöcken und `checklist`-Items (erledigt durchgestrichen)
+  - **Zeitraum** — aus `timeline`-Blöcken, aufsteigend nach Datum sortiert
+- Leere Blöcke (ohne Text/URL) werden nicht angezeigt; ohne jeglichen Inhalt verschwindet die Karte komplett.
 
 ---
 

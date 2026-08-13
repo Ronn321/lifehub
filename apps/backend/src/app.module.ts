@@ -19,6 +19,7 @@ import { ShoppingModule } from '@lifehub/shopping-domain';
 import { FinanceModule } from '@lifehub/finance-domain';
 import { PagesModule } from '@lifehub/pages-domain';
 import { JellyfinModule } from '@lifehub/jellyfin-domain';
+import { CalendarModule } from '@lifehub/calendar-domain';
 import { SystemModule } from './system/system.module.js';
 
 @Module({
@@ -68,6 +69,7 @@ import { SystemModule } from './system/system.module.js';
     FinanceModule,
     PagesModule,
     JellyfinModule,
+    CalendarModule,
     SystemModule,
   ],
   controllers: [HealthController],

@@ -403,6 +403,7 @@ export const ingredients = pgTable('ingredients', {
   name: text('name').notNull(),
   amount: text('amount'),
   unit: text('unit'),
+  note: text('note'),
   ord: integer('ord').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
@@ -660,7 +661,7 @@ export const pages = pgTable('pages', {
   ownerId: uuid('owner_id').notNull().references(() => users.id),
   parentId: uuid('parent_id'),
   icon: text('icon'),
-  coverMediaId: uuid('cover_media_id'),
+  coverMediaId: text('cover_media_id'),
   description: text('description'),
   templateId: uuid('template_id'),
   status: text('status').notNull().default('published'),
@@ -721,7 +722,8 @@ export const browserBookmarks = pgTable('browser_bookmarks', {
 // ===================== browser_tabs =====================
 export const browserTabs = pgTable('browser_tabs', {
   id: uuid('id').primaryKey().defaultRandom(),
-  sessionId: uuid('session_id').notNull().references(() => researchSessions.id, { onDelete: 'cascade' }),
+  // Legacy research tabs still use session_id. BrowserBlock tabs use browserSessionId.
+  sessionId: uuid('session_id').references(() => researchSessions.id, { onDelete: 'cascade' }),
   browserSessionId: uuid('browser_session_id').references(() => browserSessions.id, { onDelete: 'cascade' }),
   url: text('url').notNull().default('about:blank'),
   title: text('title'),
@@ -732,6 +734,7 @@ export const browserTabs = pgTable('browser_tabs', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('browser_tabs_session_idx').on(t.sessionId, t.sortOrder),
+  index('browser_tabs_browser_session_idx').on(t.browserSessionId, t.sortOrder),
 ]);
 
 // ===================== page_blocks =====================
@@ -777,7 +780,7 @@ export const pageVersions = pgTable('page_versions', {
   title: text('title').notNull(),
   description: text('description'),
   icon: text('icon'),
-  coverMediaId: uuid('cover_media_id'),
+  coverMediaId: text('cover_media_id'),
   blocks: jsonb('blocks').notNull(),
   changedBy: uuid('changed_by').notNull().references(() => users.id),
   changeType: text('change_type').notNull(),
@@ -901,6 +904,31 @@ export const jellyfinItems = pgTable('jellyfin_items', {
   index('jellyfin_items_library_idx').on(t.libraryId),
   index('jellyfin_items_owner_idx').on(t.ownerId),
   uniqueIndex('jellyfin_items_library_ext_uq').on(t.libraryId, t.externalId),
+]);
+
+// ===================== jellyfin_watchlists =====================
+export const jellyfinWatchlists = pgTable('jellyfin_watchlists', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('jellyfin_watchlists_owner_idx').on(t.ownerId),
+]);
+
+export const jellyfinWatchlistItems = pgTable('jellyfin_watchlist_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  watchlistId: uuid('watchlist_id').notNull().references(() => jellyfinWatchlists.id, { onDelete: 'cascade' }),
+  externalItemId: text('external_item_id').notNull(),
+  itemType: text('item_type').notNull(),
+  name: text('name').notNull(),
+  position: integer('position').notNull().default(0),
+  addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('jellyfin_watchlist_items_list_idx').on(t.watchlistId),
+  uniqueIndex('jellyfin_watchlist_items_uq').on(t.watchlistId, t.externalItemId),
 ]);
 
 // ===================== research_collections =====================

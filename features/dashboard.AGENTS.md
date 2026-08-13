@@ -19,6 +19,7 @@ Persönliches Hub-UI. Widget-basiert, Drag & Drop, Layout pro User persistiert. 
 - Standard-Widgets (MVP): MediaWidget, CalendarWidget, WeatherWidget (Open-Meteo, kein Key)
 - Drag & Drop mit `react-grid-layout` (Phase 2, MVP nur statische Anordnung)
 - Persistierung: `PUT /api/v1/dashboard/layout`
+- `dashboard_layouts` wird durch Migration `apps/backend/drizzle/0016_dashboard_layouts.sql` angelegt (user_id uuid PK REFERENCES users(id), layout jsonb, updated_at timestamptz — exakt wie `dashboardLayouts` in `shared/db/src/schema/public.ts`). Keine manuellen SQL-Fixes nötig; bei Schema-Änderungen Migration + Drizzle-Definition synchron halten.
 
 ## 3. Dependencies
 

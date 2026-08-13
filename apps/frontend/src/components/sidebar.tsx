@@ -7,7 +7,7 @@ import {
   Server, Key, LogOut, Menu, X, Users, Plane, Code2, Notebook,
   FileText, FolderLock, Calendar, Search, Puzzle, ShieldCheck,
   ScrollText, Settings, Monitor, ChevronRight, ChevronDown, Pin, Plus,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Mail,
 } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { useState, useRef, useEffect } from 'react';
@@ -36,6 +36,7 @@ interface PinnedPage {
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, disabled: false },
   { href: '/calendar', label: 'Kalender', icon: Calendar, disabled: false },
+  { href: '/email', label: 'E-Mail', icon: Mail, disabled: false },
   { href: '/media', label: 'Medien', icon: Image, disabled: false },
   { href: '/travel', label: 'Reisen', icon: Plane, disabled: false },
   { href: '/projects', label: 'Projekte', icon: Code2, disabled: false },

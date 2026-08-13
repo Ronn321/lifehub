@@ -46,6 +46,7 @@ export class RecipesService {
       recipeId, name: input.name,
       amount: input.amount != null ? String(input.amount) : null,
       unit: input.unit ?? null, order: input.order,
+      note: input.note ?? null,
     });
   }
 

@@ -5,3 +5,8 @@ export * from './dtos/dishes.dto';
 export { RecipesService } from './services/recipes.service';
 export { DishesService } from './services/dishes.service';
 export { RecipesModule } from './api/recipes.module';
+export { ImportOrchestratorService } from './services/import/import-orchestrator.service';
+export { UrlDetectorService } from './services/import/url-detector.service';
+export { HtmlFetcherService } from './services/import/html-fetcher.service';
+export { RecipeExtractorService } from './services/import/recipe-extractor.service';
+export { RecipesImportController } from './api/recipes-import.controller';

@@ -96,7 +96,7 @@ export const importJobStatusEnum = z.enum([
 ]);
 
 export const importRecipeSchema = z.object({
-  url: z.string().url(),
+  url: z.string().min(1),
   mode: z.enum(['raw', 'normalized', 'enhanced']).optional().default('normalized'),
   autoConfirm: z.boolean().optional().default(false),
 });

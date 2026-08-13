@@ -60,6 +60,7 @@ export class RecipesRepository {
       cookTime: recipes.cookTime,
       totalTime: recipes.totalTime,
       calories: recipes.calories,
+      nutrition: sql<{ calories: number | null; protein: number | null; fat: number | null; carbs: number | null } | null>`NULL`,
       imageMediaId: recipes.imageMediaId,
       ownerId: recipes.ownerId,
       createdAt: recipes.createdAt,
@@ -106,18 +107,27 @@ export class RecipesRepository {
 
   async createIngredient(data: {
     recipeId: string; name: string; amount?: string | null;
-    unit?: string | null; order?: number;
+    unit?: string | null; order?: number; note?: string | null;
   }) {
     const [row] = await this.db.insert(ingredients).values({
       recipeId: data.recipeId, name: data.name,
       amount: data.amount ?? null, unit: data.unit ?? null,
-      ord: data.order ?? 0,
+      ord: data.order ?? 0, note: data.note ?? null,
     }).returning();
     return row;
   }
 
   async findIngredientsByRecipe(recipeId: string) {
-    return this.db.select().from(ingredients)
+    return this.db.select({
+      id: ingredients.id,
+      recipeId: ingredients.recipeId,
+      name: ingredients.name,
+      amount: ingredients.amount,
+      unit: ingredients.unit,
+      order: ingredients.ord,
+      note: ingredients.note,
+      createdAt: ingredients.createdAt,
+    }).from(ingredients)
       .where(eq(ingredients.recipeId, recipeId))
       .orderBy(asc(ingredients.ord));
   }

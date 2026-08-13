@@ -17,7 +17,7 @@ export interface Recipe {
   attributes: string[] | null;
   variantLabel: string | null;
   effortLevel: string | null;
-  sourceType: SourceType;
+  sourceType: string;
   sourceUrl: string | null;
   servings: number;
   prepTime: number | null;
@@ -27,9 +27,9 @@ export interface Recipe {
   nutrition: Nutrition | null;
   imageMediaId: string | null;
   ownerId: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  deletedAt: string | Date | null;
 }
 
 export interface Ingredient {

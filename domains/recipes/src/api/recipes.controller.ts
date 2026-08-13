@@ -1,13 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { JwtGuard, CurrentUser, type JwtPayload } from '@lifehub/auth';
 import { RequirePermission, PermissionGuard } from '@lifehub/permissions';
 import { RecipesService } from '../services/recipes.service';
-import { createRecipeSchema, updateRecipeSchema, createIngredientSchema, createStepSchema, updateServingsSchema, createRecipeTagAndAssignSchema } from '../dtos/recipes.dto';
+import { SearchService } from '../services/search.service';
+import { createRecipeSchema, updateRecipeSchema, createIngredientSchema, createStepSchema, updateServingsSchema, createRecipeTagAndAssignSchema, searchRecipesSchema } from '../dtos/recipes.dto';
 
 @UseGuards(JwtGuard, PermissionGuard)
 @Controller('recipes')
 export class RecipesController {
-  constructor(@Inject(RecipesService) private readonly recipes: RecipesService) {}
+  constructor(
+    @Inject(RecipesService) private readonly recipes: RecipesService,
+    @Inject(SearchService) private readonly searchService: SearchService,
+  ) {}
 
   @Post()
   @RequirePermission('recipes', 'create')
@@ -103,5 +107,24 @@ export class RecipesController {
   @RequirePermission('recipes', 'update')
   async removeTag(@Param('id') id: string, @Param('tagId') tagId: string, @CurrentUser() user: JwtPayload) {
     await this.recipes.removeTagFromRecipe(user.sub, id, tagId);
+  }
+
+  // ========== SEARCH ==========
+
+  @Post('search')
+  @RequirePermission('recipes', 'read')
+  async search(@Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = searchRecipesSchema.parse(body);
+    return this.searchService.search({
+      query: dto.query,
+      page: dto.page,
+      pageSize: dto.pageSize,
+      avoidFlags: dto.avoidFlags,
+      requiredAttributes: dto.requiredAttributes,
+      maxTimeMinutes: dto.maxTimeMinutes ?? undefined,
+      calorieTarget: dto.calorieTarget ?? undefined,
+      calorieTolerance: dto.calorieTolerance ?? undefined,
+      preferredEffort: dto.preferredEffort as any,
+    }, user.sub);
   }
 }

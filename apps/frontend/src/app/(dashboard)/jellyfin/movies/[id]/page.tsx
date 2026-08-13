@@ -12,6 +12,7 @@ import {
   type JellyfinMediaItem, type ContinueWatchingItem,
 } from '@/lib/jellyfin-media-api';
 import { DetailHeader } from '@/components/jellyfin/media/DetailHeader';
+import { JellyfinPageWrapper } from '@/components/jellyfin/media/JellyfinPageWrapper';
 import { CastSection } from '@/components/jellyfin/media/CastSection';
 import { SimilarSection } from '@/components/jellyfin/media/SimilarSection';
 import { ArrowLeft, Loader2, Info, CheckCircle, Circle } from 'lucide-react';
@@ -55,18 +56,15 @@ export default function MovieDetailPage() {
   }, [continueWatching, item]);
 
   const resumeTicks = resumeItem?.UserData?.PlaybackPositionTicks ?? null;
-  const isWatched = resumeItem?.UserData?.Played ?? false;
+  const isWatched = item?.UserData?.Played ?? false;
 
   /* -------- Watch State -------- */
   const qc = useQueryClient();
   const watchMut = useMutation({
-    mutationFn: () => toggleWatched(externalId),
+    mutationFn: () => toggleWatched(serverId, externalId),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jellyfin-movie-detail', externalId] });
       qc.invalidateQueries({ queryKey: ['jellyfin-continue-watching'] });
-      // Optimistic update: toggle local state via query refetch
-      setTimeout(() => {
-        qc.invalidateQueries({ queryKey: ['jellyfin-movie-detail', externalId] });
-      }, 500);
     },
   });
 
@@ -134,7 +132,8 @@ export default function MovieDetailPage() {
   const studios = (item as any).Studios as { Name?: string; Id?: string }[] | undefined;
 
   return (
-    <div className="pb-12">
+    <JellyfinPageWrapper>
+      <div className="pb-12">
       {/* Hero header (includes back button) */}
       <DetailHeader
         item={item}
@@ -142,8 +141,8 @@ export default function MovieDetailPage() {
         onPlay={handlePlay}
         onResume={resumeTicks ? handleResume : undefined}
         resumePositionTicks={resumeTicks}
+        isFavorite={item?.UserData?.IsFavorite ?? false}
         onToggleFavorite={() => favMut.mutate()}
-        onToggleWatchlist={() => watchMut.mutate()}
       />
 
       {/* Watched toggle */}
@@ -222,6 +221,7 @@ export default function MovieDetailPage() {
         {/* Similar */}
         <SimilarSection serverId={serverId} externalId={externalId} />
       </div>
-    </div>
+      </div>
+    </JellyfinPageWrapper>
   );
 }

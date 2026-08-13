@@ -10,6 +10,7 @@ import {
   type JellyfinMediaItem, type ContinueWatchingItem,
 } from '@/lib/jellyfin-media-api';
 import { DetailHeader } from '@/components/jellyfin/media/DetailHeader';
+import { JellyfinPageWrapper } from '@/components/jellyfin/media/JellyfinPageWrapper';
 import { SeasonPicker } from '@/components/jellyfin/media/SeasonPicker';
 import { EpisodeList } from '@/components/jellyfin/media/EpisodeList';
 import { CastSection } from '@/components/jellyfin/media/CastSection';
@@ -101,14 +102,24 @@ export default function SeriesDetailPage() {
   }, [continueWatching, series]);
 
   const resumeTicks = resumeItem?.UserData?.PlaybackPositionTicks ?? null;
-  const isWatched = resumeItem?.UserData?.Played ?? false;
+  const isWatched = series?.UserData?.Played ?? false;
 
   /* -------- Watch State -------- */
   const qc = useQueryClient();
   const watchMut = useMutation({
-    mutationFn: () => toggleWatched(externalId),
+    mutationFn: () => toggleWatched(serverId, externalId),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jellyfin-series-detail', externalId] });
       qc.invalidateQueries({ queryKey: ['jellyfin-continue-watching'] });
+    },
+  });
+
+  const episodeWatchMut = useMutation({
+    mutationFn: (episodeId: string) => toggleWatched(serverId, episodeId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jellyfin-season-episodes', selectedSeasonExternalId] });
+      qc.invalidateQueries({ queryKey: ['jellyfin-continue-watching'] });
+      qc.invalidateQueries({ queryKey: ['jellyfin-series-detail', externalId] });
     },
   });
 
@@ -180,7 +191,8 @@ export default function SeriesDetailPage() {
   }
 
   return (
-    <div className="pb-12">
+    <JellyfinPageWrapper>
+      <div className="pb-12">
       {/* Hero header (includes back button) */}
       <DetailHeader
         item={series}
@@ -188,8 +200,8 @@ export default function SeriesDetailPage() {
         onPlay={handlePlay}
         onResume={resumeTicks && resumeItem ? handleResume : undefined}
         resumePositionTicks={resumeTicks}
+        isFavorite={series?.UserData?.IsFavorite ?? false}
         onToggleFavorite={() => favMut.mutate()}
-        onToggleWatchlist={() => watchMut.mutate()}
       />
 
       {/* Watched toggle */}
@@ -235,6 +247,7 @@ export default function SeriesDetailPage() {
             episodes={episodes}
             serverId={serverId}
             onPlay={handleEpisodePlay}
+            onToggleWatched={(ep) => episodeWatchMut.mutate(ep.Id)}
           />
         ) : (
           <div className="rounded-xl border-2 border-dashed border-border p-12 text-center text-fg-muted">
@@ -248,6 +261,7 @@ export default function SeriesDetailPage() {
         {/* Similar */}
         <SimilarSection serverId={serverId} externalId={externalId} />
       </div>
-    </div>
+      </div>
+    </JellyfinPageWrapper>
   );
 }

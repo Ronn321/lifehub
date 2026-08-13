@@ -48,6 +48,8 @@ export interface MusicSidebarProps {
   collapsed?: boolean;
   /** Called when the collapse toggle button is clicked */
   onToggleCollapse?: () => void;
+  /** Collapse toggle style: 'classic' (round button on the sidebar edge) or 'spotify' (inside, top) */
+  toggleStyle?: 'classic' | 'spotify';
 }
 
 const TABS: { key: LibraryTab; label: string }[] = [
@@ -74,6 +76,7 @@ export function MusicSidebar({
   onTabChange,
   collapsed = false,
   onToggleCollapse,
+  toggleStyle = 'spotify',
 }: MusicSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -98,7 +101,8 @@ export function MusicSidebar({
   return (
     <aside
       className={cn(
-        'flex h-full flex-col overflow-hidden transition-[width] duration-[250ms] ease-in-out',
+        'relative flex h-full flex-col transition-[width] duration-[250ms] ease-in-out',
+        collapsed && toggleStyle === 'classic' ? 'overflow-visible' : 'overflow-hidden',
       )}
       style={{
         width: collapsed
@@ -108,23 +112,34 @@ export function MusicSidebar({
       }}
     >
       {/* ── Toggle Collapse Button ── */}
-      <div className={cn('flex items-center px-3 pt-6 pb-2', collapsed && 'justify-center')}>
+      {collapsed && toggleStyle === 'classic' ? (
+        /* Classic: round button on the sidebar edge (like the main LifeHub sidebar) */
         <button
           onClick={onToggleCollapse}
-          className={cn(
-            'flex items-center justify-center rounded-md transition-colors',
-            'text-[var(--music-text-tertiary)] hover:text-[var(--music-text-primary)] hover:bg-[var(--music-bg-card)]',
-            collapsed ? 'h-8 w-8' : 'h-8 w-8',
-          )}
-          title={collapsed ? 'Sidebar erweitern' : 'Sidebar einklappen'}
+          className="absolute -right-3 top-5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-bg-surface text-fg-muted shadow-sm transition-colors hover:bg-bg hover:text-fg"
+          title="Sidebar erweitern"
         >
-          {collapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
+          <PanelLeftOpen className="h-3.5 w-3.5" />
         </button>
-      </div>
+      ) : (
+        <div className={cn('flex items-center px-3 pt-6 pb-2', collapsed && 'justify-center')}>
+          <button
+            onClick={onToggleCollapse}
+            className={cn(
+              'flex items-center justify-center rounded-md transition-colors',
+              'text-[var(--music-text-tertiary)] hover:text-[var(--music-text-primary)] hover:bg-[var(--music-bg-card)]',
+              collapsed ? 'h-8 w-8' : 'h-8 w-8',
+            )}
+            title={collapsed ? 'Sidebar erweitern' : 'Sidebar einklappen'}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+      )}
 
       {/* ── Navigation Buttons ── */}
       <nav className={cn('flex flex-col gap-1 px-3 pb-4', collapsed ? '' : 'pt-0')}>

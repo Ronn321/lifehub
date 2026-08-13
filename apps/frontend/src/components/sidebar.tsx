@@ -85,6 +85,16 @@ export function Sidebar() {
     localStorage.setItem('lifehub-sidebar-collapsed', String(desktopCollapsed));
   }, [desktopCollapsed]);
 
+  // Externes Einklappen/Aufklappen (z.B. BrowserBlock-Vollbild-Modus)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const collapsed = (e as CustomEvent<{ collapsed: boolean }>).detail?.collapsed;
+      if (typeof collapsed === 'boolean') setDesktopCollapsed(collapsed);
+    };
+    window.addEventListener('lifehub:sidebar-collapse', handler);
+    return () => window.removeEventListener('lifehub:sidebar-collapse', handler);
+  }, []);
+
   // Fetch all pages
   const { data: pages } = useQuery<Page[]>({
     queryKey: ['pages'],
@@ -231,30 +241,42 @@ export function Sidebar() {
           {/* ─── Seiten section ─── */}
           {!desktopCollapsed && (
             <div>
-              {/* Section header */}
-              <button
-                onClick={() => setSeitenOpen((prev) => !prev)}
+              {/* Section header — Klick auf Label navigiert zur Übersicht, Chevron klappt die Liste um */}
+              <div
                 onContextMenu={handleContextMenu}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
-                  pathname === '/pages'
+                  'flex w-full items-center rounded-md text-sm transition-colors',
+                  pathname.startsWith('/pages')
                     ? 'bg-brand-500/10 text-brand-500 font-medium'
                     : 'text-fg-muted hover:text-fg hover:bg-bg',
                 )}
               >
-                {seitenOpen ? (
-                  <ChevronDown className="h-4 w-4 shrink-0" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 shrink-0" />
-                )}
-                <Notebook className="h-5 w-5 shrink-0" />
-                <span className="flex-1 text-left">Seiten</span>
-                {pinnedList.length > 0 && (
-                  <span className="text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none">
-                    {pinnedList.length}
-                  </span>
-                )}
-              </button>
+                <button
+                  onClick={() => setSeitenOpen((prev) => !prev)}
+                  className="flex h-10 w-8 shrink-0 items-center justify-center rounded-l-md"
+                  title={seitenOpen ? 'Liste einklappen' : 'Liste ausklappen'}
+                >
+                  {seitenOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+                <Link
+                  href="/pages"
+                  onClick={() => setOpen(false)}
+                  className="flex flex-1 items-center gap-1.5 rounded-r-md py-2.5 pr-3 min-w-0"
+                  title="Zur Seiten-Übersicht"
+                >
+                  <Notebook className="h-5 w-5 shrink-0" />
+                  <span className="flex-1 text-left">Seiten</span>
+                  {pinnedList.length > 0 && (
+                    <span className="text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none">
+                      {pinnedList.length}
+                    </span>
+                  )}
+                </Link>
+              </div>
 
               {/* Pinned pages — always visible regardless of collapse state */}
               {pinnedList.length > 0 && (

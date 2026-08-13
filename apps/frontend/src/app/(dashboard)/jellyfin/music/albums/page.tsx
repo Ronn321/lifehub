@@ -27,7 +27,7 @@ export default function MusicAlbumsPage() {
 
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-      <div className="flex-1 overflow-y-auto music-scroll">
+      <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
         <MusicPageShell sidebarProps={{}}>
           <div className="flex h-full flex-col gap-4 pt-4">
             {/* ── Page Title ── */}
@@ -45,7 +45,7 @@ export default function MusicAlbumsPage() {
                 description="Füge Musik zu deiner Jellyfin-Bibliothek hinzu."
               />
             ) : (
-              <div className="flex-1 overflow-y-auto music-scroll">
+              <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
                 <MusicCardGrid>
                   {items.map((item) => (
                     <MusicCard

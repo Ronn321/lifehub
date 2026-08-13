@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/cn';
 import { MusicSidebar } from '@/components/music/sidebar/MusicSidebar';
 import { useStickyHeader } from '@/components/music/shared/useStickyHeader';
+import { useJellyfinLayout } from '@/lib/jellyfin-layout-store';
 import type { MusicSidebarProps } from '@/components/music/sidebar/MusicSidebar';
 
 import '@/app/(dashboard)/jellyfin/music/music-theme.css';
@@ -28,6 +29,8 @@ export function MusicAppShell({
   const [collapsed, setCollapsed] = useState(false);
   const hasRightSidebar = !!rightSidebar;
   const sidebarW = collapsed ? 'var(--music-sidebar-collapsed-width)' : 'var(--music-sidebar-width)';
+  // Sidebar collapse style from persisted store (settings → Darstellung)
+  const sidebarStyle = useJellyfinLayout((s) => s.sidebarStyle);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const { isScrolled } = useStickyHeader(scrollRef);
@@ -43,12 +46,16 @@ export function MusicAppShell({
     >
       {/* Music Sidebar */}
       <div
-        className="flex-shrink-0 overflow-hidden transition-all duration-200 ease-in-out sticky top-0 self-start"
+        className={cn(
+          'relative flex-shrink-0 transition-all duration-200 ease-in-out sticky top-0 self-start',
+          collapsed && sidebarStyle === 'classic' ? 'overflow-visible' : 'overflow-hidden',
+        )}
         style={{ width: sidebarW }}
       >
         <MusicSidebar
           collapsed={collapsed}
           onToggleCollapse={() => setCollapsed(!collapsed)}
+          toggleStyle={sidebarStyle}
           {...sidebarProps}
         />
       </div>

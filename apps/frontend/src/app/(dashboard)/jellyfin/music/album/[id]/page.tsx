@@ -41,7 +41,7 @@ export default function AlbumDetailPage() {
   if (!accessToken || !server) {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-        <div className="flex-1 overflow-y-auto music-scroll">
+        <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
           <MusicPageShell sidebarProps={{ activeTab: 'albums' }}>
             <MusicLoader />
           </MusicPageShell>
@@ -56,7 +56,7 @@ export default function AlbumDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-        <div className="flex-1 overflow-y-auto music-scroll">
+        <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
           <MusicPageShell sidebarProps={{ activeTab: 'albums' }}>
             <MusicLoader />
           </MusicPageShell>
@@ -104,7 +104,7 @@ export default function AlbumDetailPage() {
   if (!accessToken || !server) {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-        <div className="flex-1 overflow-y-auto music-scroll">
+        <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
           <MusicPageShell
             sidebarProps={{ activeTab: 'albums' }}
             topBar={
@@ -129,7 +129,7 @@ export default function AlbumDetailPage() {
 
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-      <div className="flex-1 overflow-y-auto music-scroll">
+      <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
         <MusicPageShell
           sidebarProps={{ activeTab: 'albums' }}
           topBar={

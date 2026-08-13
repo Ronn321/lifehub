@@ -43,7 +43,7 @@ export default function ArtistDetailPage() {
   if (!accessToken || !server) {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-        <div className="flex-1 overflow-y-auto music-scroll">
+        <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
           <MusicPageShell sidebarProps={{ activeTab: 'artists' }}>
             <MusicLoader />
           </MusicPageShell>
@@ -83,7 +83,7 @@ export default function ArtistDetailPage() {
 
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
-      <div className="flex-1 overflow-y-auto music-scroll">
+      <div className="flex-1 overflow-y-auto overscroll-contain music-scroll">
         <MusicPageShell
           sidebarProps={{ activeTab: 'artists' }}
           stickyTitle={artistName}

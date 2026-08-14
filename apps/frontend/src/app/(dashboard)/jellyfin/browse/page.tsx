@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
-import { Film, Monitor, Loader2, Search, X, Filter, Heart } from 'lucide-react';
+import { Film, Monitor, Loader2, Search, X, Filter, Heart, ListMusic, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { MediaGrid } from '@/components/jellyfin/media/MediaCard';
 import { ContentRow } from '@/components/jellyfin/media/ContentRow';
@@ -162,6 +162,20 @@ export default function BrowsePage() {
           >
             <Monitor className="h-3.5 w-3.5" />
             Nur Serien
+          </button>
+          <button
+            onClick={() => router.push('/jellyfin/music/playlists')}
+            className="flex items-center gap-1.5 rounded-full bg-bg-surface border border-border px-3.5 py-1.5 text-xs font-medium text-fg-muted hover:text-fg hover:border-brand-500/30 transition-colors"
+          >
+            <ListMusic className="h-3.5 w-3.5" />
+            Playlists
+          </button>
+          <button
+            onClick={() => router.push('/jellyfin/watchlist')}
+            className="flex items-center gap-1.5 rounded-full bg-bg-surface border border-border px-3.5 py-1.5 text-xs font-medium text-fg-muted hover:text-fg hover:border-brand-500/30 transition-colors"
+          >
+            <Bookmark className="h-3.5 w-3.5" />
+            Watchlist
           </button>
         </div>
 

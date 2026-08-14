@@ -143,6 +143,22 @@ export function addDays(iso: string, n: number): string {
   return toIso(d);
 }
 
+/**
+ * Add one hour to a 'YYYY-MM-DDTHH:mm' string (local naive time), returning the
+ * same 'YYYY-MM-DDTHH:mm' shape. Handles day/month/year rollover; DST is ignored.
+ * Used to default the end time on new events and to couple start→end.
+ */
+export function addHourLocal(dt: string): string {
+  const [datePart, timePart] = dt.split('T');
+  if (!datePart || !timePart) return dt;
+  const parts = datePart.split('-').map(Number);
+  const [ys, ms, ds] = parts;
+  const [hs, mins] = timePart.split(':').map(Number);
+  const d = new Date(ys ?? 0, (ms ?? 1) - 1, ds ?? 1, hs ?? 0, mins ?? 0);
+  d.setHours(d.getHours() + 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 /** Shift a 'YYYY-MM' string by delta months, clamping the day. */
 export function shiftMonth(monthStr: string, delta: number): string {
   const [ys, ms] = monthStr.split('-');

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Info, Loader2, X } from 'lucide-react';
 import { api } from '@/lib/api';
-import { toDatetimeLocal, type CalendarEvent, type CalendarItem } from '@/lib/calendar';
+import { addHourLocal, toDatetimeLocal, type CalendarEvent, type CalendarItem } from '@/lib/calendar';
 
 interface EventDialogProps {
   open: boolean;
@@ -41,33 +41,24 @@ const emptyForm: DialogForm = {
   calendarId: '',
 };
 
-/**
- * Add one hour to a 'YYYY-MM-DDTHH:mm' string (local time), returning the
- * same 'YYYY-MM-DDTHH:mm' shape. Used to default the end time on new events.
- */
-function addHourLocal(dt: string): string {
-  const d = new Date(`${dt}:00`);
-  d.setHours(d.getHours() + 1);
-  const y = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const mi = String(d.getMinutes()).padStart(2, '0');
-  return `${y}-${mo}-${da}T${h}:${mi}`;
-}
-
 export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, calendars }: EventDialogProps) {
   const [form, setForm] = useState<DialogForm>(emptyForm);
+  const [endTouched, setEndTouched] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!open) return;
+    setEndTouched(false);
     if (editEvent) {
       setForm({
         title: editEvent.title,
         description: editEvent.description || '',
-        startDate: toDatetimeLocal(editEvent.startDate),
-        endDate: editEvent.endDate ? toDatetimeLocal(editEvent.endDate) : '',
+        startDate: editEvent.allDay ? editEvent.startDate.slice(0, 10) : toDatetimeLocal(editEvent.startDate),
+        endDate: editEvent.endDate
+          ? editEvent.allDay
+            ? editEvent.endDate.slice(0, 10)
+            : toDatetimeLocal(editEvent.endDate)
+          : '',
         allDay: editEvent.allDay,
         location: editEvent.location || '',
         color: editEvent.color || '',
@@ -81,8 +72,8 @@ export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, 
           // Exact time given → start at that time, end +1h.
           setForm({ ...emptyForm, startDate: prefillDate, endDate: addHourLocal(prefillDate) });
         } else {
-          // Date only → default to 09:00.
-          setForm({ ...emptyForm, startDate: `${prefillDate}T09:00` });
+          // Date only → default 08:00–09:00 (1h).
+          setForm({ ...emptyForm, startDate: `${prefillDate}T08:00`, endDate: `${prefillDate}T09:00` });
         }
       } else {
         setForm(emptyForm);
@@ -93,6 +84,40 @@ export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, 
 
   const set = <K extends keyof DialogForm>(key: K, value: DialogForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const toggleAllDay = (next: boolean) => {
+    setForm((f) => {
+      if (next) {
+        // All-day: strip any time portion from the stored values.
+        return {
+          ...f,
+          allDay: true,
+          startDate: f.startDate ? f.startDate.slice(0, 10) : '',
+          endDate: f.endDate ? f.endDate.slice(0, 10) : '',
+        };
+      }
+      // Timed mode: re-add default times if the date has none.
+      let start = f.startDate;
+      if (start && !start.includes('T')) start = `${start}T08:00`;
+      let end = f.endDate;
+      if (end && !end.includes('T')) end = `${end}T08:00`;
+      if (!end) end = start ? addHourLocal(start) : '';
+      return { ...f, allDay: false, startDate: start, endDate: end };
+    });
+  };
+
+  const handleStartChange = (v: string) => {
+    set('startDate', v);
+    // Couple end → start+1h only in timed mode and if the user hasn't edited the end.
+    if (!form.allDay && !endTouched && v) {
+      set('endDate', addHourLocal(v));
+    }
+  };
+
+  const handleEndChange = (v: string) => {
+    set('endDate', v);
+    setEndTouched(true);
+  };
 
   const selectedCalendar = calendars.find((c) => c.id === form.calendarId) ?? null;
   const defaultColor = selectedCalendar?.color ?? '';
@@ -122,6 +147,7 @@ export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, 
     },
     onSuccess: () => {
       setForm(emptyForm);
+      setEndTouched(false);
       setError('');
       onSuccess();
       onClose();
@@ -183,7 +209,7 @@ export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, 
               type="checkbox"
               id="allDay"
               checked={form.allDay}
-              onChange={(e) => set('allDay', e.target.checked)}
+              onChange={(e) => toggleAllDay(e.target.checked)}
               className="accent-cal-500"
             />
             <label htmlFor="allDay" className="text-sm">
@@ -198,7 +224,7 @@ export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, 
                 type={form.allDay ? 'date' : 'datetime-local'}
                 className="input-field w-full text-sm"
                 value={form.startDate}
-                onChange={(e) => set('startDate', e.target.value)}
+                onChange={(e) => handleStartChange(e.target.value)}
               />
             </div>
             <div>
@@ -207,7 +233,7 @@ export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, 
                 type={form.allDay ? 'date' : 'datetime-local'}
                 className="input-field w-full text-sm"
                 value={form.endDate}
-                onChange={(e) => set('endDate', e.target.value)}
+                onChange={(e) => handleEndChange(e.target.value)}
               />
             </div>
           </div>

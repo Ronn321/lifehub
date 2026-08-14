@@ -3,6 +3,7 @@ import {
   getMonthWeeks,
   getWeekDays,
   todayIso,
+  addHourLocal,
   eventSpan,
   getEventColor,
   calendarRange,
@@ -179,5 +180,20 @@ describe('slotToPrefill', () => {
   it('builds a datetime-local prefill from a date and start minutes', () => {
     expect(slotToPrefill('2026-08-13', 570)).toBe('2026-08-13T09:30');
     expect(slotToPrefill('2026-08-13', 0)).toBe('2026-08-13T00:00');
+  });
+});
+
+describe('addHourLocal', () => {
+  it('adds one hour within the same day', () => {
+    expect(addHourLocal('2026-08-13T09:00')).toBe('2026-08-13T10:00');
+  });
+  it('rolls over midnight to the next day (23:00 → 00:00)', () => {
+    expect(addHourLocal('2026-08-13T23:00')).toBe('2026-08-14T00:00');
+  });
+  it('rolls over the end of a month', () => {
+    expect(addHourLocal('2026-08-31T23:00')).toBe('2026-09-01T00:00');
+  });
+  it('rolls over the end of the year (31.12. → 01.01. next year)', () => {
+    expect(addHourLocal('2026-12-31T23:00')).toBe('2027-01-01T00:00');
   });
 });

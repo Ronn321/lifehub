@@ -465,3 +465,10 @@ Dieses Dokument wird später detailliert beschreiben
 - **Akzent:** `--music-accent` = `rgb(var(--brand-500))` — alle Musik-Symbole, Buttons und Slider folgen der System-Akzentfarbe (Einstellungen → Darstellung). Kein festes Spotify-Grün mehr.
 - **Slider:** `.volume-slider`/`.mini-volume-slider` in `music-theme.css` (global) — Webkit-Füllung via `--fill`-CSS-Var (styled-jsx greift bei `<input type="range">` nicht zuverlässig).
 - **Borders:** harte `rgba(255,255,255,…)` durch `--music-border` / `--music-border-weak` ersetzt (theme-aware).
+
+## v0.4 — Favoriten- und Recent-Seiten (implementiert 13.08.2026)
+
+- **`/jellyfin/music/favorites`** — alle Favoriten (GET `/jellyfin/servers/{id}/favorites`) in TrackTable; Empty-State mit Herz-Hinweis.
+- **`/jellyfin/music/recent`** — zuletzt gehörte Titel (GET `/jellyfin/servers/{id}/recent?limit=100`).
+- Schnellzugriff-Karten „Lieblingssongs" → `/favorites`, „Zuletzt gehört" → `/recent` (vorher: alle Songs bzw. Scroll).
+- Sidebar-Collapse: Nav-Icons bleiben **immer links** (kein `justify-center` im collapsed-Zustand — LifeHub-Sidebar, MusicSidebar, SidebarNavButton).

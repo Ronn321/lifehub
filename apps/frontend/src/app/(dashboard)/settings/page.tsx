@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   Loader2, AlertCircle, Settings, FolderOpen, Globe,
-  Save, Check, ArrowLeft, RefreshCw, Palette, Sun, Moon, Monitor, Chrome,
+  Save, Check, ArrowLeft, RefreshCw, Palette, Sun, Moon, Monitor, LogOut, Chrome,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useJellyfinLayout, type SidebarStyle } from '@/lib/jellyfin-layout-store';
@@ -84,6 +84,8 @@ export default function SettingsPage() {
 
 function GeneralSettings() {
   const qc = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+  const clear = useAuthStore((s) => s.clear);
   const { data: settings, isLoading, error } = useQuery<SystemSettings>({
     queryKey: ['system-settings'],
     queryFn: () => api.get<SystemSettings>('/system/settings'),
@@ -92,6 +94,11 @@ function GeneralSettings() {
   const [brandName, setBrandName] = useState('');
   const [timezone, setTimezone] = useState('');
   const [saved, setSaved] = useState(false);
+
+  const handleLogout = () => {
+    clear();
+    window.location.href = '/login';
+  };
 
   useEffect(() => {
     if (settings) {
@@ -113,8 +120,28 @@ function GeneralSettings() {
   if (error) return <ErrorState message={(error as Error).message} />;
 
   return (
-    <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
-      <h2 className="text-lg font-medium">Allgemein</h2>
+    <div className="space-y-4">
+      {/* Account section — moved here from the sidebar footer */}
+      <div className="rounded-lg border border-border bg-bg-surface p-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-lg font-semibold text-brand-500">
+            {(user?.displayName ?? user?.email ?? '?')[0]?.toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium">{user?.displayName ?? '—'}</p>
+            <p className="truncate text-sm text-fg-muted">{user?.email}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex shrink-0 items-center gap-2 rounded-md border border-danger/30 px-3 py-2 text-sm font-medium text-danger transition-colors hover:bg-danger/10"
+          >
+            <LogOut className="h-4 w-4" /> Abmelden
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
+        <h2 className="text-lg font-medium">Allgemein</h2>
 
       <Field label="Anwendungsname">
         <input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)}
@@ -140,6 +167,7 @@ function GeneralSettings() {
           {saved ? <><Check className="h-4 w-4" /> Gespeichert</> : mutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Speichert …</> : <><Save className="h-4 w-4" /> Speichern</>}
         </button>
         {mutation.isError && <p className="text-sm text-danger">{(mutation.error as Error).message}</p>}
+        </div>
       </div>
     </div>
   );

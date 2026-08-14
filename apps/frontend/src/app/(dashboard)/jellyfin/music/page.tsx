@@ -100,8 +100,8 @@ export default function MusicPage() {
   const buildCards = () =>
     QUICK_ACCESS_CARDS.map((card) => {
       const onClickMap: Record<string, () => void> = {
-        Lieblingssongs: () => router.push('/jellyfin/music/tracks'),
-        'Zuletzt gehört': () => scrollToSection('section-recent'),
+        Lieblingssongs: () => router.push('/jellyfin/music/favorites'),
+        'Zuletzt gehört': () => router.push('/jellyfin/music/recent'),
         Künstler: () => router.push('/jellyfin/music/artists'),
         Alben: () => router.push('/jellyfin/music/albums'),
         Genres: () => router.push('/jellyfin/music/genres'),
@@ -137,7 +137,7 @@ export default function MusicPage() {
 
           {/* Weiter hören — Continue Listening */}
           <section>
-            <MusicSection title="Weiter hören" showAllHref="/jellyfin/music/tracks">
+            <MusicSection title="Weiter hören" showAllHref="/jellyfin/music/recent">
               {recentLoading ? <MusicSkeleton count={6} />
               : !recentTracks || recentTracks.length === 0 ? null
               : <MusicScrollRow>{recentTracks.map((item: any) => (

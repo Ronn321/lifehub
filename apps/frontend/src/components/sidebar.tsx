@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   Shield, LayoutDashboard, Image, BookOpen, ShoppingCart, PiggyBank,
-  Server, Key, LogOut, Menu, X, Users, Plane, Code2, Notebook,
+  Server, Key, Menu, X, Users, Plane, Code2, Notebook,
   FileText, FolderLock, Calendar, Search, Puzzle, ShieldCheck,
   ScrollText, Settings, Monitor, ChevronRight, ChevronDown, Pin, Plus,
   PanelLeftClose, PanelLeftOpen, Mail,
@@ -68,8 +68,6 @@ function flattenPages(pagesList: Page[] | undefined): Page[] {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const user = useAuthStore((s) => s.user);
-  const clear = useAuthStore((s) => s.clear);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [seitenOpen, setSeitenOpen] = useState(true);
@@ -181,8 +179,7 @@ export function Sidebar() {
       >
         {/* Brand + Desktop Toggle */}
         <div className={cn(
-          'flex items-center border-b border-border',
-          desktopCollapsed ? 'justify-center gap-0 px-0 py-5' : 'gap-2 px-6 py-5',
+          'flex items-center border-b border-border gap-2 px-6 py-5',
         )}>
           <Shield className="h-6 w-6 shrink-0 text-brand-500" />
           {!desktopCollapsed && (
@@ -221,7 +218,6 @@ export function Sidebar() {
                 onClick={() => setOpen(false)}
                 className={cn(
                   'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
-                  desktopCollapsed ? 'justify-center px-2' : '',
                   active
                     ? 'bg-brand-500/10 text-brand-500 font-medium'
                     : item.disabled
@@ -350,17 +346,16 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* Footer: Theme + User */}
+        {/* Footer: Theme + Settings (user section moved to /settings) */}
         <div className={cn(
           'border-t border-border py-4',
-          desktopCollapsed ? 'flex flex-col items-center gap-3 px-0' : 'px-4 space-y-3',
+          desktopCollapsed ? 'flex flex-col items-start gap-3 px-4' : 'px-4 space-y-3',
         )}>
           {!desktopCollapsed && <ThemeToggle />}
           <Link
             href="/settings"
             className={cn(
               'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
-              desktopCollapsed ? 'justify-center px-2' : '',
               pathname === '/settings'
                 ? 'bg-brand-500/10 text-brand-500 font-medium'
                 : 'text-fg-muted hover:text-fg hover:bg-bg',
@@ -370,30 +365,6 @@ export function Sidebar() {
             <Settings className="h-4 w-4 shrink-0" />
             {!desktopCollapsed && 'Einstellungen'}
           </Link>
-          {user && (
-            <>
-              {!desktopCollapsed && (
-                <>
-                  <p className="text-sm font-medium truncate">{user.displayName}</p>
-                  <p className="text-xs text-fg-muted truncate">{user.email}</p>
-                </>
-              )}
-              <button
-                onClick={() => {
-                  clear();
-                  window.location.href = '/login';
-                }}
-                className={cn(
-                  'flex items-center gap-2 text-xs text-fg-muted hover:text-danger transition-colors',
-                  desktopCollapsed ? 'justify-center px-2' : '',
-                )}
-                title={desktopCollapsed ? 'Abmelden' : undefined}
-              >
-                <LogOut className="h-3.5 w-3.5 shrink-0" />
-                {!desktopCollapsed && 'Abmelden'}
-              </button>
-            </>
-          )}
         </div>
       </aside>
 

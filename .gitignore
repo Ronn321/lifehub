@@ -4,3 +4,6 @@ dist/
 *.log
 .env
 after_click.png
+
+# Design-Scans & Cookie-Sessions (NIEMALS committen)
+.designs/

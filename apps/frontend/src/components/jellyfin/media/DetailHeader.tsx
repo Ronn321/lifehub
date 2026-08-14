@@ -41,7 +41,7 @@ export function DetailHeader({
   return (
     <div className="relative">
       {/* Backdrop container */}
-      <div className={cn('relative overflow-hidden', fullWidth ? 'h-[72vh] min-h-[520px]' : 'h-[60vh] min-h-[440px]')}>
+      <div className={cn('relative overflow-hidden', fullWidth ? 'h-[78vh] min-h-[560px]' : 'h-[60vh] min-h-[440px]')}>
         {/* Backdrop image or gradient fallback */}
         {!backdropError ? (
           <img

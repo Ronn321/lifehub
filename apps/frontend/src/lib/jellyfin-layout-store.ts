@@ -17,12 +17,17 @@ interface LayoutState {
 export const useJellyfinLayout = create<LayoutState>()(
   persist(
     (set) => ({
-      fullWidth: false,
+      fullWidth: true,
       toggleFullWidth: () => set((s) => ({ fullWidth: !s.fullWidth })),
       setFullWidth: (v) => set({ fullWidth: v }),
       sidebarStyle: 'spotify',
       setSidebarStyle: (v) => set({ sidebarStyle: v }),
     }),
-    { name: 'jellyfin-layout' },
+    {
+      name: 'jellyfin-layout',
+      version: 1,
+      // One-time migration for stores created before v1: default to full-width layout
+      migrate: (state: any) => ({ ...state, fullWidth: true }),
+    },
   ),
 );

@@ -21,7 +21,7 @@ export function JellyfinPageWrapper({ children }: { children: React.ReactNode })
       </button>
       <div className={cn(
         fullWidth
-          ? '-mx-6 lg:-mx-8 px-6 lg:px-8'
+          ? '-mx-6 lg:-mx-8 -mt-6 lg:-mt-8 px-6 lg:px-8'
           : 'mx-auto max-w-7xl'
       )}>
         {children}

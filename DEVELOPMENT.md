@@ -54,3 +54,15 @@ Currently implemented:
 - [x] RBAC (4 roles × 96 permissions)
 - [x] Audit logging (HMAC chain trigger)
 - [x] Docker dev stack
+
+## Mobile Apps
+
+Natives App-Client-Projekt (Flutter, WebView-Shell) für Android / Google TV / iOS —
+Code lebt im separaten Repo `D:\LifeHub-Mobile`. Stufe 1: Die App lädt das LifeHub-
+Webfrontend als WebView; das Web bleibt Single Source of Truth. Das Webfrontend stellt
+dafür eine Sidebar-Filterung (`lifehub:sidebar:hidden`), einen Client-/TV-Modus
+(`?client=…`, `lifehub-tv` CSS) und einen D-Pad-Fokus-Helper (`window.lifehubTvFocus/Click`)
+bereit.
+
+**Details, Build-Befehle, RAM-Prozedur und Geräte-Installation:** siehe
+[`docs/MOBILE_APPS.md`](docs/MOBILE_APPS.md) und die `README.md` in `D:\LifeHub-Mobile`.

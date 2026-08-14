@@ -131,6 +131,27 @@ export function parseLocal(iso: string): Date {
   return new Date(`${iso}T00:00:00`);
 }
 
+/**
+ * Parse an API datetime as NAIVE LOCAL WALL-CLOCK time.
+ *
+ * The backend stores naive user input as UTC ("...Z"), so "08:00:00.000Z"
+ * must render as 08:00 — NOT be converted to 10:00 (Europe/Berlin +2).
+ * Google-synced events carry an explicit offset whose wall-clock part is
+ * already the user's local time, so the offset is ignored here on purpose.
+ */
+export function parseEventDate(iso: string): Date {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return new Date(iso);
+  return new Date(
+    Number(m[1]),
+    Number(m[2]) - 1,
+    Number(m[3]),
+    Number(m[4]),
+    Number(m[5]),
+    Number(m[6] ?? 0),
+  );
+}
+
 /** Today's date as local 'YYYY-MM-DD'. */
 export function todayIso(): string {
   return toIso(new Date());
@@ -229,11 +250,11 @@ export function useCurrentMonth(): [string, (m: string) => void] {
 // ─── Formatting ─────────────────────────────────────────────────────────
 
 export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  return parseEventDate(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
 
 export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('de-DE', {
+  return parseEventDate(iso).toLocaleDateString('de-DE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -251,7 +272,7 @@ export function formatDayLong(iso: string): string {
 
 /** Convert an ISO datetime into a value usable by <input type="datetime-local">. */
 export function toDatetimeLocal(iso: string): string {
-  const d = new Date(iso);
+  const d = parseEventDate(iso);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
@@ -292,8 +313,8 @@ export function eventSpan(
 ): { top: number; height: number } | null {
   const dayStart = parseLocal(dayIso);
   const dayEnd = new Date(`${dayIso}T23:59:59`);
-  const start = new Date(ev.startDate);
-  const end = ev.endDate ? new Date(ev.endDate) : new Date(ev.startDate);
+  const start = parseEventDate(ev.startDate);
+  const end = ev.endDate ? parseEventDate(ev.endDate) : parseEventDate(ev.startDate);
   if (end < dayStart || start > dayEnd) return null;
   const clampedStart = start < dayStart ? dayStart : start;
   const clampedEnd = end > dayEnd ? dayEnd : end;

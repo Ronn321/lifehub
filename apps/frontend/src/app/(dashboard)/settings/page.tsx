@@ -11,7 +11,6 @@ import {
 import { cn } from '@/lib/cn';
 import { useJellyfinLayout, type SidebarStyle } from '@/lib/jellyfin-layout-store';
 import { useThemeStore, type Accent } from '@/lib/theme-store';
-import { ACCENT_PRESETS, useAccentStore, type AccentKey } from '@/lib/accent';
 import { GoogleAccountCard } from '@/components/integrations/GoogleAccountCard';
 
 interface SystemSettings {
@@ -348,48 +347,13 @@ function AppearanceSettings() {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const accent = useThemeStore((s) => s.accent);
+  const customHex = useThemeStore((s) => s.customHex);
   const setAccent = useThemeStore((s) => s.setAccent);
   const sidebarStyle = useJellyfinLayout((s) => s.sidebarStyle);
   const setSidebarStyle = useJellyfinLayout((s) => s.setSidebarStyle);
-  const hubAccent = useAccentStore((s) => s.accent);
-  const hubCustomHex = useAccentStore((s) => s.customHex);
-  const hubSetAccent = useAccentStore((s) => s.setAccent);
 
   return (
     <div className="space-y-4">
-      {/* Hub-Akzentfarbe (calendar/hub-wide, additive to jellyfin theme-store accent) */}
-      <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
-        <h2 className="text-lg font-medium">Akzentfarbe</h2>
-        <div className="flex flex-wrap gap-2">
-          {ACCENT_PRESETS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => hubSetAccent(p.key)}
-              title={p.label}
-              aria-label={p.label}
-              className={cn(
-                'h-8 w-8 rounded-full border-2 transition-all',
-                hubAccent === p.key ? 'border-fg scale-110' : 'border-transparent hover:scale-105',
-              )}
-              style={{ backgroundColor: `rgb(${p.dark[500]})` }}
-            />
-          ))}
-          <label
-            className="h-8 w-8 rounded-full border-2 border-dashed border-fg-subtle cursor-pointer grid place-items-center text-xs"
-            title="Eigene Farbe"
-          >
-            <input
-              type="color"
-              className="sr-only"
-              value={hubCustomHex ?? '#d97706'}
-              onChange={(e) => hubSetAccent('custom', e.target.value)}
-            />
-            +
-          </label>
-        </div>
-        <p className="text-xs text-fg-subtle mt-1">Standard: Amber — die Akzentfarbe des Hubs.</p>
-      </div>
-
       {/* Theme */}
       <div className="rounded-lg border border-border bg-bg-surface p-6 space-y-4">
         <h2 className="text-lg font-medium">Design</h2>
@@ -424,7 +388,7 @@ function AppearanceSettings() {
 
         <div>
           <label className="block text-sm font-medium mb-2">Akzentfarbe</label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {ACCENT_OPTIONS.map((opt) => {
               const active = accent === opt.key;
               return (
@@ -448,7 +412,50 @@ function AppearanceSettings() {
                 </button>
               );
             })}
+            {/* Custom color swatch (rainbow) */}
+            <button
+              onClick={() => setAccent('custom', customHex ?? '#d97706')}
+              title="Eigene Farbe"
+              aria-label="Eigene Farbe"
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-full transition-all',
+                accent === 'custom'
+                  ? 'ring-2 ring-offset-2 ring-offset-bg-surface'
+                  : 'hover:scale-110',
+              )}
+              style={{
+                background:
+                  'conic-gradient(#f43f5e, #f59e0b, #22c55e, #3b82f6, #8b5cf6, #f43f5e)',
+                ...(accent === 'custom'
+                  ? { boxShadow: `0 0 0 2px ${customHex ?? '#d97706'}` }
+                  : {}),
+              }}
+            >
+              {accent === 'custom' && <Check className="h-4 w-4 text-white" />}
+            </button>
           </div>
+
+          {/* Custom HEX picker */}
+          {accent === 'custom' && (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="color"
+                value={customHex ?? '#d97706'}
+                onChange={(e) => setAccent('custom', e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-border bg-bg p-1"
+                aria-label="Farbwähler"
+              />
+              <input
+                type="text"
+                value={customHex ?? '#d97706'}
+                onChange={(e) => setAccent('custom', e.target.value)}
+                className="input-field w-32 font-mono"
+                placeholder="#d97706"
+                aria-label="HEX-Wert"
+              />
+              <span className="text-xs text-fg-subtle">Eigene Akzentfarbe (HEX)</span>
+            </div>
+          )}
         </div>
       </div>
 

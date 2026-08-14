@@ -72,7 +72,11 @@ export class MediaService {
 
   // ========== FILES ==========
   async listFiles(ownerId: string, options?: { sourceId?: string; limit?: number; offset?: number }) {
-    return this.repo.findFilesByOwner(ownerId, options);
+    const [items, total] = await Promise.all([
+      this.repo.findFilesByOwner(ownerId, options),
+      this.repo.countFilesByOwner(ownerId, options?.sourceId),
+    ]);
+    return { items, total };
   }
 
   async getFile(ownerId: string, id: string) {

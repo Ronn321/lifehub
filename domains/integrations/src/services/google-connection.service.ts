@@ -145,8 +145,9 @@ export class GoogleConnectionService {
    */
   async getGmail(ownerId: string): Promise<gmail_v1.Gmail> {
     const client = await this.getGoogleClient(ownerId);
-    // googleapis v144 typisiert Gmail als "v1"; v3 läuft runtime korrekt.
-    return google.gmail({ version: 'v3' as 'v1', auth: client });
+    // googleapis ≥143 enthält NUR gmail_v1 (kein v3 mehr) — v3 führte zu
+    // "Unable to load endpoint gmail(v3): ctr is not a constructor".
+    return google.gmail({ version: 'v1', auth: client });
   }
 
   private async fetchEmail(

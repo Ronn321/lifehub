@@ -551,12 +551,15 @@ function AddFilesToAlbumDialog({ albumId, onClose }: { albumId: string; onClose:
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
 
-  const { data: allFiles, isLoading } = useQuery<MediaFile[]>({
+  const { data: allFiles, isLoading } = useQuery<{ items: MediaFile[]; total: number }>({
     queryKey: ['media-files-all'],
-    queryFn: () => api.get<MediaFile[]>('/media/files?limit=500'),
+    queryFn: () => api.get<{ items: MediaFile[]; total: number }>('/media/files?limit=500&offset=0'),
   });
 
-  const filtered = (allFiles ?? []).filter(f => !search || f.filename.toLowerCase().includes(search.toLowerCase()));
+  const fileList = Array.isArray(allFiles)
+    ? (allFiles as unknown as MediaFile[])
+    : (allFiles?.items ?? []);
+  const filtered = fileList.filter(f => !search || f.filename.toLowerCase().includes(search.toLowerCase()));
 
   const addMut = useMutation({
     mutationFn: (mediaIds: string[]) => api.post(`/media/albums/${albumId}/items`, { mediaIds }),
@@ -695,10 +698,10 @@ function AlbumDetailView({
                     key={file.id}
                     className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
                   >
-                    {/* Thumbnail — original via stream for 100% quality */}
+                    {/* Thumbnail first — instant base64 thumb, original only in lightbox */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={getStreamUrl(file.id)}
+                        src={file.thumbnailPath ?? getStreamUrl(file.id)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
                         loading="lazy"
@@ -707,6 +710,7 @@ function AlbumDetailView({
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
+                        thumbnail={file.thumbnailPath}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -769,6 +773,26 @@ function GalleryTab() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [addToAlbumId, setAddToAlbumId] = useState<string | null>(null);
 
+  // Pagination + page size (persisted per browser)
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return 50;
+    const saved = parseInt(localStorage.getItem('lifehub-media-page-size') ?? '50', 10);
+    return Number.isFinite(saved) && saved > 0 ? saved : 50;
+  });
+  const [page, setPage] = useState(0);
+  const [customSizeOpen, setCustomSizeOpen] = useState(false);
+  const changePageSize = (n: number) => {
+    setPageSize(n);
+    setPage(0);
+    setCustomSizeOpen(false);
+    localStorage.setItem('lifehub-media-page-size', String(n));
+  };
+
+  // Reset to first page when the source/favorite filter changes
+  useEffect(() => {
+    setPage(0);
+  }, [sourceFilter, favoriteFilter]);
+
   // Get sources for the filter dropdown
   const { data: sources } = useQuery<MediaSource[]>({
     queryKey: ['media-sources'],
@@ -776,23 +800,30 @@ function GalleryTab() {
     staleTime: 30_000,
   });
 
-  // Fetch files (simple query — API returns plain array)
+  // Fetch files (paginated — API returns { items, total })
   const {
     data: allFiles,
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['media-files', sourceFilter, favoriteFilter],
+  } = useQuery<{ items: MediaFile[]; total: number }>({
+    queryKey: ['media-files', sourceFilter, favoriteFilter, page, pageSize],
     queryFn: () => {
       const params = new URLSearchParams();
       if (sourceFilter) params.set('sourceId', sourceFilter);
-      return api.get<MediaFile[]>(`/media/files?${params.toString()}`);
+      params.set('limit', String(pageSize));
+      params.set('offset', String(page * pageSize));
+      return api.get<{ items: MediaFile[]; total: number }>(`/media/files?${params.toString()}`);
     },
     staleTime: 10_000,
   });
 
-  const files = (allFiles ?? []).filter(f => {
+  const totalFiles = allFiles?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalFiles / pageSize));
+  const rawFiles = Array.isArray(allFiles)
+    ? (allFiles as unknown as MediaFile[])
+    : (allFiles?.items ?? []);
+  const files = rawFiles.filter(f => {
     if (search && !f.filename.toLowerCase().includes(search.toLowerCase())) return false;
     if (favoriteFilter && !f.isFavorite) return false;
     return true;
@@ -937,8 +968,63 @@ function GalleryTab() {
           </div>
         )}
 
-        <span className="text-xs text-fg-muted ml-auto">
-          {files.length} Dateien
+        {/* Page size + pagination */}
+        <div className="flex items-center gap-2 ml-auto">
+          <select
+            value={customSizeOpen ? 'custom' : String(pageSize)}
+            onChange={(e) => {
+              if (e.target.value === 'custom') setCustomSizeOpen(true);
+              else changePageSize(parseInt(e.target.value, 10));
+            }}
+            title="Medien pro Seite"
+            className="rounded-md border border-border bg-bg-surface px-2 py-1.5 text-xs text-fg focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          >
+            {[25, 50, 100, 150, 200].map((n) => (
+              <option key={n} value={n}>{n} pro Seite</option>
+            ))}
+            <option value="custom">Eigene…</option>
+          </select>
+          {customSizeOpen && (
+            <input
+              type="number"
+              min={1}
+              max={500}
+              placeholder="Anzahl"
+              autoFocus
+              className="w-20 rounded-md border border-border bg-bg-surface px-2 py-1.5 text-xs text-fg focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+              onBlur={(e) => {
+                const n = parseInt(e.target.value, 10);
+                if (Number.isFinite(n) && n > 0) changePageSize(n);
+                else setCustomSizeOpen(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+              }}
+            />
+          )}
+          <span className="text-xs text-fg-muted whitespace-nowrap">
+            Seite {page + 1} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-fg-muted transition-colors hover:text-fg disabled:opacity-30"
+            aria-label="Vorherige Seite"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-fg-muted transition-colors hover:text-fg disabled:opacity-30"
+            aria-label="Nächste Seite"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <span className="text-xs text-fg-muted">
+          {totalFiles} Dateien
           {sourceFilter && sources ? ` · ${sources.find((s) => s.id === sourceFilter)?.name ?? ''}` : ''}
         </span>
       </div>
@@ -1005,19 +1091,19 @@ function GalleryTab() {
                         </div>
                       </div>
                     )}
-                    {/* Thumbnail — original via stream for 100% quality */}
+                    {/* Thumbnail first — instant base64 thumb, original only in lightbox */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={getStreamUrl(file.id)}
+                        src={file.thumbnailPath ?? getStreamUrl(file.id)}
                         alt={file.filename}
                         className="h-full w-full object-contain bg-bg-raised"
                         loading="lazy"
-                        style={{ imageRendering: 'crisp-edges' }}
                       />
                     ) : isVideo(file.mimeType) ? (
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
+                        thumbnail={file.thumbnailPath}
                         className="h-full w-full object-contain bg-bg-raised"
                       />
                     ) : (
@@ -1278,8 +1364,9 @@ function MapView() {
   const { data, isLoading, error } = useQuery<MediaFile[]>({
     queryKey: ['media-files-gps'],
     queryFn: async () => {
-      const res = await api.get<MediaFile[]>('/media/files?limit=500&offset=0');
-      return (Array.isArray(res) ? res : []).filter((f) => f.gpsLat != null && f.gpsLng != null);
+      const res = await api.get<{ items: MediaFile[]; total: number }>('/media/files?limit=500&offset=0');
+      const list = Array.isArray(res) ? (res as unknown as MediaFile[]) : (res?.items ?? []);
+      return list.filter((f) => f.gpsLat != null && f.gpsLng != null);
     },
     staleTime: 30_000,
   });

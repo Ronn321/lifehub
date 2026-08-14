@@ -362,7 +362,6 @@ Plugins            (/admin/plugins)     — Phase 6
 Widgets per Drag & Drop umsortierbar, Layout wird pro User persistiert.
 
 ### 6.2 Medien — Galerie (Google-Photos-Style)
-
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Medien › Galerie                                             │
@@ -382,7 +381,10 @@ Widgets per Drag & Drop umsortierbar, Layout wird pro User persistiert.
 │ │     │     │     │     │     │     │                       │
 │ └─────┴─────┴─────┴─────┴─────┴─────┘                       │
 │                                                               │
-│ Masonry-Grid, Lightbox auf Klick, Infinite-Scroll             │
+- Masonry-Grid, Lightbox auf Klick, Infinite-Scroll
+
+**Pagination (implementiert 08/2026):** Galerie lädt seitenweise (`GET /media/files?limit&offset` → `{items,total}`), Seiten-Größe 25/50/100/150/200 oder eigene Zahl (persistiert in `lifehub-media-page-size`), „Seite X / Y" + Pfeile.
+**Thumbnail-first:** Kacheln zeigen sofort das eingebettete Base64-Thumbnail (`thumbnailPath`); Video-Kacheln rendern `VideoPreviewTile` (Play-Platzhalter, die 5s-Vorschau mountet erst bei Hover) — keine Original-Streams beim Galerie-Laden.
 └──────────────────────────────────────────────────────────────┘
 ```
 

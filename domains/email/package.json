@@ -17,7 +17,7 @@
     "@lifehub/integrations-domain": "workspace:*",
     "drizzle-orm": "^0.36.0",
     "zod": "3.23.8",
-    "googleapis": "^144.0.0",
+    "googleapis": "143.0.0",
     "@types/express": "^5.0.0"
   },
   "devDependencies": {

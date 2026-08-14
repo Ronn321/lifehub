@@ -89,6 +89,17 @@ export class MediaRepository {
       .offset(options?.offset ?? 0);
   }
 
+  /** Total file count for pagination (same filters as findFilesByOwner) */
+  async countFilesByOwner(ownerId: string, sourceId?: string): Promise<number> {
+    const conditions = [eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)];
+    if (sourceId) conditions.push(eq(mediaFiles.sourceId, sourceId));
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(mediaFiles)
+      .where(and(...conditions));
+    return row?.count ?? 0;
+  }
+
   async findFileById(id: string, ownerId: string) {
     const [row] = await this.db.select().from(mediaFiles)
       .where(and(eq(mediaFiles.id, id), eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)));

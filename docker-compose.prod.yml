@@ -124,6 +124,26 @@ services:
     networks: [lifehub]
     logging: *default-logging
 
+  # ============ Browser-Renderer (Chrome) ============
+  chrome:
+    image: ghcr.io/ronn321/lifehub-chrome:latest
+    container_name: lifehub-chrome
+    restart: unless-stopped
+    environment:
+      - BROWSER_PROFILE_ROOT=/data/browser-profiles
+      - BROWSER_MAX_DOWNLOAD_BYTES=524288000
+      - BROWSER_RENDERER_KEY=${BROWSER_RENDERER_KEY}
+      - PORT=3000
+    ports:
+      - "3111:3000"
+    shm_size: 2gb
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ${LIFEHUB_DATA_PATH:-./data}/browser-profiles:/data/browser-profiles
+    networks: [lifehub]
+    logging: *default-logging
+
   # ============ Backend ============
   backend:
     image: ghcr.io/ronn321/lifehub-backend:latest
@@ -147,6 +167,8 @@ services:
       - LIFEHUB_PROJECTS_PATH=/mnt/projects
       - TZ=${TZ:-Europe/Berlin}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - BROWSER_RENDERER_URL=http://chrome:3000
+      - BROWSER_RENDERER_KEY=${BROWSER_RENDERER_KEY}
       - CORS_ORIGINS=http://localhost:${FRONTEND_PORT:-3100},http://localhost:3001
     volumes:
       - ${LIFEHUB_DATA_PATH:-./data}/storage:/data/storage

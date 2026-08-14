@@ -4,7 +4,7 @@ import React, { memo, useState, useRef, useCallback } from 'react';
 import { Play, Pause, Heart, MoreHorizontal, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MusicImage } from './MusicCard';
-import { formatTime, useJellyfinServer, useToggleFavorite } from '@/lib/music-api';
+import { formatTime, useJellyfinServer, useToggleFavoriteSong } from '@/lib/music-api';
 import { useAuthStore } from '@/lib/auth-store';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { useSongContextMenu } from './ContextMenu';
@@ -43,12 +43,11 @@ function SongRowImpl({
 
   const router = useRouter();
   const server = useJellyfinServer();
-  const toggleFavoriteStore = useMusicPlayerStore((s) => s.toggleFavorite);
+  const toggleFav = useToggleFavoriteSong();
   const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
   const addToQueueNext = useMusicPlayerStore((s) => s.addToQueueNext);
   const isFav = useMusicPlayerStore((s) => s.isFavorite);
   const playbackStatus = useMusicPlayerStore((s) => s.status);
-  const toggleFavoriteAPI = useToggleFavorite();
   const onSongContextMenu = useSongContextMenu({ serverId: server?.id });
 
   const handleClick = useCallback(
@@ -95,10 +94,7 @@ function SongRowImpl({
           onAddToQueue: () => addToQueue(track),
           onAddToQueueNext: () => addToQueueNext(track),
           onToggleFavorite: () => {
-            toggleFavoriteStore(track);
-            if (server) {
-              toggleFavoriteAPI(server.id, track.id);
-            }
+            if (server) toggleFav.mutate(track.id);
           },
           onGoToArtist: track.artistId
             ? () => router.push(`/jellyfin/music/artist/${track.artistId}`)
@@ -178,10 +174,7 @@ function SongRowImpl({
         aria-label="Favorit"
         onClick={(e) => {
           e.stopPropagation();
-          toggleFavoriteStore(track);
-          if (server) {
-            toggleFavoriteAPI(server.id, track.id);
-          }
+          if (server) toggleFav.mutate(track.id);
         }}
       >
         <Heart
@@ -209,10 +202,7 @@ function SongRowImpl({
               onAddToQueue: () => addToQueue(track),
               onAddToQueueNext: () => addToQueueNext(track),
               onToggleFavorite: () => {
-                toggleFavoriteStore(track);
-                if (server) {
-                  toggleFavoriteAPI(server.id, track.id);
-                }
+                if (server) toggleFav.mutate(track.id);
               },
               onGoToArtist: track.artistId
                 ? () => router.push(`/jellyfin/music/artist/${track.artistId}`)

@@ -25,6 +25,7 @@ import {
   ticksToSeconds,
   formatTime,
   getCoverUrl,
+  useToggleFavoriteSong,
   jellyfinItemToTrack,
 } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
@@ -96,6 +97,8 @@ export function PlaylistSongTable({
   const playTrack = useMusicPlayerStore((s) => s.playTrack);
   const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
   const addToQueueNext = useMusicPlayerStore((s) => s.addToQueueNext);
+  const toggleFav = useToggleFavoriteSong();
+  const isFav = useMusicPlayerStore((s) => s.isFavorite);
 
   // Convert items to tracks once
   const tracks = useMemo(
@@ -468,9 +471,19 @@ export function PlaylistSongTable({
                 <button
                   className="shrink-0 p-1 opacity-0 transition-opacity group-hover:opacity-100"
                   aria-label="Favorit"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFav.mutate(track.id);
+                  }}
                 >
-                  <Heart className="h-4 w-4 text-[var(--music-text-secondary)] hover:text-[var(--music-accent)]" />
+                  <Heart
+                    className={cn(
+                      'h-4 w-4',
+                      isFav(track.id)
+                        ? 'fill-[var(--music-accent)] text-[var(--music-accent)]'
+                        : 'text-[var(--music-text-secondary)] hover:text-[var(--music-accent)]',
+                    )}
+                  />
                 </button>
 
                 {/* More */}
@@ -531,7 +544,9 @@ export function PlaylistSongTable({
           <SongContextItem
             icon={<Heart className="h-4 w-4" />}
             label="Favorit"
-            onClick={() => {}}
+            onClick={() => {
+              if (contextMenu.track) toggleFav.mutate(contextMenu.track.id);
+            }}
           />
           <SongContextItem
             icon={<Info className="h-4 w-4" />}

@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
-import { useJellyfinServer, getStreamUrl, useReportPlaybackStart, useReportPlaybackProgress, useReportPlaybackStop, useFavoriteSongs, jellyfinItemToTrack } from '@/lib/music-api';
+import { useJellyfinServer, getStreamUrl, useReportPlaybackStart, useReportPlaybackProgress, useReportPlaybackStop, useFavoriteSongs, useToggleFavoriteSong, jellyfinItemToTrack } from '@/lib/music-api';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import type { RepeatMode, QueueItem } from '@/lib/music-player-store';
 import { MusicPlayerBar } from '@/components/music/player/MusicPlayerBar';
@@ -153,6 +154,7 @@ export function MusicPlayerWrapper() {
   /* ── UI state from store ── */
   const isExpanded = useMusicPlayerStore((s) => s.isExpanded);
   const toggleExpanded = useMusicPlayerStore((s) => s.toggleExpanded);
+  const setNowPlayingTab = useMusicPlayerStore((s) => s.setNowPlayingTab);
   const isMiniPlayer = useMusicPlayerStore((s) => s.isMiniPlayer);
 
   /* ── Local UI state for the player bar ── */
@@ -380,6 +382,7 @@ export function MusicPlayerWrapper() {
   const reportPlaybackStart = useReportPlaybackStart();
   const reportPlaybackProgress = useReportPlaybackProgress();
   const reportPlaybackStop = useReportPlaybackStop();
+  const qc = useQueryClient();
 
   // Track the current item to detect skips and avoid redundant stops
   const prevItemIdRef = useRef<string | null>(null);
@@ -393,7 +396,9 @@ export function MusicPlayerWrapper() {
     // If we changed from a previous track that hasn't been stopped yet, stop it first
     if (prevItemIdRef.current && prevItemIdRef.current !== itemId && !hasReportedStopRef.current) {
       const activeEl = activeElementRef.current;
-      reportPlaybackStop(server.id, prevItemIdRef.current, Math.floor((activeEl?.currentTime ?? 0) * 10_000_000)).catch(() => {});
+      reportPlaybackStop(server.id, prevItemIdRef.current, Math.floor((activeEl?.currentTime ?? 0) * 10_000_000))
+        .then(() => qc.invalidateQueries({ queryKey: ['music-recent'] }))
+        .catch(() => {});
     }
 
     prevItemIdRef.current = itemId;
@@ -423,7 +428,9 @@ export function MusicPlayerWrapper() {
 
     if (status === 'finished' || status === 'stopped') {
       const activeEl = activeElementRef.current;
-      reportPlaybackStop(server.id, prevItemIdRef.current, Math.floor((activeEl?.currentTime ?? 0) * 10_000_000)).catch(() => {});
+      reportPlaybackStop(server.id, prevItemIdRef.current, Math.floor((activeEl?.currentTime ?? 0) * 10_000_000))
+        .then(() => qc.invalidateQueries({ queryKey: ['music-recent'] }))
+        .catch(() => {});
       hasReportedStopRef.current = true;
     }
   }, [status, server?.id]);
@@ -729,18 +736,25 @@ export function MusicPlayerWrapper() {
   /*  5. Callbacks for MusicPlayerBar                                */
   /* ════════════════════════════════════════════════════════════════ */
 
-  const handleLikeToggle = useCallback((_trackId: string) => {
-    setIsLiked((prev) => !prev);
-    // TODO: Wire up to a real favourites API call
-  }, []);
+  const toggleFavSong = useToggleFavoriteSong();
+
+  const handleLikeToggle = useCallback(
+    (trackId: string) => {
+      if (!currentTrack) return;
+      toggleFavSong.mutate(trackId);
+      setIsLiked((prev) => !prev);
+    },
+    [currentTrack, toggleFavSong],
+  );
 
   const handleExpandToggle = useCallback(() => {
     toggleExpanded();
   }, [toggleExpanded]);
 
   const handleQueueToggle = useCallback(() => {
-    // TODO: Open queue/now-playing panel
-  }, []);
+    setNowPlayingTab('queue');
+    if (!useMusicPlayerStore.getState().isExpanded) toggleExpanded();
+  }, [setNowPlayingTab, toggleExpanded]);
 
   const handleLyricsToggle = useCallback(() => {
     setIsLyricsVisible((prev) => !prev);

@@ -140,7 +140,7 @@ export function MusicSidebar({
           <PanelLeftOpen className="h-3.5 w-3.5" />
         </button>
       ) : (
-        <div className={cn('flex items-center px-3 pb-2', lhCollapsed && collapsed ? 'pt-16' : 'pt-6')}>
+        <div className={cn('flex items-center justify-end px-3 pb-2', lhCollapsed && collapsed ? 'pt-16' : 'pt-6')}>
           <button
             onClick={onToggleCollapse}
             className={cn(

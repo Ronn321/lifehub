@@ -2,7 +2,7 @@
 
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { MusicTrack } from '@/lib/music-player-store';
 import { useCallback } from 'react';
 
@@ -201,7 +201,9 @@ export function useRecentlyPlayed(serverId?: string, limit = 12) {
     queryFn: () =>
       api.get<JellyfinApiItem[]>(`/jellyfin/servers/${serverId}/recent?limit=${limit}`),
     enabled: !!serverId,
-    staleTime: 60_000,
+    // Keep recent history reasonably fresh and refetch when the page is revisited.
+    staleTime: 30_000,
+    refetchOnMount: true,
   });
 }
 
@@ -424,6 +426,24 @@ export function useFavoriteSongs(serverId?: string) {
       api.get<JellyfinApiItem[]>(`/jellyfin/servers/${serverId}/favorites`),
     enabled: !!serverId,
     staleTime: 60_000,
+  });
+}
+
+/** Persist a favorite toggle on Jellyfin and keep the music player store in sync. */
+export function useToggleFavoriteSong() {
+  const qc = useQueryClient();
+  const server = useJellyfinServer();
+  const toggleFavorite = useMusicPlayerStore((s) => s.toggleFavorite);
+  return useMutation({
+    mutationFn: (trackId: string) =>
+      api.post<{ isFavorite: boolean }>(
+        `/jellyfin/servers/${server!.id}/items/${trackId}/favorite`,
+      ),
+    onSuccess: async (_data, trackId) => {
+      // Optimistically update the local favorites set, then refetch from Jellyfin
+      toggleFavorite(trackId);
+      await qc.invalidateQueries({ queryKey: ['music-favorites', server?.id] });
+    },
   });
 }
 

@@ -58,6 +58,9 @@ export type RepeatMode = 'off' | 'all' | 'one';
 
 export type QueueType = 'manual' | 'album' | 'playlist' | 'automatic';
 
+/* Active tab of the Now Playing / queue panel */
+export type NowPlayingTab = 'nowplaying' | 'lyrics' | 'queue';
+
 /* Queue item states: position + origin per track */
 export type QueueItemState =
   | 'current'
@@ -211,10 +214,14 @@ interface MusicPlayerStore {
   updateDevice: (deviceId: string, updates: Partial<DeviceInfo>) => void;
 
   /* ── Favorites Actions ── */
-    toggleFavorite: (track: MusicTrack) => void;
+    toggleFavorite: (trackId: string) => void;
     isFavorite: (trackId: string) => boolean;
     getFavoriteTracks: () => MusicTrack[];
     syncFavorites: (tracks: MusicTrack[]) => void;
+
+  /* ── Now Playing panel ── */
+  nowPlayingTab: NowPlayingTab;
+  setNowPlayingTab: (tab: NowPlayingTab) => void;
   }
 
 /* ------------------------------------------------------------------ */
@@ -328,6 +335,7 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
 
       /* ── UI state ── */
       isExpanded: false,
+      nowPlayingTab: 'nowplaying',
       isMiniPlayer: false,
       sleepTimerEnd: null,
       miniPlayerPosition: typeof window !== 'undefined' ? { x: window.innerWidth - 320, y: window.innerHeight - 200 } : { x: 200, y: 200 },
@@ -843,6 +851,8 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
 
       toggleExpanded: () => set((s) => ({ isExpanded: !s.isExpanded })),
 
+      setNowPlayingTab: (tab) => set({ nowPlayingTab: tab }),
+
       setSleepTimer: (ms) =>
         set({ sleepTimerEnd: ms ? Date.now() + ms : null }),
 
@@ -853,21 +863,18 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
 
       /* ── Favorites Actions ── */
 
-      toggleFavorite: (track) => {
+      toggleFavorite: (trackId) => {
         const { favoriteIds, favoriteTracks } = get();
-        const idx = favoriteIds.indexOf(track.id);
+        const idx = favoriteIds.indexOf(trackId);
         if (idx >= 0) {
           // Remove from favorites
-          const newIds = favoriteIds.filter((id) => id !== track.id);
+          const newIds = favoriteIds.filter((id) => id !== trackId);
           const newTracks = { ...favoriteTracks };
-          delete newTracks[track.id];
+          delete newTracks[trackId];
           set({ favoriteIds: newIds, favoriteTracks: newTracks });
         } else {
-          // Add to favorites
-          set({
-            favoriteIds: [...favoriteIds, track.id],
-            favoriteTracks: { ...favoriteTracks, [track.id]: track },
-          });
+          // Add to favorites; the full track detail is restored by the server sync
+          set({ favoriteIds: [...favoriteIds, trackId] });
         }
       },
 

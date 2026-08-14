@@ -97,7 +97,8 @@ function formatSampleRate(hz?: number): string {
 /* ------------------------------------------------------------------ */
 
 export function NowPlayingView({ mode, onClose, audioRef }: NowPlayingViewProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('nowplaying');
+  const activeTab = useMusicPlayerStore((s) => s.nowPlayingTab);
+  const setActiveTab = useMusicPlayerStore((s) => s.setNowPlayingTab);
   const [sidebarGradientColor, setSidebarGradientColor] = useState('#1e1e1e');
 
   const {

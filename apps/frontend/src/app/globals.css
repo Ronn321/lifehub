@@ -163,3 +163,16 @@
     pointer-events: none;
   }
 }
+
+/* ── TV mode (Google TV Streamer) ──────────────────────────────────────────
+   Activated via html.lifehub-tv (see src/lib/client-mode.ts). Larger type,
+   visible focus rings, D-pad-friendly hit targets, thin scrollbars. */
+html.lifehub-tv { font-size: 125%; } /* Basis-Skalierung */
+html.lifehub-tv :focus-visible {
+  outline: 3px solid rgb(var(--brand-500));
+  outline-offset: 2px;
+}
+html.lifehub-tv nav a { min-height: 3rem; } /* größere Sidebar-Trefferflächen */
+html.lifehub-tv button,
+html.lifehub-tv a { cursor: default; }
+html.lifehub-tv ::-webkit-scrollbar { width: 8px; }

@@ -10,10 +10,18 @@ import {
   PanelLeftClose, PanelLeftOpen, Mail,
 } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/cn';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { readHiddenNav, filterNavItems, NAV_ITEM_KEY } from '@/lib/nav-filter';
+
+declare global {
+  interface Window {
+    // Exposed for the mobile WebView shell (reads the real nav list via runJavaScript).
+    __lifehubNav: { href: string; label: string }[];
+  }
+}
 
 interface Page {
   id: string;
@@ -74,6 +82,7 @@ export function Sidebar() {
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
+  const [hiddenNav, setHiddenNav] = useState<string[]>([]);
 
   // Load/save desktop collapsed state from localStorage
   useEffect(() => {
@@ -87,6 +96,16 @@ export function Sidebar() {
       new CustomEvent('lifehub:sidebar-collapse', { detail: { collapsed: desktopCollapsed } }),
     );
   }, [desktopCollapsed]);
+
+  // Read hidden nav items after hydration (client-only, avoids SSR mismatch).
+  useEffect(() => {
+    setHiddenNav(readHiddenNav(window.localStorage.getItem(NAV_ITEM_KEY)));
+  }, []);
+
+  // Expose the real nav list to the mobile WebView shell.
+  useEffect(() => {
+    window.__lifehubNav = navItems.map((i) => ({ href: i.href, label: i.label }));
+  }, []);
 
   // Externes Einklappen/Aufklappen (z.B. BrowserBlock-Vollbild-Modus)
   useEffect(() => {
@@ -157,6 +176,8 @@ export function Sidebar() {
   const pinnedList = allPages.filter((p) => pinnedPageIds.has(p.id));
   const unpinnedList = allPages.filter((p) => !pinnedPageIds.has(p.id));
 
+  const visibleItems = useMemo(() => filterNavItems(navItems, hiddenNav), [hiddenNav]);
+
   return (
     <>
       {/* Mobile toggle */}
@@ -209,7 +230,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
-          {navItems.map((item) => {
+          {visibleItems.map((item) => {
             const active = pathname === item.href;
             return (
               <Link

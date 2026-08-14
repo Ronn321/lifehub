@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Settings } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { formatDayLong, type CalendarView } from '@/lib/calendar';
+import { MonthPickerPopover } from '@/components/calendar/MonthPickerPopover';
 
 interface CalendarToolbarProps {
   view: CalendarView;
@@ -14,6 +16,7 @@ interface CalendarToolbarProps {
   onToday: () => void;
   onNew: () => void;
   onSettingsOpen: () => void;
+  onMonthNavigate: (monthStr: 'YYYY-MM') => void;
 }
 
 const VIEW_LABELS: Record<CalendarView, string> = {
@@ -27,13 +30,6 @@ const VIEW_LABELS: Record<CalendarView, string> = {
 function navLabel(view: CalendarView, monthStr: string, selectedDay: string): string {
   if (view === 'agenda') return 'Anstehende Termine';
   if (view === 'day') return formatDayLong(selectedDay);
-  if (view === 'month') {
-    const [y, m] = monthStr.split('-');
-    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('de-DE', {
-      month: 'long',
-      year: 'numeric',
-    });
-  }
   const [y, m] = monthStr.split('-');
   return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('de-DE', {
     month: 'long',
@@ -51,7 +47,17 @@ export function CalendarToolbar({
   onToday,
   onNew,
   onSettingsOpen,
+  onMonthNavigate,
 }: CalendarToolbarProps) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // Year shown in the month picker, reset to the current month's year on open.
+  const [pickerYear, setPickerYear] = useState(() => Number(monthStr.split('-')[0]));
+
+  function togglePicker() {
+    if (!pickerOpen) setPickerYear(Number(monthStr.split('-')[0]));
+    setPickerOpen((o) => !o);
+  }
+
   return (
     <div className="space-y-3">
       {/* Header row: title + view switcher + actions */}
@@ -93,7 +99,7 @@ export function CalendarToolbar({
       {/* Navigation row */}
       {view !== 'agenda' && (
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <button
               onClick={onPrev}
               className="p-2 rounded-lg hover:bg-bg-raised transition-colors"
@@ -101,9 +107,14 @@ export function CalendarToolbar({
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <h2 className="text-xl font-semibold min-w-[200px] text-center">
+            <button
+              onClick={togglePicker}
+              className="px-3 py-1 rounded-lg hover:bg-bg-raised transition-colors text-xl font-semibold min-w-[200px] text-center"
+              aria-haspopup="dialog"
+              aria-expanded={pickerOpen}
+            >
               {navLabel(view, monthStr, selectedDay)}
-            </h2>
+            </button>
             <button
               onClick={onNext}
               className="p-2 rounded-lg hover:bg-bg-raised transition-colors"
@@ -111,6 +122,14 @@ export function CalendarToolbar({
             >
               <ChevronRight className="h-5 w-5" />
             </button>
+            <MonthPickerPopover
+              open={pickerOpen}
+              onClose={() => setPickerOpen(false)}
+              currentMonthStr={monthStr}
+              year={pickerYear}
+              onYearChange={setPickerYear}
+              onSelect={onMonthNavigate}
+            />
           </div>
           <button
             onClick={onToday}

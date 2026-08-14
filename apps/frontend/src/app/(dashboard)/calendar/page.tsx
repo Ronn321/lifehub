@@ -238,6 +238,7 @@ function CalendarInner() {
         onToday={goToday}
         onNew={() => openNew()}
         onSettingsOpen={() => setSettingsOpen(true)}
+        onMonthNavigate={setMonthStr}
       />
 
       {view === 'month' && (

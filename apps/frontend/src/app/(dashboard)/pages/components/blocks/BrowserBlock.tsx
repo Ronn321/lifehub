@@ -79,7 +79,7 @@ function normalizeInput(input: string): string {
   if (!value) return '';
   if (/^https?:\/\//i.test(value)) return value;
   if (/^[^\s./]+\.[^\s./]+/.test(value)) return `https://${value}`;
-  return `http://searxng:8080/search?q=${encodeURIComponent(value)}`;
+  return `https://www.google.com/search?q=${encodeURIComponent(value)}`;
 }
 
 export function BrowserBlock({

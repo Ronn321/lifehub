@@ -152,13 +152,12 @@ async function humanMouseMove(page, x, y) {
     await page.mouse.move(x, y);
     return;
   }
-  const steps = Math.min(24, Math.max(8, Math.round(dist / 22)));
+  const steps = Math.min(12, Math.max(4, Math.round(dist / 40)));
   for (const p of humanBezierPath(cur.x, cur.y, x, y, steps)) {
     await page.mouse.move(p.x, p.y);
-    await sleep(7 + Math.random() * 24); // 7-31ms je Schritt
+    await sleep(4 + Math.random() * 10); // 4-14ms je Schritt
   }
-  // Hover-Pause vor dem Klick, wie ein Mensch der kurz zielt
-  await sleep(80 + Math.random() * 240);
+  await sleep(40 + Math.random() * 80); // kurze Ziel-Pause vor dem Klick
 }
 
 // Stealth-Patches pro Tab: webdriver-Flag entfernen, Chrome-Objekte vortäuschen
@@ -200,6 +199,13 @@ function rgbToI420(rgb, width, height) {
   }
   return output;
 }
+
+// Typen, die den Browser-/Tab-/Kontrollzustand ändern und daher einen
+// State-Broadcast auslösen (im Gegensatz zu reinen Eingabe-Events wie Maus-Move)
+const STATE_CHANGING_TYPES = new Set([
+  'navigate', 'reload', 'back', 'forward', 'new-tab', 'close-tab',
+  'activate-tab', 'take-control', 'release-control',
+]);
 
 class BrowserSession {
   constructor(id) {
@@ -368,7 +374,7 @@ class BrowserSession {
     return this.state();
   }
 
-  async newTab(rawUrl = 'about:blank') {
+  async newTab(rawUrl = 'https://www.google.com') {
     const target = rawUrl === 'about:blank' ? rawUrl : (await assertSafeTarget(rawUrl)).href;
     const page = await this.browser.newPage();
     const tabId = await this.attachPage(page);
@@ -458,7 +464,7 @@ class BrowserSession {
   async captureFrame() {
     const page = this.getActivePage();
     if (!page) return null;
-    const screenshot = await page.screenshot({ type: 'jpeg', quality: 72 });
+    const screenshot = await page.screenshot({ type: 'jpeg', quality: 65 });
     const raw = await sharp(screenshot).raw().toBuffer({ resolveWithObject: true });
     const width = raw.info.width - (raw.info.width % 2);
     const height = raw.info.height - (raw.info.height % 2);
@@ -532,7 +538,11 @@ class BrowserSession {
         try {
           const message = JSON.parse(String(event.data));
           console.error(`DC-MSG [${this.id}]:`, JSON.stringify(message).slice(0, 160));
-          void this.input(peer, message).then(() => this.sendState(ws)).catch((error) => {
+          void this.input(peer, message).then(() => {
+            // State-Broadcast nur bei Tab-/Kontroll-Änderungen — nicht bei jedem
+            // Maus-Move (sonst Serialisierung + Latenz bei jeder Bewegung).
+            if (STATE_CHANGING_TYPES.has(message.type)) void this.sendState(ws);
+          }).catch((error) => {
             console.error('DC-Input failed:', error.message);
           });
         } catch (error) {
@@ -624,7 +634,7 @@ class BrowserSession {
       await peer.pc.addIceCandidate(new RTCIceCandidate(message.candidate));
     } else if (message.type === 'input') {
       await this.input(peer, message.payload);
-      await this.sendState(peer.ws);
+      if (STATE_CHANGING_TYPES.has(message.payload?.type)) await this.sendState(peer.ws);
     }
   }
 

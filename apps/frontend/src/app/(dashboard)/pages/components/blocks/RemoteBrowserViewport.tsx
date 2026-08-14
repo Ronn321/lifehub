@@ -208,12 +208,16 @@ export const RemoteBrowserViewport = forwardRef<
   };
 
   const overlayRef = useRef<HTMLDivElement>(null);
+  // Hover-Drosselung: letzter Send-Zeitpunkt und letzter gesendeter Punkt, um
+  // Bewegungen nur alle 33ms und bei >3px Abstand zu übertragen (siehe onPointerMove).
+  const lastMoveSentAtRef = useRef(0);
+  const lastMovePointRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Frame-Watchdog: Wenn das Video eingefroren ist (currentTime bleibt 5s
-  // stehen, obwohl die Verbindung offen ist), aktiv neu verbinden. Der Server
-  // schließt den Peer zwar nach Capture-Fehlern selbst — dieser Watchdog ist
-  // die zweite Sicherung, falls der WebSocket lebt, aber keine Frames mehr
-  // ankommen (z.B. Chromium-Hänger).
+  // Frame-Watchdog: Wenn das Video eingefroren ist (currentTime bleibt stehen,
+  // obwohl die Verbindung offen ist), aktiv neu verbinden. 10s statt 5s: Unter
+  // Last (mehrere Sessions) dauert ein Frame gelegentlich länger als 5s — der
+  // Server erkennt Stalls bereits nach 10s und startet hart neu. Dieser Watchdog
+  // ist nur der Fallback und darf nicht zuerst feuern.
   useEffect(() => {
     if (!streamPath || !token) return undefined;
     let lastTime = -1;
@@ -225,7 +229,7 @@ export const RemoteBrowserViewport = forwardRef<
       if (t !== lastTime) {
         lastTime = t;
         lastChangeAt = Date.now();
-      } else if (Date.now() - lastChangeAt > 5000 && socketRef.current?.readyState === WebSocket.OPEN) {
+      } else if (Date.now() - lastChangeAt > 10_000 && socketRef.current?.readyState === WebSocket.OPEN) {
         console.error('[RemoteBrowserViewport] Stream eingefroren — Reconnect');
         socketRef.current?.close();
         lastChangeAt = Date.now();
@@ -238,17 +242,29 @@ export const RemoteBrowserViewport = forwardRef<
   // Wheel-Scroll-Isolation: Reacts onWheel ist passiv (preventDefault greift
   // nicht) → die LifeHub-Seite scrollte mit. Nativer non-passive Listener:
   // stoppt die Propagation und leitet das Rad nur an den Remote-Browser weiter.
+  // Gedrosselt: Rad-Impulse (bei einigen Mausrädern sehr schnell) werden zu
+  // Deltas akkumuliert und max. alle 40ms gesendet, damit der DataChannel nicht
+  // geflutet wird.
   useEffect(() => {
     const el = overlayRef.current;
     if (!el) return undefined;
+    let pendingDeltaX = 0;
+    let pendingDeltaY = 0;
+    let lastSentAt = 0;
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       event.stopPropagation();
-      sendInput({ type: 'wheel', deltaX: event.deltaX, deltaY: event.deltaY });
+      pendingDeltaX += event.deltaX;
+      pendingDeltaY += event.deltaY;
+      const now = performance.now();
+      if (now - lastSentAt < 40) return;
+      lastSentAt = now;
+      sendInput({ type: 'wheel', deltaX: pendingDeltaX, deltaY: pendingDeltaY });
+      pendingDeltaX = 0;
+      pendingDeltaY = 0;
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-    // sendInput ist stabil (nutzt Refs); nur bei streamPath/token neu binden.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamPath, token]);
 
@@ -284,8 +300,18 @@ export const RemoteBrowserViewport = forwardRef<
           try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* non-fatal */ }
         }}
         onPointerMove={(event) => {
-          if (event.buttons === 0) return;
-          sendInput({ type: 'mouse', action: 'move', ...getPoint(event) });
+          // Hover-Bewegungen IMMER senden (gedrosselt): Cloudflare-Captchas werten
+          // die Cursor-Trajektorie zur Checkbox aus — ohne Hover sieht der Renderer
+          // nur Klick-Sprünge und der Captcha schlägt fehl. Drossel: max. alle 33ms
+          // und nur bei >3px Positionsänderung, damit der DataChannel nicht flutet.
+          const now = performance.now();
+          if (now - lastMoveSentAtRef.current < 33) return;
+          const point = getPoint(event);
+          const last = lastMovePointRef.current;
+          if (last && Math.abs(point.x - last.x) < 3 && Math.abs(point.y - last.y) < 3) return;
+          lastMoveSentAtRef.current = now;
+          lastMovePointRef.current = point;
+          sendInput({ type: 'mouse', action: 'move', ...point });
         }}
         onPointerUp={(event) => {
           const point = getPoint(event);

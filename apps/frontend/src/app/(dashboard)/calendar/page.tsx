@@ -17,6 +17,7 @@ import {
   useCurrentMonth,
   type CalendarEvent,
   type CalendarItem,
+  type CalendarSlot,
   type CalendarUserSettings,
   type CalendarView,
   type WeekStart,
@@ -74,6 +75,7 @@ function CalendarInner() {
   const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
   const [prefillDate, setPrefillDate] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const defaultViewApplied = useRef(false);
 
@@ -167,27 +169,46 @@ function CalendarInner() {
   });
 
   function changeView(v: CalendarView) {
+    setSelectedSlot(null);
     setView(v);
     router.replace(`/calendar?view=${v}`, { scroll: false });
   }
   function goPrev() {
+    setSelectedSlot(null);
     if (view === 'month') setMonthStr(shiftMonth(monthStr, -1));
     else if (view === 'week') setSelectedDay(addDays(selectedDay, -7));
     else if (view === 'day') setSelectedDay(addDays(selectedDay, -1));
   }
   function goNext() {
+    setSelectedSlot(null);
     if (view === 'month') setMonthStr(shiftMonth(monthStr, 1));
     else if (view === 'week') setSelectedDay(addDays(selectedDay, 7));
     else if (view === 'day') setSelectedDay(addDays(selectedDay, 1));
   }
   function goToday() {
     const t = todayIso();
+    setSelectedSlot(null);
     setSelectedDay(t);
     setMonthStr(t.slice(0, 7));
   }
   function openNew(date?: string) {
     setEditEvent(null);
-    setPrefillDate(date ?? todayIso());
+    if (date) {
+      setPrefillDate(date);
+    } else if (selectedSlot) {
+      // Toolbar "Neuer Termin" with an active slot → prefill on that slot, then reset.
+      setPrefillDate(`${selectedSlot.date}T${selectedSlot.start}`);
+      setSelectedSlot(null);
+    } else {
+      setPrefillDate(todayIso());
+    }
+    setDialogOpen(true);
+  }
+  function openNewAtSlot(slot: CalendarSlot) {
+    // Double-click on an empty time slot → open the dialog immediately with start = slot, end = +1h.
+    setEditEvent(null);
+    setSelectedSlot(null);
+    setPrefillDate(`${slot.date}T${slot.start}`);
     setDialogOpen(true);
   }
   function openEdit(ev: CalendarEvent) {
@@ -240,6 +261,9 @@ function CalendarInner() {
           events={events ?? []}
           calendarsMap={calendarsMap}
           onEventClick={setSelectedEvent}
+          selectedSlot={selectedSlot}
+          onSlotSelect={setSelectedSlot}
+          onSlotDoubleClick={openNewAtSlot}
         />
       )}
       {view === 'day' && (
@@ -249,6 +273,9 @@ function CalendarInner() {
           calendarsMap={calendarsMap}
           onEventClick={setSelectedEvent}
           onNew={() => openNew(selectedDay)}
+          selectedSlot={selectedSlot}
+          onSlotSelect={setSelectedSlot}
+          onSlotDoubleClick={openNewAtSlot}
         />
       )}
       {view === 'agenda' && (

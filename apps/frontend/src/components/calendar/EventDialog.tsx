@@ -41,6 +41,21 @@ const emptyForm: DialogForm = {
   calendarId: '',
 };
 
+/**
+ * Add one hour to a 'YYYY-MM-DDTHH:mm' string (local time), returning the
+ * same 'YYYY-MM-DDTHH:mm' shape. Used to default the end time on new events.
+ */
+function addHourLocal(dt: string): string {
+  const d = new Date(`${dt}:00`);
+  d.setHours(d.getHours() + 1);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${y}-${mo}-${da}T${h}:${mi}`;
+}
+
 export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, calendars }: EventDialogProps) {
   const [form, setForm] = useState<DialogForm>(emptyForm);
   const [error, setError] = useState('');
@@ -60,7 +75,18 @@ export function EventDialog({ open, onClose, onSuccess, editEvent, prefillDate, 
         calendarId: editEvent.calendarId || '',
       });
     } else {
-      setForm({ ...emptyForm, startDate: prefillDate ? `${prefillDate}T09:00` : '' });
+      // prefillDate is either 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:mm'.
+      if (prefillDate) {
+        if (prefillDate.includes('T')) {
+          // Exact time given → start at that time, end +1h.
+          setForm({ ...emptyForm, startDate: prefillDate, endDate: addHourLocal(prefillDate) });
+        } else {
+          // Date only → default to 09:00.
+          setForm({ ...emptyForm, startDate: `${prefillDate}T09:00` });
+        }
+      } else {
+        setForm(emptyForm);
+      }
     }
     setError('');
   }, [open, editEvent, prefillDate]);

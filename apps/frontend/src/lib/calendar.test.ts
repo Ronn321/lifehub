@@ -8,6 +8,10 @@ import {
   calendarRange,
   hexToRgbTriplet,
   eventsOnDay,
+  slotFromPoint,
+  minutesToTimeStr,
+  timeStrToMinutes,
+  slotToPrefill,
 } from './calendar';
 import type { CalendarEvent } from './calendar';
 
@@ -133,5 +137,47 @@ describe('eventsOnDay', () => {
     ] as CalendarEvent[];
     const result = eventsOnDay(events, '2026-08-13');
     expect(result.map((e) => e.id).sort()).toEqual(['a', 'b']);
+  });
+});
+
+describe('slotFromPoint', () => {
+  it('snaps a click to the nearest 30-minute slot (48px/hour)', () => {
+    // 00:25 → 20px → 00:30
+    expect(slotFromPoint(20, 48)).toEqual({ startMinutes: 30 });
+    // 00:05 → 4px → 00:00
+    expect(slotFromPoint(4, 48)).toEqual({ startMinutes: 0 });
+  });
+  it('clamps clicks above the grid to the first slot (00:00)', () => {
+    expect(slotFromPoint(-100, 48)).toEqual({ startMinutes: 0 });
+  });
+  it('clamps clicks below the grid to the last slot (23:30)', () => {
+    expect(slotFromPoint(10_000, 48)).toEqual({ startMinutes: 23 * 60 + 30 });
+    expect(slotFromPoint(24 * 48, 48)).toEqual({ startMinutes: 23 * 60 + 30 });
+  });
+  it('respects a custom hour count', () => {
+    expect(slotFromPoint(12 * 48, 48, 12)).toEqual({ startMinutes: 11 * 60 + 30 });
+  });
+});
+
+describe('minutesToTimeStr / timeStrToMinutes', () => {
+  it('formats minutes as HH:mm', () => {
+    expect(minutesToTimeStr(0)).toBe('00:00');
+    expect(minutesToTimeStr(570)).toBe('09:30');
+    expect(minutesToTimeStr(780)).toBe('13:00');
+    expect(minutesToTimeStr(23 * 60 + 30)).toBe('23:30');
+  });
+  it('parses HH:mm back to minutes', () => {
+    expect(timeStrToMinutes('09:30')).toBe(570);
+    expect(timeStrToMinutes('23:30')).toBe(23 * 60 + 30);
+  });
+  it('round-trips minutes → HH:mm → minutes', () => {
+    expect(timeStrToMinutes(minutesToTimeStr(45))).toBe(45);
+  });
+});
+
+describe('slotToPrefill', () => {
+  it('builds a datetime-local prefill from a date and start minutes', () => {
+    expect(slotToPrefill('2026-08-13', 570)).toBe('2026-08-13T09:30');
+    expect(slotToPrefill('2026-08-13', 0)).toBe('2026-08-13T00:00');
   });
 });

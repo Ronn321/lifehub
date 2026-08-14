@@ -69,6 +69,12 @@ export interface WeekDay {
   label: string;
 }
 
+/** A selected 30-minute time slot in a day column. `start` is 'HH:mm'. */
+export interface CalendarSlot {
+  date: string;
+  start: string;
+}
+
 // ─── Constants ─────────────────────────────────────────────────────────
 
 export const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -231,6 +237,33 @@ export function formatDayLong(iso: string): string {
 export function toDatetimeLocal(iso: string): string {
   const d = new Date(iso);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// ─── Time-slot helpers (30-minute grid selection) ───────────────────────
+
+/** Minutes of the day (0..1439) from a y-offset within a time grid, snapped to the nearest 30-minute slot. */
+export function slotFromPoint(y: number, hourPx: number, hourCount = 24): { startMinutes: number } {
+  const minutesFloat = (y / hourPx) * 60;
+  const clamped = Math.min(Math.max(minutesFloat, 0), hourCount * 60 - 30);
+  return { startMinutes: Math.round(clamped / 30) * 30 };
+}
+
+/** Format minutes-of-day as 'HH:mm' (e.g. 570 → '09:30'). */
+export function minutesToTimeStr(m: number): string {
+  const h = Math.floor(m / 60);
+  const min = m % 60;
+  return `${pad(h)}:${pad(min)}`;
+}
+
+/** Minutes-of-day from an 'HH:mm' string (e.g. '09:30' → 570). */
+export function timeStrToMinutes(t: string): number {
+  const [h, min] = t.split(':').map(Number);
+  return (h ?? 0) * 60 + (min ?? 0);
+}
+
+/** Build a datetime-local prefill value 'YYYY-MM-DDTHH:mm' from a date and start minutes. */
+export function slotToPrefill(dateIso: string, startMinutes: number): string {
+  return `${dateIso}T${minutesToTimeStr(startMinutes)}`;
 }
 
 // ─── Event geometry & color ─────────────────────────────────────────────

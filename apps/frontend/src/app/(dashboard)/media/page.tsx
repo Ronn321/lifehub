@@ -67,10 +67,10 @@ interface ScanResult {
 type TabId = 'sources' | 'albums' | 'gallery' | 'map';
 
 const TABS: { id: TabId; label: string; icon: ReactNode }[] = [
-  { id: 'sources', label: 'Quellen', icon: <FolderOpen className="h-4 w-4" /> },
-  { id: 'albums', label: 'Alben', icon: <Image className="h-4 w-4" /> },
   { id: 'gallery', label: 'Galerie', icon: <Camera className="h-4 w-4" /> },
+  { id: 'albums', label: 'Alben', icon: <Image className="h-4 w-4" /> },
   { id: 'map', label: 'Karte', icon: <MapPin className="h-4 w-4" /> },
+  { id: 'sources', label: 'Quellen', icon: <FolderOpen className="h-4 w-4" /> },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -124,7 +124,7 @@ function isImage(mimeType?: string): boolean {
 
 export default function MediaPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>('sources');
+  const [activeTab, setActiveTab] = useState<TabId>('gallery');
   const [showSourceModal, setShowSourceModal] = useState(false);
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const accessToken = useAuthStore((s) => s.accessToken);

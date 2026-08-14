@@ -10,8 +10,9 @@ Integrate Jellyfin as primary media library backend with native fallback.
 - Jellyfin API connection
 - libraries, movies, series
 - watch state sync (gegen Jellyfin `PlayedItems`-API — Jellyfin ist Server of Record)
-- Favoriten (Jellyfin `FavoriteItems`)
-- Benutzerdefinierte Watchlists (LifeHub-eigen: anlegen, benennen, verwalten, Filme/Serien hinzufügen)
+- Favoriten (Jellyfin `FavoriteItems`) — für Filme/Serien UND Songs (Musik-Player)
+- Benutzerdefinierte Watchlists (LifeHub-eigen: anlegen, benennen, verwalten, Filme/Serien/Folgen hinzufügen)
+- Weiterschauen mit Deep-Links (Serie → Staffel/Folge vorausgewählt) + Resume-Position im Player
 - native fallback for direct NAS sources
 
 ---

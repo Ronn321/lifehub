@@ -15,10 +15,20 @@ interface EpisodeListProps {
   serverId: string;
   onPlay?: (episode: JellyfinMediaItem) => void;
   onToggleWatched?: (episode: JellyfinMediaItem) => void;
+  onEpisodeContextMenu?: (episode: JellyfinMediaItem, e: React.MouseEvent) => void;
+  highlightedEpisodeId?: string;
   className?: string;
 }
 
-export function EpisodeList({ episodes, serverId, onPlay, onToggleWatched, className }: EpisodeListProps) {
+export function EpisodeList({
+  episodes,
+  serverId,
+  onPlay,
+  onToggleWatched,
+  onEpisodeContextMenu,
+  highlightedEpisodeId,
+  className,
+}: EpisodeListProps) {
   const sorted = [...episodes].sort((a, b) => (a.IndexNumber ?? 0) - (b.IndexNumber ?? 0));
 
   return (
@@ -32,11 +42,19 @@ export function EpisodeList({ episodes, serverId, onPlay, onToggleWatched, class
         return (
           <div
             key={episode.Id}
+            id={`ep-${episode.Id}`}
             className={cn(
               'group flex gap-4 rounded-xl border border-border bg-bg-surface p-3 transition-all',
               'hover:border-brand-500/30 hover:bg-brand-500/5 cursor-pointer',
+              episode.Id === highlightedEpisodeId && 'ring-2 ring-brand-500',
             )}
             onClick={() => onPlay?.(episode)}
+            onContextMenu={(e) => {
+              if (onEpisodeContextMenu) {
+                e.preventDefault();
+                onEpisodeContextMenu(episode, e);
+              }
+            }}
           >
             {/* Thumbnail */}
             <div className="relative w-[120px] shrink-0 overflow-hidden rounded-lg aspect-video bg-black/40">

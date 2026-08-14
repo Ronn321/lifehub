@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   fetchItemDetail, fetchChildren, fetchContinueWatching, fetchSimilarItems,
@@ -15,15 +15,27 @@ import { SeasonPicker } from '@/components/jellyfin/media/SeasonPicker';
 import { EpisodeList } from '@/components/jellyfin/media/EpisodeList';
 import { CastSection } from '@/components/jellyfin/media/CastSection';
 import { SimilarSection } from '@/components/jellyfin/media/SimilarSection';
-import { ArrowLeft, Loader2, CheckCircle, Circle } from 'lucide-react';
+import { WatchlistPicker } from '@/components/jellyfin/media/WatchlistPicker';
+import { ArrowLeft, Loader2, CheckCircle, Circle, Bookmark } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function SeriesDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const accessToken = useAuthStore((s) => s.accessToken);
   const [hydrated, setHydrated] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
+
+  // Deep-link query params (?season=…&episode=…) from "Continue Watching"
+  const qSeason = Number(searchParams.get('season')) || null;
+  const qEpisode = searchParams.get('episode') || null;
+
+  // Context menu state: which episode was right-clicked + where.
+  const [menuFor, setMenuFor] = useState<{ episode: JellyfinMediaItem; x: number; y: number } | null>(null);
+  // Watchlist picker opened from the context menu (per-episode).
+  const [pickerFor, setPickerFor] = useState<JellyfinMediaItem | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const externalId = params?.id as string;
   const serverId = 'default';
@@ -32,6 +44,18 @@ export default function SeriesDetailPage() {
   useEffect(() => {
     if (hydrated && !accessToken) router.push('/login');
   }, [hydrated, accessToken, router]);
+
+  // Close context menu + picker on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setMenuFor(null);
+        setPickerFor(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   /* -------- Series Detail -------- */
   const { data: series, isLoading, error } = useQuery<JellyfinMediaItem>({
@@ -61,14 +85,6 @@ export default function SeriesDetailPage() {
       }))
       .sort((a: any, b: any) => a.IndexNumber - b.IndexNumber);
   }, [seasons]);
-
-  // Auto-select first non-0 season (skip "All Episodes"/"Specials")
-  useEffect(() => {
-    if (seasonList.length > 0 && selectedSeason === 1) {
-      const first = seasonList.find((s: any) => s.IndexNumber > 0) ?? seasonList[0];
-      setSelectedSeason(first?.IndexNumber ?? 1);
-    }
-  }, [seasonList, selectedSeason]);
 
   // Find selected season's external ID
   const selectedSeasonExternalId = useMemo(() => {
@@ -100,6 +116,43 @@ export default function SeriesDetailPage() {
     if (!continueWatching || !series) return null;
     return continueWatching.find(cw => cw.SeriesId === series.Id) ?? null;
   }, [continueWatching, series]);
+
+  // Episode to highlight + scroll to (deep link param or resume item)
+  const highlightedEpisodeId = qEpisode ?? resumeItem?.Id ?? undefined;
+
+  // Auto-select season by priority: qSeason param > resume season > first non-0 season.
+  // Only set when the target differs from the current selection to avoid resetting
+  // a season the user picked manually.
+  useEffect(() => {
+    if (seasonList.length === 0) return;
+    let target: number | null = null;
+
+    // 1) URL season param (?season=…), if it matches an existing season
+    if (qSeason !== null) {
+      const match = seasonList.find((s: any) => s.IndexNumber === qSeason);
+      if (match) target = match.IndexNumber;
+    }
+    // 2) Season of the resume episode
+    if (target === null && resumeItem?.ParentIndexNumber != null) {
+      const match = seasonList.find((s: any) => s.IndexNumber === resumeItem.ParentIndexNumber);
+      if (match) target = match.IndexNumber;
+    }
+    // 3) Fallback: first non-0 season (skip "All Episodes"/"Specials")
+    if (target === null) {
+      const first = seasonList.find((s: any) => s.IndexNumber > 0) ?? seasonList[0];
+      target = first?.IndexNumber ?? null;
+    }
+
+    if (target !== null && target !== selectedSeason) {
+      setSelectedSeason(target);
+    }
+  }, [seasonList, selectedSeason, qSeason, resumeItem]);
+
+  // Scroll the highlighted episode into view once its episodes are loaded
+  useEffect(() => {
+    if (!episodes || !highlightedEpisodeId) return;
+    document.getElementById(`ep-${highlightedEpisodeId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [episodes, highlightedEpisodeId]);
 
   const resumeTicks = resumeItem?.UserData?.PlaybackPositionTicks ?? null;
   const isWatched = series?.UserData?.Played ?? false;
@@ -191,6 +244,7 @@ export default function SeriesDetailPage() {
   }
 
   return (
+    <>
     <JellyfinPageWrapper>
       <div className="pb-12">
       {/* Hero header (includes back button) */}
@@ -247,7 +301,12 @@ export default function SeriesDetailPage() {
             episodes={episodes}
             serverId={serverId}
             onPlay={handleEpisodePlay}
+            highlightedEpisodeId={highlightedEpisodeId}
             onToggleWatched={(ep) => episodeWatchMut.mutate(ep.Id)}
+            onEpisodeContextMenu={(ep, e) => {
+              setPickerFor(null);
+              setMenuFor({ episode: ep, x: e.clientX, y: e.clientY });
+            }}
           />
         ) : (
           <div className="rounded-xl border-2 border-dashed border-border p-12 text-center text-fg-muted">
@@ -263,5 +322,44 @@ export default function SeriesDetailPage() {
       </div>
       </div>
     </JellyfinPageWrapper>
+
+    {/* Episode context menu */}
+    {menuFor && (
+      <div
+        ref={contextMenuRef}
+        className="fixed z-50 min-w-[200px] rounded-lg border border-border bg-bg-surface py-1 shadow-2xl"
+        style={{ left: menuFor.x, top: menuFor.y }}
+        role="menu"
+      >
+        <button
+          type="button"
+          onClick={() => setPickerFor(menuFor.episode)}
+          className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm transition-colors hover:bg-bg-muted/60"
+          role="menuitem"
+        >
+          <Bookmark className="h-4 w-4 shrink-0 text-fg-muted" />
+          <span className="flex-1">Zur Watchlist hinzufügen</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            episodeWatchMut.mutate(menuFor.episode.Id);
+            setMenuFor(null);
+            setPickerFor(null);
+          }}
+          className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm transition-colors hover:bg-bg-muted/60"
+          role="menuitem"
+        >
+          <CheckCircle className="h-4 w-4 shrink-0 text-fg-muted" />
+          <span className="flex-1">Als gesehen markieren</span>
+        </button>
+        {pickerFor && (
+          <div className="absolute left-full top-0 ml-1 w-64">
+            <WatchlistPicker serverId={serverId} item={pickerFor} />
+          </div>
+        )}
+      </div>
+    )}
+    </>
   );
 }

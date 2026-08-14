@@ -8,13 +8,18 @@ import type { JellyfinMediaItem } from '@/lib/jellyfin-media-api';
 import {
   fetchWatchlists,
   fetchWatchlistStatus,
-  createWatchlist,
   addToWatchlist,
   removeFromWatchlist,
 } from '@/lib/jellyfin-media-api';
+import { WatchlistPicker } from './WatchlistPicker';
 
 /* ------------------------------------------------------------------ */
-/*  WatchlistButton — Popover to manage watchlist membership           */
+/*  WatchlistButton — click semantics:                                 */
+/*   - 0 lists        → open picker (create first list)                */
+/*   - 1 list         → toggle membership directly (no popover)        */
+/*   - >1 lists       → open picker when not a member, otherwise       */
+/*                      remove from every list the item is in          */
+/*   - right-click    → always open the picker                         */
 /* ------------------------------------------------------------------ */
 
 interface WatchlistButtonProps {
@@ -25,8 +30,6 @@ interface WatchlistButtonProps {
 export function WatchlistButton({ item, serverId }: WatchlistButtonProps) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -63,14 +66,6 @@ export function WatchlistButton({ item, serverId }: WatchlistButtonProps) {
     },
   });
 
-  const createMut = useMutation({
-    mutationFn: (name: string) => createWatchlist(serverId, name),
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ['jellyfin-watchlists', serverId] });
-      addMut.mutate(data.id);
-    },
-  });
-
   // Close popover on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -89,11 +84,42 @@ export function WatchlistButton({ item, serverId }: WatchlistButtonProps) {
     return () => clearTimeout(t);
   }, [feedback]);
 
+  // Left-click semantics based on list count and membership
+  function handleClick() {
+    if (!lists || lists.length === 0) {
+      // No lists yet — open the picker to create the first one.
+      setOpen(true);
+      return;
+    }
+    if (lists.length === 1) {
+      // Single list — toggle membership directly, no popover.
+      const onlyList = lists[0];
+      if (onlyList) {
+        if (isInList(onlyList.id)) {
+          removeMut.mutate(onlyList.id);
+        } else {
+          addMut.mutate(onlyList.id);
+        }
+      }
+      return;
+    }
+    // Multiple lists — open picker for non-members, bulk-remove for members.
+    if (!status?.inWatchlist) {
+      setOpen(true);
+      return;
+    }
+    (status?.lists ?? []).forEach((l) => removeMut.mutate(l.id));
+  }
+
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
         aria-label={isInAny ? 'Aus Watchlist entfernen' : 'Zur Watchlist hinzufügen'}
         className={cn(
           'flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all',
@@ -112,41 +138,8 @@ export function WatchlistButton({ item, serverId }: WatchlistButtonProps) {
       )}
 
       {open && (
-        <div className="absolute right-0 top-12 z-30 w-64 rounded-xl border border-border bg-bg-surface p-2 shadow-xl">
-          <p className="px-2 py-1 text-xs font-semibold text-fg-muted">Zu Watchlist hinzufügen</p>
-          {lists && lists.length > 0 ? (
-            <div className="max-h-48 overflow-y-auto overscroll-contain">
-              {lists.map((list) => (
-                <button
-                  key={list.id}
-                  type="button"
-                  disabled={addMut.isPending || removeMut.isPending}
-                  onClick={() => (isInList(list.id) ? removeMut.mutate(list.id) : addMut.mutate(list.id))}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-bg-muted/60 transition-colors"
-                >
-                  {isInList(list.id) ? <Check className="h-4 w-4 text-brand-400" /> : <Plus className="h-4 w-4 text-fg-muted" />}
-                  <span className="flex-1 truncate text-left">{list.name}</span>
-                  <span className="text-xs text-fg-muted">{list.itemCount ?? 0}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="px-2 py-2 text-xs text-fg-muted">Noch keine Watchlists vorhanden.</p>
-          )}
-          <div className="mt-1 border-t border-border pt-2">
-            <input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && newName.trim()) {
-                  createMut.mutate(newName.trim());
-                  setNewName('');
-                }
-              }}
-              placeholder="Neue Watchlist…"
-              className="w-full rounded-lg border border-border bg-bg px-2 py-1.5 text-sm outline-none focus:border-brand-500/50"
-            />
-          </div>
+        <div className="absolute right-0 top-12 z-30 w-64">
+          <WatchlistPicker serverId={serverId} item={item} />
         </div>
       )}
     </div>

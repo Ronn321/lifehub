@@ -35,6 +35,9 @@ function typeBadge(itemType: string): { label: string; className: string } | nul
   if (itemType === 'Series') {
     return { label: 'Serie', className: 'bg-purple-500/10 text-purple-400' };
   }
+  if (itemType === 'Episode') {
+    return { label: 'Folge', className: 'bg-brand-500/10 text-brand-400' };
+  }
   return null;
 }
 

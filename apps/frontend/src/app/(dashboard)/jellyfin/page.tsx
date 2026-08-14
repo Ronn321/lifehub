@@ -303,10 +303,14 @@ export default function JellyfinHubPage() {
             Type: cw.Type === 'Episode' ? 'Episode' as const : 'Movie' as const,
             SeriesName: cw.SeriesName,
             SeriesId: cw.SeriesId,
+            ParentIndexNumber: cw.ParentIndexNumber,
             RunTimeTicks: cw.RunTimeTicks,
             ProductionYear: cw.ProductionYear,
           }))}
           serverId={serverId}
+          hrefFn={(item) => item.Type === 'Episode'
+            ? `/jellyfin/series/${item.SeriesId}?season=${item.ParentIndexNumber ?? ''}&episode=${item.Id}`
+            : `/jellyfin/movies/${item.Id}`}
         />
       )}
 

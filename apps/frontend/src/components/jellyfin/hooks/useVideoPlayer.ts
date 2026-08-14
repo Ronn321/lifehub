@@ -74,13 +74,15 @@ function detectMobile(): boolean {
   return window.innerWidth < 768 || 'ontouchstart' in window;
 }
 
-export function useVideoPlayer(streamUrl: string): UseVideoPlayerReturn {
+export function useVideoPlayer(streamUrl: string, startPositionTicks?: number): UseVideoPlayerReturn {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const destroyRef = useRef(false);
   // Preserve position across stream URL changes (audio/subtitle switch)
   const resumeRef = useRef<{ time: number; wasPlaying: boolean } | null>(null);
+  // Ensure the initial resume seek only runs once
+  const seekedRef = useRef(false);
 
   const [state, setState] = useState<PlayerState>({
     playing: false,
@@ -126,6 +128,11 @@ export function useVideoPlayer(streamUrl: string): UseVideoPlayerReturn {
           hls.on(HlsLib.Events.MANIFEST_PARSED, () => {
             if (destroyRef.current) return;
             setState(s => ({ ...s, ready: true, loading: false }));
+            // Seek to the resume position once the stream is ready
+            if (startPositionTicks && startPositionTicks > 0 && !seekedRef.current && video) {
+              video.currentTime = startPositionTicks / 10_000_000;
+              seekedRef.current = true;
+            }
             // Restore position after audio/subtitle switch
             const resume = resumeRef.current;
             if (resume && video) {
@@ -171,6 +178,11 @@ export function useVideoPlayer(streamUrl: string): UseVideoPlayerReturn {
           video!.src = streamUrl;
           video!.addEventListener('loadedmetadata', () => {
             if (!destroyRef.current) {
+              // Seek to the resume position once metadata is loaded (native HLS)
+              if (startPositionTicks && startPositionTicks > 0 && !seekedRef.current) {
+                video!.currentTime = startPositionTicks / 10_000_000;
+                seekedRef.current = true;
+              }
               const resume = resumeRef.current;
               if (resume && video) {
                 video.currentTime = resume.time;

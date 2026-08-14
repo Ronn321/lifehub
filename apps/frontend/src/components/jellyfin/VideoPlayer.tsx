@@ -45,9 +45,10 @@ interface VideoPlayerProps {
   title?: string;
   onError?: (msg: string) => void;
   onEnded?: () => void;
+  startPositionTicks?: number;
 }
 
-export function VideoPlayer({ streamUrl, mediaInfoUrl, title, onError, onEnded }: VideoPlayerProps) {
+export function VideoPlayer({ streamUrl, mediaInfoUrl, title, onError, onEnded, startPositionTicks }: VideoPlayerProps) {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(false);
   const [showAudioTracks, setShowAudioTracks] = useState(false);
@@ -79,7 +80,7 @@ export function VideoPlayer({ streamUrl, mediaInfoUrl, title, onError, onEnded }
     return { base: `${getStreamBaseUrl()}/api/v1/jellyfin/servers/${serverId}/items/${externalId}/subtitles`, token };
   }, [streamUrl]);
 
-  const { state, actions, videoRef, containerRef, hlsRef } = useVideoPlayer(currentStreamUrl);
+  const { state, actions, videoRef, containerRef, hlsRef } = useVideoPlayer(currentStreamUrl, startPositionTicks);
 
   // Fetch media info
   useEffect(() => {

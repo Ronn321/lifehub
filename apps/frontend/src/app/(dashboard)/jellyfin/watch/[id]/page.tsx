@@ -123,6 +123,7 @@ export default function WatchPage() {
 
   const streamUrl = getStreamUrl(serverId, externalId, item.Type);
   const mediaInfoUrl = getMediaInfoUrl(serverId, externalId);
+  const startTicks = item?.UserData?.PlaybackPositionTicks ?? 0;
 
   return (
     <div className="flex h-screen flex-col bg-black">
@@ -190,6 +191,7 @@ export default function WatchPage() {
               streamUrl={streamUrl}
               mediaInfoUrl={mediaInfoUrl}
               title={title}
+              startPositionTicks={startTicks > 0 ? startTicks : undefined}
               onError={(msg) => setPlayerError(msg)}
               onEnded={handleEnded}
             />

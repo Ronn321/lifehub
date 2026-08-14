@@ -17,9 +17,10 @@ interface ContentRowProps {
   loading?: boolean;
   className?: string;
   onItemClick?: (item: JellyfinMediaItem) => void;
+  hrefFn?: (item: JellyfinMediaItem) => string | undefined;
 }
 
-export function ContentRow({ title, items, serverId, loading, className }: ContentRowProps) {
+export function ContentRow({ title, items, serverId, loading, className, hrefFn }: ContentRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -97,6 +98,7 @@ export function ContentRow({ title, items, serverId, loading, className }: Conte
                   serverId={serverId}
                   size="sm"
                   showYear
+                  href={hrefFn ? hrefFn(item) : undefined}
                 />
               </div>
             </div>

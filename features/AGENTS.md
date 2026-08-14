@@ -154,6 +154,8 @@ Pro Domain existiert ein Paar `<name>.feature.md` + `<name>.AGENTS.md`. Die `.AG
 | `vault.feature.md` | `vault.AGENTS.md` | Passwort-Manager, AES-256, TOTP |
 | `documents.feature.md` | `documents.AGENTS.md` | Dokumente, OCR, Volltext-Suche |
 | `calendar.feature.md` | `calendar.AGENTS.md` | Kalender, Google/CalDAV-Sync |
+| `email.feature.md` | `email.AGENTS.md` | E-Mail (Gmail-Live-Proxy: Posteingang, Lesen, Senden, Antworten, Anhänge) |
+| `integrations.feature.md` | `integrations.AGENTS.md` | Google-Konto-Verbindung (OAuth2, verschlüsselte Tokens, Public-Service für andere Domains) |
 | `it_inventory.feature.md` | `it_inventory.AGENTS.md` | Geräte-Inventar, Netzwerk-Ansicht |
 | `jellyfin.feature.md` | `jellyfin.AGENTS.md` | Mediathek, Jellyfin-Integration |
 | `search.feature.md` | `search.AGENTS.md` | globale Suche über alle Domains |

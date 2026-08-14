@@ -224,6 +224,8 @@ Lokale `AGENTS.md`-Dateien (näher am Work = spezifischer):
 | `features/vault.AGENTS.md` | vault-Domain-Spec | `features/vault.feature.md`-Änderungen |
 | `features/documents.AGENTS.md` | documents-Domain-Spec | `features/documents.feature.md`-Änderungen |
 | `features/calendar.AGENTS.md` | calendar-Domain-Spec | `features/calendar.feature.md`-Änderungen |
+| `features/email.AGENTS.md` | email-Domain-Spec | `features/email.feature.md`-Änderungen |
+| `features/integrations.AGENTS.md` | integrations-Domain-Spec | `features/integrations.feature.md`-Änderungen |
 | `features/it_inventory.AGENTS.md` | it_inventory-Domain-Spec | `features/it_inventory.feature.md`-Änderungen |
 | `features/jellyfin.AGENTS.md` | jellyfin-Domain-Spec | `features/jellyfin.feature.md`-Änderungen |
 | `features/search.AGENTS.md` | search-Domain-Spec | `features/search.feature.md`-Änderungen |

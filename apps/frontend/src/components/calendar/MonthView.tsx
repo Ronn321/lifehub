@@ -61,7 +61,7 @@ export function MonthView({
           )}
           {week.days.map((cell, di) => {
             if (cell.day === null) {
-              return <div key={di} className="min-h-[92px] bg-bg-raised/30" />;
+              return <div key={di} className="min-h-[100px] bg-bg-raised/30" />;
             }
             const dayEvents = eventsOnDay(events, cell.date);
             const visible = dayEvents.slice(0, MAX_CHIPS);
@@ -72,7 +72,7 @@ export function MonthView({
                 key={di}
                 onDoubleClick={() => onCellDoubleClick(cell.date)}
                 onClick={() => onCellClick(cell.date)}
-                className="min-h-[92px] cursor-pointer border-l border-border first:border-l-0 p-1 align-top hover:bg-bg-raised/50 transition-colors"
+                className="min-h-[100px] cursor-pointer border-l border-border first:border-l-0 p-1 align-top hover:bg-bg-raised/50 transition-colors"
               >
                 <div className="flex justify-center">
                   <span

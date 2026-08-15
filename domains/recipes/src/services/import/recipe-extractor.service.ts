@@ -105,6 +105,7 @@ export class RecipeExtractorService {
   private extractFromJsonLd(html: string): RawRecipeDTO | null {
     // Find all JSON-LD script tags
     const jsonLdRegex = /<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+    jsonLdRegex.lastIndex = 0; // g-Flag behält lastIndex zwischen Aufrufen — sonst matcht der 2. Import nie
     let match: RegExpExecArray | null;
 
     while ((match = jsonLdRegex.exec(html)) !== null) {
@@ -150,10 +151,12 @@ export class RecipeExtractorService {
       return hours * 60 + minutes;
     };
 
-    // Parse servings: "4 Portionen" → 4
-    const parseServings = (yield_: string | undefined): number | null => {
+    // Parse servings: "4 Portionen" → 4 (Chefkoch liefert recipeYield teils als Array)
+    const parseServings = (yield_: string | string[] | undefined): number | null => {
       if (!yield_) return null;
-      const m = yield_.match(/(\d+)/);
+      const raw = Array.isArray(yield_) ? yield_[0] : yield_;
+      if (typeof raw !== 'string') return null;
+      const m = raw.match(/(\d+)/);
       return m ? parseInt(m[1]!, 10) : null;
     };
 

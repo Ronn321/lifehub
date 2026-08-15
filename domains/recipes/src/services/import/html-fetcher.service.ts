@@ -12,7 +12,7 @@ export class HtmlFetcherService {
   private readonly logger = new Logger(HtmlFetcherService.name);
   private readonly maxRetries = 3;
   private readonly timeoutMs = 15000;
-  private readonly userAgent = 'LifeHub/1.0 (compatible; +https://lifehub.local)';
+  private readonly userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36';
 
   async fetch(url: string): Promise<FetchResult> {
     let lastError: Error | null = null;

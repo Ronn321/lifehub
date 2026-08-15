@@ -82,6 +82,8 @@ function normalizeInput(input: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(value)}`;
 }
 
+const DEFAULT_START_URL = 'https://www.google.com/';
+
 export function BrowserBlock({
   blockId,
   pageId: _pageId,
@@ -97,7 +99,9 @@ export function BrowserBlock({
   const lastSyncSignatureRef = useRef('');
 
   const sessionId = typeof content.sessionId === 'string' ? content.sessionId : null;
-  const startUrl = typeof content.startUrl === 'string' ? content.startUrl : '';
+  const startUrl = typeof content.startUrl === 'string' && content.startUrl.trim()
+    ? content.startUrl
+    : DEFAULT_START_URL;
   const [urlInput, setUrlInput] = useState(startUrl);
   const [remoteState, setRemoteState] = useState<RemoteBrowserState | null>(null);
   const [stream, setStream] = useState<StreamInfo | null>(null);

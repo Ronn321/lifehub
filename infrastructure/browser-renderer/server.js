@@ -29,6 +29,7 @@ const MAX_DOWNLOAD_BYTES = Number(process.env.BROWSER_MAX_DOWNLOAD_BYTES || 500 
 // Falscher Pfad = ffmpeg kann nie Audio aufnehmen = stummer Stream.
 const PULSE_SERVER = process.env.PULSE_SERVER || 'unix:/tmp/pulse/pulse/native';
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
+const DEFAULT_START_URL = 'https://www.google.com/';
 const INTERNAL_HOSTS = (process.env.BROWSER_INTERNAL_HOSTS || '')
   .split(',')
   .map((host) => host.trim().toLowerCase())
@@ -321,8 +322,8 @@ class BrowserSession {
         }
       }
     }
-    if (!restoredTab && active && startUrl && (active.url() === 'about:blank' || active.url() === '')) {
-      await this.navigate(startUrl);
+    if (!restoredTab && active && (active.url() === 'about:blank' || active.url() === '')) {
+      await this.navigate(startUrl || DEFAULT_START_URL);
     }
     await this.broadcastState();
     return this.state();
@@ -426,7 +427,7 @@ class BrowserSession {
     }
     const page = this.getActivePage();
     if (message.type === 'navigate') return this.navigate(message.url);
-    if (message.type === 'new-tab') return this.newTab(message.url || 'about:blank');
+    if (message.type === 'new-tab') return this.newTab(message.url || DEFAULT_START_URL);
     if (message.type === 'activate-tab') return this.activate(message.tabId);
     if (message.type === 'close-tab') return this.closeTab(message.tabId);
     if (message.type === 'reload') { await page?.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 }); return this.broadcastState(); }

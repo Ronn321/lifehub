@@ -288,7 +288,7 @@ export function registerAllBlocks(): void {
       component: null,
       label: 'Browser',
       icon: Globe,
-      defaultContent: { startUrl: '', title: '', sessionId: null },
+      defaultContent: { startUrl: 'https://www.google.com/', title: '', sessionId: null },
       category: 'Widgets',
     },
     {

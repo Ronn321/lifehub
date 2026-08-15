@@ -136,11 +136,11 @@ export default function RecipeImportPage() {
 
       {/* Error */}
       {result?.status === 'failed' && result.errors && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-red-800 mb-2">
+        <div className="border border-danger/30 bg-danger/10 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-fg mb-2">
             Import fehlgeschlagen
           </h3>
-          <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+          <ul className="list-disc list-inside text-sm text-fg-muted space-y-1">
             {result.errors.map((err, i) => (
               <li key={i}>{err}</li>
             ))}
@@ -153,13 +153,13 @@ export default function RecipeImportPage() {
 
       {/* Draft Preview */}
       {result?.status === 'draft' && result.recipe && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+        <div className="border border-success/30 bg-success/10 rounded-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-green-800">
+            <h3 className="text-lg font-semibold text-fg">
               ✅ Rezept erkannt
             </h3>
             {result.warnings && result.warnings.length > 0 && (
-              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+              <span className="text-xs bg-warning/15 text-fg-muted px-2 py-1 rounded-full">
                 {result.warnings.length} Warnungen
               </span>
             )}
@@ -282,7 +282,7 @@ export default function RecipeImportPage() {
                   alert('Fehler: ' + (err as Error).message);
                 }
               }}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              className="flex-1 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition"
             >
               Rezept übernehmen
             </button>

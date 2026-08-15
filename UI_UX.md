@@ -361,6 +361,9 @@ Plugins            (/admin/plugins)     — Phase 6
 
 Widgets per Drag & Drop umsortierbar, Layout wird pro User persistiert.
 
+**Kalender-Widget (08/2026):** Hover über einen Tag öffnet eine Agenda neben dem Tag (Pfeil, Termine mit Uhrzeit/Farbe, „Keine Termine" wenn leer). Rechtsklick auf einen Tag öffnet den Termin-Dialog (ohne Navigation). Klick/Rechtsklick auf einen Termin in der Agenda öffnet Bearbeiten/Löschen.
+**Wetter-Widget (08/2026):** Neu gesuchte Standorte werden beim Klick **sofort aktiviert**; das Einstellungs-Panel bleibt offen bis „Fertig" (kein Auto-Close bei Config-Änderungen).
+
 ### 6.2 Medien — Galerie (Google-Photos-Style)
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -706,3 +709,60 @@ UI ist „fertig", wenn:
 - Kein LCP > 2.5s auf Galerie-Seite mit 1000 Bildern
 - Skeleton-States überall wo Daten laden
 - Empty-States mit hilfreichen Aktionen überall
+
+---
+
+## 14. Kontrast & Barrierefreiheit (verbindlich)
+
+**Regel: Jeder Text auf jedem Hintergrund muss WCAG-AA erfüllen — in BEIDEN Modi (Hell UND Dunkel).**
+
+### 14.1 Mindest-Kontrast (WCAG 2.1 AA)
+
+| Text-Art | Mindest-Kontrastverhältnis |
+|----------|---------------------------|
+| Normaler Text (< 18pt / < 14pt bold) | **4.5 : 1** |
+| Großer Text (≥ 18pt / ≥ 14pt bold) | **3.0 : 1** |
+| UI-Elemente & Icon-Grafiken (sichtbare Grenzen) | **3.0 : 1** |
+
+Kontrastformel: `(L1 + 0.05) / (L2 + 0.05)` mit L = relative Luminanz (WCAG 2.1, sRGB).
+
+### 14.2 Pflicht: Semantische Tokens statt statischer Tailwind-Farben
+
+**Verboten:** Statische Tailwind-Farbklassen für Text/BG in Komponenten, die in beiden Modi laufen:
+
+- ❌ `bg-green-50` / `text-green-800`, `bg-red-50`/`text-red-700`, `bg-blue-100`/`text-blue-800`, `bg-yellow-100`/`text-yellow-800` …
+- ❌ `text-white`/`text-black` auf farbigem Grund (außer Knopf mit brand-600+, Kontrast prüfen!)
+
+**Grund:** Die statischen Klassen bleiben im Dark Mode unverändert (hellgrün/hellgelb), während die semantischen Text-Tokens (`text-fg`, `text-muted-foreground`, `text-fg-subtle`) dunkel-adaptiert sind → helle Schrift auf hellem Grund (Kontrast ~2.5:1 statt 4.5:1).
+
+**Erlaubt:** Semantische Tokens + Alpha-Stufen des Design-Systems:
+
+- ✅ `bg-success/10 text-fg`, `bg-success/15 text-fg-muted`, `border-success/30`
+- ✅ `bg-warning/10`, `bg-danger/10`, `bg-info/10` (jeweils mit passendem Text-Token)
+- ✅ `bg-brand-500/10 text-brand-700` (Dark-first-Skala: brand-700 ist hell genug)
+- ✅ Tailwind-Farben NUR mit `dark:`-Varianten, wenn beide Modi explizit gepflegt werden
+
+### 14.3 Status-Boxen (Success/Warning/Danger/Info) — Referenz-Muster
+
+```tsx
+{/* Erfolg / Erfolgs-Box */}
+<div className="rounded-lg border border-success/30 bg-success/10 p-4">
+  <h3 className="font-semibold text-fg">✅ Titel</h3>
+  <p className="text-sm text-fg-muted">Beschreibung — lesbar in Hell & Dunkel</p>
+</div>
+
+{/* Warnung */}
+<div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
+  <p className="text-sm text-fg">Warnhinweis</p>
+</div>
+```
+
+`--success: #16A34A` (light) bzw. dark-adaptiert: `--success-500`-Skala verwenden; Text IMMER via `text-fg`/`text-fg-muted`.
+
+### 14.4 Pflicht-Verifikation pro UI-Änderung
+
+1. **Beide Modi prüfen:** Seite in Hell UND Dunkel öffnen (Theme-Toggle), alle Status-Farben, Badges, Buttons, Tabellen lesen.
+2. **Kontrast rechnen** bei neuen Farbkombinationen (z.B. via Skill `lifehub-ui-contrast` oder online-Check): Text-fg auf BG ≥ 4.5:1, große Texte ≥ 3:1.
+3. **Statische Farben auditieren:** `grep -rn "bg-green-50\|text-green-800\|bg-red-50\|text-red-700\|bg-yellow-100\|text-yellow-800\|bg-blue-100\|text-blue-800" apps/frontend/src` → jede Fundstelle auf semantische Tokens umstellen oder `dark:`-Variante ergänzen.
+4. **Knöpfe:** `text-white` nur auf brand-500+/success-600+/danger-600+ prüfen (Kontrast ≥ 4.5:1); sonst dunklere Fläche oder dunkleren Text.
+5. Audit-Werkzeug: Skill `lifehub-ui-contrast` (WCAG-Formel + Checkliste + bekannte Fallen).

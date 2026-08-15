@@ -5,6 +5,7 @@ import { useGridStore } from '@/stores/grid-store';
 import { useGridInteraction } from '@/hooks/use-grid-interaction';
 import { getResponsiveColumns, GRID_GAP } from '@/lib/grid-utils';
 import type { Widget } from '@/lib/grid-utils';
+import type { DashboardProfile } from '@/lib/dashboard-profiles';
 import { DashboardWidget } from './dashboard-widget';
 import { DropIndicator } from './drop-indicator';
 import { ResizePreview } from './resize-preview';
@@ -15,6 +16,8 @@ interface DashboardGridProps {
   onDelete: (id: string) => void;
   onConfigChange: (id: string, config: Record<string, unknown>) => void;
   isSaving: boolean;
+  editMode: boolean;
+  profile: DashboardProfile | null;
 }
 
 export function DashboardGrid({
@@ -23,6 +26,8 @@ export function DashboardGrid({
   onDelete,
   onConfigChange,
   isSaving,
+  editMode,
+  profile,
 }: DashboardGridProps) {
   const columns = useGridStore((s) => s.columns);
   const setColumns = useGridStore((s) => s.setColumns);
@@ -55,13 +60,13 @@ export function DashboardGrid({
       if (!first) return;
       const width = first.contentBoxSize?.[0]?.inlineSize ?? first.contentRect.width;
       setContainerWidth(width);
-      const cols = getResponsiveColumns(width);
+      const cols = Math.min(getResponsiveColumns(width), profile?.columns ?? 6);
       setGridCols(cols);
       setColumns(cols);
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [gridRef, setColumns]);
+  }, [gridRef, setColumns, profile]);
 
   return (
     <div
@@ -71,10 +76,10 @@ export function DashboardGrid({
         gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
         gap: `${GRID_GAP}px`,
       }}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      onDragOver={editMode ? handleDragOver : undefined}
+      onDrop={editMode ? handleDrop : undefined}
     >
-      {dragActiveId && (
+      {editMode && dragActiveId && (
         <DropIndicator
           isOver
           w={widgets.find((w) => w.id === dragActiveId)?.w ?? 1}
@@ -86,7 +91,7 @@ export function DashboardGrid({
       )}
 
       {/* Resize preview — snapped size while dragging handle */}
-      {resizeActiveId && (() => {
+      {editMode && resizeActiveId && (() => {
         const resizingWidget = widgets.find((w) => w.id === resizeActiveId);
         if (!resizingWidget) return null;
         return (
@@ -106,11 +111,14 @@ export function DashboardGrid({
           widget={widget}
           isDragging={dragActiveId === widget.id}
           isResizing={resizeActiveId === widget.id}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onResizeStart={handleResizeStart}
+          onDragStart={editMode ? handleDragStart : undefined}
+          onDragEnd={editMode ? handleDragEnd : undefined}
+          onResizeStart={editMode ? handleResizeStart : undefined}
           onDelete={onDelete}
           onConfigChange={onConfigChange}
+          editMode={editMode}
+          profile={profile}
+          columns={gridCols}
         />
       ))}
 

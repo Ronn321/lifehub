@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { api, authResponseSchema, ApiError } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+import { useBrandName } from '@/lib/use-brand-name';
 import { Loader2, Shield } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const brandName = useBrandName();
   const setAuth = useAuthStore((s) => s.setAuth);
   const existingToken = useAuthStore((s) => s.accessToken);
   const [email, setEmail] = useState('admin@lifehub.local');
@@ -52,7 +54,7 @@ export default function LoginPage() {
             <Shield className="h-8 w-8 text-brand-500" />
           </div>
           <h1 className="text-3xl font-semibold">Willkommen zurück</h1>
-          <p className="text-sm text-fg-muted">Melde dich bei LifeHub an</p>
+          <p className="text-sm text-fg-muted">Melde dich bei {brandName} an</p>
         </div>
 
         <form

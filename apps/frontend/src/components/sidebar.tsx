@@ -15,6 +15,7 @@ import { cn } from '@/lib/cn';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { readHiddenNav, filterNavItems, NAV_ITEM_KEY } from '@/lib/nav-filter';
+import { useBrandName } from '@/lib/use-brand-name';
 
 declare global {
   interface Window {
@@ -76,6 +77,7 @@ function flattenPages(pagesList: Page[] | undefined): Page[] {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const brandName = useBrandName();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [seitenOpen, setSeitenOpen] = useState(true);
@@ -205,7 +207,7 @@ export function Sidebar() {
           <Shield className="h-6 w-6 shrink-0 text-brand-500" />
           {!desktopCollapsed && (
             <>
-              <span className="flex-1 text-lg font-semibold">LifeHub</span>
+              <span className="flex-1 text-lg font-semibold">{brandName}</span>
               {/* Desktop collapse toggle — only on lg+ */}
               <button
                 onClick={() => setDesktopCollapsed(true)}

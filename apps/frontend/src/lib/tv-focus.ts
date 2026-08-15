@@ -42,7 +42,16 @@ function step(dir: 'up' | 'down' | 'left' | 'right'): void {
       best = el;
     }
   }
-  if (best) best.focus();
+  if (best) {
+    // Explizite Markierung statt Verlass auf :focus/:focus-visible —
+    // programmatischer Fokus wird von konkurrierenden CSS-Regeln
+    // (focus:outline-none etc.) sonst unsichtbar (TV-Hardware verifiziert).
+    document.querySelectorAll('.tv-focus-current').forEach((el) =>
+      el.classList.remove('tv-focus-current'),
+    );
+    best.focus();
+    best.classList.add('tv-focus-current');
+  }
 }
 
 function click(): void {

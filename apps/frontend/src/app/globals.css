@@ -176,6 +176,12 @@ html.lifehub-tv :focus {
   outline: 3px solid rgb(var(--brand-500));
   outline-offset: 2px;
 }
+/* Vom tv-focus-Helper gesetzte, spezifische Markierung — gewinnt gegen
+   konkurrierende Regeln (focus:outline-none, :focus-visible-Preflight). */
+html.lifehub-tv .tv-focus-current {
+  outline: 4px solid rgb(var(--brand-500)) !important;
+  outline-offset: 3px !important;
+}
 html.lifehub-tv nav a { min-height: 3rem; } /* größere Sidebar-Trefferflächen */
 html.lifehub-tv button,
 html.lifehub-tv a { cursor: default; }

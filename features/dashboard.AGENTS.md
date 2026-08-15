@@ -11,6 +11,8 @@ Parent: `../AGENTS.md` → `../../AGENTS.md`
 
 Persönliches Hub-UI. Widget-basiert, Drag & Drop, Layout pro User persistiert. Standard-Widgets für Media, Kalender, Finanzen, Einkaufslisten, Wetter, Sparziele, Projekte, Mediathek. **Phase 1.**
 
+**Phase 2 (Geräte-Dashboards):** Layouts pro Geräteprofil (`phone`/`tablet`/`tv`) werden pro Gerät im WebView-`localStorage` (`lifehub:dashboard:<mode>`) gespeichert und sind unabhängig vom Desktop-Layout (weiterhin backend-persistiert) sowie von anderen Geräten. Profil-Regeln (Spaltenzahl, Mindestgrößen pro Widget-Typ, Standard-Layouts) liegen zentral in `apps/frontend/src/lib/dashboard-profiles.ts`; Klemmung/Normalisierung garantieren überlagerungsfreie Layouts. Phone/Tablet haben einen Bearbeiten-Modus, TV einen D-pad-Widget-Verwaltungs-Dialog.
+
 ## 2. Scope
 
 - Schema `dashboard`: `dashboard_layouts`, `widgets`

@@ -99,6 +99,37 @@ Entwickleroptionen → **Netzwerk-Debugging** AN → TV-IP ermitteln →
 `adb connect <tv-ip>:5555` → `adb install app-tv-debug.apk`.
 Alternativ: APK auf USB-Stick + „Send files to TV"-App, oder Downloader-URL.
 
+## Phase 2: Geräte-Dashboards
+
+Jedes Gerät hat ein **eigenes Dashboard** — Widget-Auswahl, Anordnung, Größen und
+Widget-Einstellungen sind pro Gerät unabhängig voneinander und vom Desktop.
+
+- **Speicherung:** WebView-`localStorage`, Key `lifehub:dashboard:<mode>`
+  (`phone`/`tablet`/`tv`). localStorage ist pro App-Installation isoliert →
+  zwei Handys sind automatisch getrennt. Desktop nutzt weiter das Backend
+  (`GET/PUT /dashboard/layout`) und bleibt unverändert.
+- **Hinweis:** App-Reinstall oder „Daten löschen" setzt das Geräte-Layout auf
+  das Profil-Standard-Layout zurück (Automatik-Seeding + „Zurücksetzen"-Button).
+
+### Profil-Regeln (zentral in `dashboard-profiles.ts`)
+
+| Profil | Spalten | Mindestgrößen (media / weather / calendar / savings) | Standard-Layout |
+|---|---|---|---|
+| phone | 2 | 2×2 / 2×1 / 2×2 / 2×1 | Wetter → Kalender → Medien (einspaltig, volle Breite) |
+| tablet | 4 | 4×2 / 2×2 / 2×2 / 2×2 | Medien (Hero) + Wetter + Kalender |
+| tv | 4 | 4×2 / 2×2 / 2×2 / 2×1 | Medien (Hero) + Wetter + Kalender |
+
+Überlagerungsfreiheit ist garantiert: jede Änderung und jedes Rendern läuft
+durch Klemmung (`clampWidgetToProfile`) + Normalisierung in den Profil-Spalten.
+
+### Bearbeiten je Gerät
+
+- **Desktop (browser):** unverändert — Drag&Drop/Resize immer aktiv.
+- **Phone/Tablet:** Lesemodus als Default; „Bearbeiten"-Toggle schaltet
+  Drag/Resize/Delete frei (verhindert versehentliches Verschieben beim Scrollen).
+- **TV:** „Widgets verwalten"-Dialog, D-pad-freundlich (▲▼ umordnen, Größe
+  zyklisch ändern, entfernen, hinzufügen, Standard-Layout). Kein Drag auf TV.
+
 ## Screenshots
 
 <!-- TODO: Screenshots hier einfügen -->

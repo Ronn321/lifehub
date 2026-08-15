@@ -502,7 +502,7 @@ class BrowserSession {
   async addPeer(ws) {
     const source = new RTCVideoSource();
     const pc = new RTCPeerConnection({ iceServers: [] });
-    const peer = { ws, pc, source, audioSource: null, audioProcess: null, audioBuffer: Buffer.alloc(0), timer: null, channel: null };
+    const peer = { ws, pc, source, audioSource: null, audioProcess: null, audioBuffer: Buffer.alloc(0), timer: null, channel: null, inputQueue: Promise.resolve(), pendingInputs: 0 };
     this.peers.add(peer);
     if (!this.controlPeer) this.controlPeer = peer;
     pc.addTrack(source.createTrack());
@@ -538,14 +538,19 @@ class BrowserSession {
       channel.onmessage = (event) => {
         try {
           const message = JSON.parse(String(event.data));
-          console.error(`DC-MSG [${this.id}]:`, JSON.stringify(message).slice(0, 160));
-          void this.input(peer, message).then(() => {
-            // State-Broadcast nur bei Tab-/Kontroll-Änderungen — nicht bei jedem
-            // Maus-Move (sonst Serialisierung + Latenz bei jeder Bewegung).
-            if (STATE_CHANGING_TYPES.has(message.type)) void this.sendState(ws);
-          }).catch((error) => {
-            console.error('DC-Input failed:', error.message);
-          });
+          // Stale-Drop: gestaute 'move'-Events verwerfen (>4 Inputs in der Queue),
+          // sonst bleibt die Queue hinter der Maus zurück.
+          if (message.type === 'mouse' && message.action === 'move' && peer.pendingInputs > 4) return;
+          peer.pendingInputs += 1;
+          peer.inputQueue = peer.inputQueue
+            .then(() => this.input(peer, message))
+            .then(() => {
+              if (STATE_CHANGING_TYPES.has(message.type)) void this.sendState(ws);
+            })
+            .catch((error) => {
+              console.error('DC-Input failed:', error.message);
+            })
+            .finally(() => { peer.pendingInputs -= 1; });
         } catch (error) {
           console.error('DC-Malformed:', error.message);
         }
@@ -634,8 +639,14 @@ class BrowserSession {
     } else if (message.type === 'candidate' && message.candidate) {
       await peer.pc.addIceCandidate(new RTCIceCandidate(message.candidate));
     } else if (message.type === 'input') {
-      await this.input(peer, message.payload);
-      if (STATE_CHANGING_TYPES.has(message.payload?.type)) await this.sendState(peer.ws);
+      const payload = message.payload;
+      if (payload?.type === 'mouse' && payload?.action === 'move' && peer.pendingInputs > 4) return;
+      peer.pendingInputs += 1;
+      peer.inputQueue = peer.inputQueue
+        .then(() => this.input(peer, payload))
+        .then(() => { if (STATE_CHANGING_TYPES.has(payload?.type)) void this.sendState(peer.ws); })
+        .catch((error) => { console.error('WS-Input failed:', error.message); })
+        .finally(() => { peer.pendingInputs -= 1; });
     }
   }
 

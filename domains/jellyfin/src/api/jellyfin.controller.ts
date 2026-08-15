@@ -157,9 +157,13 @@ export class JellyfinController {
 
   @Get('servers/:serverId/favorites')
   @RequirePermission('jellyfin', 'read')
-  @ApiOperation({ summary: 'Lieblingssongs (Favoriten)' })
-  async getFavoriteSongs(@CurrentUser() user: JwtPayload, @Param('serverId') serverId: string) {
-    return this.jellyfin.getFavoriteSongs(user.sub, serverId);
+  @ApiOperation({ summary: 'Favoriten (type: songs|albums|artists, default songs)' })
+  async getFavoriteSongs(
+    @CurrentUser() user: JwtPayload,
+    @Param('serverId') serverId: string,
+    @Query('type') type?: string,
+  ) {
+    return this.jellyfin.getFavoriteSongs(user.sub, serverId, type as 'songs' | 'albums' | 'artists' | undefined);
   }
 
   @Get('servers/:serverId/songs')

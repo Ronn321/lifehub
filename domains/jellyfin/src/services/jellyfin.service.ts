@@ -632,12 +632,26 @@ export class JellyfinService {
     return data.Items ?? [];
   }
 
-  async getFavoriteSongs(ownerId: string, serverId: string): Promise<any[]> {
+  /**
+   * Get favorite items from Jellyfin. `type` selects which item types are returned:
+   * 'songs' (default) -> Audio, 'albums' -> MusicAlbum, 'artists' -> MusicArtist.
+   */
+  async getFavoriteSongs(
+    ownerId: string,
+    serverId: string,
+    type: 'songs' | 'albums' | 'artists' = 'songs',
+  ): Promise<any[]> {
     const server = await this.findServerOrFallback(serverId, ownerId);
     const userId = await this.getJellyfinUserId(server);
+    const includeTypes: Record<'songs' | 'albums' | 'artists', string> = {
+      songs: 'Audio',
+      albums: 'MusicAlbum',
+      artists: 'MusicArtist',
+    };
+    const fields = type === 'songs' ? 'AudioInfo,PrimaryImageAspectRatio' : 'PrimaryImageAspectRatio,Overview';
     const data = await this.fetchFromJellyfin(
       server,
-      `/Users/${userId}/Items?Filters=IsFavorite&IncludeItemTypes=Audio&Recursive=true&Fields=AudioInfo,PrimaryImageAspectRatio`,
+      `/Users/${userId}/Items?Filters=IsFavorite&IncludeItemTypes=${includeTypes[type]}&Recursive=true&Fields=${fields}`,
     );
     return data.Items ?? [];
   }
@@ -763,15 +777,14 @@ export class JellyfinService {
     const jellyfinUserId = await this.getJellyfinUserId(server);
     const baseUrl = server.url.replace(/\/$/, '');
     const idsParam = songIds.join(',');
+    // Jellyfin expects `userId` as a query param (not in the body), else it returns 400.
     const res = await fetch(
-      `${baseUrl}/Playlists/${playlistId}/Items?ids=${encodeURIComponent(idsParam)}&api_key=${server.apiKey}`,
+      `${baseUrl}/Playlists/${playlistId}/Items?ids=${encodeURIComponent(idsParam)}&userId=${jellyfinUserId}&api_key=${server.apiKey}`,
       {
         method: 'POST',
         headers: {
           'Authorization': `MediaBrowser Token=${server.apiKey}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ UserId: jellyfinUserId }),
       },
     );
     if (!res.ok) {

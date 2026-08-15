@@ -36,7 +36,10 @@ function getStreamBaseUrl(): string {
   if (typeof window !== 'undefined') {
     return `http://${window.location.hostname}:3007`;
   }
-  return 'http://localhost:3007';
+  // SSR-sicher: im Docker-Container ist localhost der Frontend-Container selbst.
+  return process.env.NEXT_PUBLIC_API_BASE
+    ? process.env.NEXT_PUBLIC_API_BASE.replace(/\/api\/v1\/?$/, '')
+    : 'http://localhost:3007';
 }
 
 interface VideoPlayerProps {

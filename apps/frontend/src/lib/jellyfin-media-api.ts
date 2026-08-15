@@ -69,7 +69,9 @@ export interface SearchResults {
 export function getImageUrl(serverId: string, itemId: string, width = 300, height = 450): string {
   const base = typeof window !== 'undefined'
     ? `http://${window.location.hostname}:3007`
-    : 'http://localhost:3007';
+    : (process.env.NEXT_PUBLIC_API_BASE
+        ? process.env.NEXT_PUBLIC_API_BASE.replace(/\/api\/v1\/?$/, '')
+        : 'http://localhost:3007');
   const token = typeof window !== 'undefined' ? getAccessToken() : '';
   return `${base}/api/v1/jellyfin/servers/${serverId}/items/${itemId}/image?w=${width}&h=${height}&token=${token}`;
 }
@@ -77,7 +79,9 @@ export function getImageUrl(serverId: string, itemId: string, width = 300, heigh
 export function getBackdropUrl(serverId: string, itemId: string): string {
   const base = typeof window !== 'undefined'
     ? `http://${window.location.hostname}:3007`
-    : 'http://localhost:3007';
+    : (process.env.NEXT_PUBLIC_API_BASE
+        ? process.env.NEXT_PUBLIC_API_BASE.replace(/\/api\/v1\/?$/, '')
+        : 'http://localhost:3007');
   const token = typeof window !== 'undefined' ? getAccessToken() : '';
   return `${base}/api/v1/jellyfin/servers/${serverId}/items/${itemId}/image?w=1920&h=1080&type=Backdrop&token=${token}`;
 }
@@ -85,7 +89,9 @@ export function getBackdropUrl(serverId: string, itemId: string): string {
 export function getStreamUrl(serverId: string, itemId: string, type: string): string {
   const base = typeof window !== 'undefined'
     ? `http://${window.location.hostname}:3007`
-    : 'http://localhost:3007';
+    : (process.env.NEXT_PUBLIC_API_BASE
+        ? process.env.NEXT_PUBLIC_API_BASE.replace(/\/api\/v1\/?$/, '')
+        : 'http://localhost:3007');
   const token = typeof window !== 'undefined' ? getAccessToken() : '';
   return `${base}/api/v1/jellyfin/servers/${serverId}/items/${itemId}/stream?type=${type}&token=${token}`;
 }
@@ -93,7 +99,9 @@ export function getStreamUrl(serverId: string, itemId: string, type: string): st
 export function getMediaInfoUrl(serverId: string, itemId: string): string {
   const base = typeof window !== 'undefined'
     ? `http://${window.location.hostname}:3007`
-    : 'http://localhost:3007';
+    : (process.env.NEXT_PUBLIC_API_BASE
+        ? process.env.NEXT_PUBLIC_API_BASE.replace(/\/api\/v1\/?$/, '')
+        : 'http://localhost:3007');
   const token = typeof window !== 'undefined' ? getAccessToken() : '';
   return `${base}/api/v1/jellyfin/servers/${serverId}/items/${itemId}/media-info?token=${token}`;
 }

@@ -86,7 +86,12 @@ export function getStreamBaseUrl(): string {
   if (typeof window !== 'undefined') {
     return `http://${window.location.hostname}:3007`;
   }
-  return 'http://localhost:3007';
+  // SSR-sicher: im Docker-Container ist localhost der Frontend-Container selbst.
+  // NEXT_PUBLIC_API_BASE (z.B. http://backend:3007/api/v1) wird beim Build gesetzt.
+  const ssrBase = process.env.NEXT_PUBLIC_API_BASE
+    ? process.env.NEXT_PUBLIC_API_BASE.replace(/\/api\/v1\/?$/, '')
+    : 'http://localhost:3007';
+  return ssrBase;
 }
 
 export function formatTime(seconds: number): string {

@@ -9,11 +9,13 @@ interface GridStore {
   resizeActiveId: string | null;
   resizeCurrent: { w: number; h: number };
   columns: number;
+  editMode: boolean;
 
   setDragActive: (id: string | null, offset?: { x: number; y: number }) => void;
   setDragOver: (id: string | null) => void;
   setResizeActive: (id: string | null, size?: { w: number; h: number }) => void;
   setColumns: (n: number) => void;
+  setEditMode: (on: boolean) => void;
   clearAll: () => void;
 }
 
@@ -24,6 +26,7 @@ export const useGridStore = create<GridStore>((set) => ({
   resizeActiveId: null,
   resizeCurrent: { w: 1, h: 1 },
   columns: 6,
+  editMode: false,
 
   setDragActive: (id, offset) =>
     set({ dragActiveId: id, dragOffset: offset ?? { x: 0, y: 0 } }),
@@ -31,6 +34,7 @@ export const useGridStore = create<GridStore>((set) => ({
   setResizeActive: (id, size) =>
     set({ resizeActiveId: id, resizeCurrent: size ?? { w: 1, h: 1 } }),
   setColumns: (n) => set({ columns: n }),
+  setEditMode: (on) => set({ editMode: on }),
   clearAll: () =>
     set({
       dragActiveId: null,

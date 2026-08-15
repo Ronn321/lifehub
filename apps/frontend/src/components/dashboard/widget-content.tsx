@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Camera,
   CloudSun,
@@ -22,10 +22,21 @@ import { getMediaStreamUrl } from '@/lib/media';
 import type { Widget, WidgetConfig } from '@/lib/grid-utils';
 import type { CalendarConfig, WeatherConfig, MediaConfig, WeatherLocation } from '@/lib/grid-utils';
 import { WIDGET_LABELS } from '@/lib/grid-utils';
+import { formatTime, getEventColor, type CalendarEvent, type CalendarItem } from '@/lib/calendar';
+import { EventDialog } from '@/components/calendar/EventDialog';
+import { EventDetailModal } from '@/components/calendar/EventDetailModal';
 
 interface Album {
   id: string;
   name: string;
+}
+
+interface MediaFile {
+  id: string;
+  filename: string;
+  thumbnailPath?: string;
+  mimeType?: string;
+  url?: string;
 }
 
 export const WIDGET_ICONS: Record<string, React.ReactNode> = {
@@ -182,7 +193,8 @@ function WeatherSettings({
   const addLocation = (loc: { name: string; lat: number; lng: number }) => {
     if (config.locations.some((l) => Math.abs(l.lat - loc.lat) < 0.01 && Math.abs(l.lng - loc.lng) < 0.01)) return;
     const newLocations = [...config.locations, loc];
-    onChange({ ...config, locations: newLocations });
+    // The newly added location becomes active immediately
+    onChange({ ...config, locations: newLocations, activeLocationIndex: newLocations.length - 1 });
     setQuery('');
     setResults(null);
     setSearched(false);
@@ -403,6 +415,76 @@ export function CalendarWidget({ config, onNavigate }: { config: CalendarConfig;
   }
 
   const cols = config.showWeekNumbers ? 'grid-cols-[2rem_repeat(7,_1fr)]' : 'grid-cols-7';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const isoForDay = (day: number) => `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(day)}`;
+
+  // ── Events for the current month ──
+  const qc = useQueryClient();
+  const monthStart = isoForDay(1);
+  const monthEnd = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(daysInMonth)}`;
+  const { data: events } = useQuery<CalendarEvent[]>({
+    queryKey: ['dashboard-calendar-events', monthStart],
+    queryFn: () => api.get<CalendarEvent[]>(`/calendar/events?from=${monthStart}&to=${monthEnd}`),
+    staleTime: 30_000,
+  });
+  const { data: calendars } = useQuery<CalendarItem[]>({
+    queryKey: ['dashboard-calendars'],
+    queryFn: () => api.get<CalendarItem[]>('/calendar/calendars'),
+    staleTime: 60_000,
+  });
+  const calendarsMap = (calendars ?? []).reduce<Record<string, CalendarItem>>((acc, c) => {
+    acc[c.id] = c;
+    return acc;
+  }, {});
+
+  const eventsOnDay = (iso: string): CalendarEvent[] =>
+    (events ?? []).filter((e) => {
+      const s = e.startDate.slice(0, 10);
+      const en = e.endDate ? e.endDate.slice(0, 10) : s;
+      return iso >= s && iso <= en;
+    });
+
+  // ── Interactions: hover agenda + context menus ──
+  const [hoverDay, setHoverDay] = useState<string | null>(null);
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
+  const [createDay, setCreateDay] = useState<string | null>(null);
+  const [editEvent, setEditEvent] = useState<CalendarEvent | null>(null);
+  const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openHover = (day: number) => {
+    const iso = isoForDay(day);
+    const el = document.getElementById(`dash-cal-${iso}`);
+    const rect = el?.getBoundingClientRect();
+    if (rect) setHoverPos({ x: rect.right + 10, y: rect.top - 4 });
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    setHoverDay(iso);
+  };
+  const closeHoverSoon = () => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHoverDay(null), 180);
+  };
+  const cancelHoverClose = () => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/calendar/events/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['dashboard-calendar-events'] });
+      qc.invalidateQueries({ queryKey: ['calendar-events'] });
+      setDetailEvent(null);
+    },
+  });
+  const refreshEvents = () => {
+    qc.invalidateQueries({ queryKey: ['dashboard-calendar-events'] });
+    qc.invalidateQueries({ queryKey: ['calendar-events'] });
+  };
+
+  const hoverEvents = hoverDay ? eventsOnDay(hoverDay) : [];
+  const hoverTitle = hoverDay
+    ? new Date(`${hoverDay}T12:00:00`).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })
+    : '';
 
   return (
     <div className="text-xs cursor-pointer" onClick={onNavigate}>
@@ -422,20 +504,98 @@ export function CalendarWidget({ config, onNavigate }: { config: CalendarConfig;
             {week.days.map((d, di) => (
               <div key={di} className="flex items-center justify-center">
                 {d !== null && (
-                  <span
-                    className={cn(
-                      'inline-flex items-center justify-center w-6 h-6 rounded',
-                      d === today.getDate() ? 'bg-brand-500 text-white font-medium' : '',
-                    )}
+                  <div
+                    id={`dash-cal-${isoForDay(d)}`}
+                    className="relative flex items-center justify-center"
+                    onMouseEnter={() => openHover(d)}
+                    onMouseLeave={closeHoverSoon}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCreateDay(isoForDay(d));
+                    }}
                   >
-                    {d}
-                  </span>
+                    <span
+                      className={cn(
+                        'relative inline-flex items-center justify-center w-6 h-6 rounded',
+                        d === today.getDate() ? 'bg-brand-500 text-white font-medium' : 'hover:bg-bg-raised',
+                      )}
+                    >
+                      {d}
+                      {eventsOnDay(isoForDay(d)).length > 0 && (
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand-500" />
+                      )}
+                    </span>
+                  </div>
                 )}
               </div>
             ))}
           </div>
         ))}
       </div>
+
+      {/* Hover agenda — fixed positioned next to the day, with pointer arrow */}
+      {hoverDay && hoverPos && (
+        <div
+          className="fixed z-50 w-60 rounded-lg border border-border bg-bg-surface shadow-xl p-2 space-y-1 animate-fade-in"
+          style={{ left: hoverPos.x, top: hoverPos.y }}
+          onMouseEnter={cancelHoverClose}
+          onMouseLeave={closeHoverSoon}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="absolute -left-1 top-3 h-2 w-2 rotate-45 border-l border-t border-border bg-bg-surface" />
+          <p className="px-1.5 pb-1 text-[11px] font-semibold text-fg-muted border-b border-border">{hoverTitle}</p>
+          {hoverEvents.length === 0 ? (
+            <p className="px-1.5 py-1.5 text-xs text-fg-muted">Keine Termine</p>
+          ) : (
+            hoverEvents.map((ev) => (
+              <button
+                key={ev.id}
+                onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setDetailEvent(ev); }}
+                className="w-full flex items-center gap-2 rounded px-1.5 py-1 text-left text-xs transition-colors hover:bg-bg-raised"
+              >
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: getEventColor(ev, calendarsMap) }} />
+                <span className="text-fg-muted shrink-0">{ev.allDay ? 'Ganztags' : formatTime(ev.startDate)}</span>
+                <span className="truncate text-fg">{ev.title}</span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Right-click on a day → create event (no navigation) */}
+      {createDay && (
+        <EventDialog
+          open
+          onClose={() => setCreateDay(null)}
+          onSuccess={() => { refreshEvents(); setCreateDay(null); }}
+          prefillDate={createDay}
+          calendars={calendars ?? []}
+        />
+      )}
+
+      {/* Edit existing event */}
+      {editEvent && (
+        <EventDialog
+          open
+          onClose={() => setEditEvent(null)}
+          onSuccess={() => { refreshEvents(); setEditEvent(null); }}
+          editEvent={editEvent}
+          calendars={calendars ?? []}
+        />
+      )}
+
+      {/* Event detail (click / right-click in the hover agenda) */}
+      {detailEvent && (
+        <EventDetailModal
+          event={detailEvent}
+          calendars={calendars ?? []}
+          onClose={() => setDetailEvent(null)}
+          onEdit={(ev) => { setDetailEvent(null); setEditEvent(ev); }}
+          onDelete={(ev) => deleteMutation.mutate(ev.id)}
+        />
+      )}
     </div>
   );
 }
@@ -536,15 +696,23 @@ export function MediaWidget({ config }: { config: MediaConfig }) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const intervalMs = config.slideshowInterval * 1000;
 
-  const albumQuery = config.albumIds.length > 0
-    ? `albumIds=${config.albumIds.join(',')}`
-    : '';
-
   const { data: files, isLoading } = useQuery({
     queryKey: ['dashboard-media', config.albumIds],
-    queryFn: () => api.get<{ id: string; filename: string; thumbnailPath?: string; mimeType?: string; url?: string }[]>(
-      `/media/files${albumQuery ? '?' + albumQuery : '?limit=50'}`,
-    ),
+    queryFn: async (): Promise<MediaFile[]> => {
+      // No album selected -> list the most recent files globally.
+      if (config.albumIds.length === 0) {
+        const res = await api.get<{ items: MediaFile[]; total: number }>('/media/files?limit=50');
+        return res.items ?? [];
+      }
+      // Album selected -> fetch each album and merge its files.
+      // The album endpoint returns [{ file, sortOrder }], so map to file.
+      const results = await Promise.all(
+        config.albumIds.map((id) =>
+          api.get<{ file: MediaFile; sortOrder: number }[]>(`/media/albums/${id}/media`),
+        ),
+      );
+      return results.flat().map((entry) => entry.file);
+    },
     staleTime: 30_000,
   });
 
@@ -573,12 +741,23 @@ export function MediaWidget({ config }: { config: MediaConfig }) {
     <div className="flex flex-col gap-2 h-full">
       <div className="relative flex-1 rounded-md overflow-hidden bg-bg-raised" style={{ aspectRatio: '16/9' }}>
         {imgSrc ? (
-          <img
-            src={imgSrc}
-            alt={current.filename}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+          isVideo ? (
+            <video
+              src={imgSrc}
+              muted
+              autoPlay
+              playsInline
+              loop
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={imgSrc}
+              alt={current.filename}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          )
         ) : (
           <div className="w-full h-full flex items-center justify-center text-fg-muted text-xs">
             {current?.filename ?? 'Kein Bild'}

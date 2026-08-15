@@ -37,7 +37,9 @@ Unified-Media-System für Fotos, Videos, Alben. NAS-Indexierung, Timeline, Karte
 - Perceptual-Hash vor Speicherung berechnen, um Duplikate zu erkennen.
 - Globe-View in MVP optional — UI-Code dafür vorbereiten, Rendering kann in V1 fertig werden.
 - Performance-Ziel: 1000 Fotos Galerie rendert < 2.5s LCP, infinite-scroll ohne Ruckeln.
-- Video-Tiles (Galerie + Album) nutzen `VideoPreviewTile` (`components/VideoPreviewTile.tsx`): Standbild aus der Video-Mitte (seek bei `loadedMetadata`), Hover spielt 5s-Snippet aus der Mitte in Schleife (`onTimeUpdate`-Window), Verlassen → zurück zum Standbild. Nutzt den Range-fähigen Stream-Endpoint.
+- Video-Tiles (Galerie + Album) nutzen `VideoPreviewTile` (`components/VideoPreviewTile.tsx`): Standbild aus der Video-Mitte (seek bei `loadedMetadata`), Hover spielt 5s-Snippet aus der Mitte in Schleife (`onTimeUpdate`-Window), Verlassen → zurück zum Standbild. Nutzt den Range-fähigen Stream-Endpoint. Optionales `thumbnail`-Prop (ffmpeg-Frame) wird als Sofort-Bild gezeigt; `onMetadataLoaded`/`registerVideo` melden Bereitschaft an die Lazy-Loading-Queue.
+- Galerie-Pagination: `GET /media/files?sourceId=&favorite=&limit=&offset=` liefert `{ items, total }` (favorite-Filter server-seitig, 2026-08 implementiert). GalleryTab nutzt Seiten (50/100/200, localStorage `lifehub-media-page-size`), `placeholderData` (keepPreviousData) für flüssige Seitenwechsel, Prefetch von `page±1` via `queryClient.prefetchQuery`.
+- Lazy-Loading: `LazyMediaTile` (IntersectionObserver + sequentielle Aktivierungs-Queue `activatedUpTo` von oben nach unten, 4s-Timeout-Fallback). Nach komplettem Seiten-Load (`pageReady`) startet der Video-Warmup: alle Videos der Seite in DOM-Reihenfolge, ~120ms Abstand, seek zur Mitte + play/pause (Puffer warm für Hover-Playback).
 - Lightbox-Info-Bar (Titel, Maße, Datum, Favorit): bei VIDEOS oben (`top-0`, `pointer-events-none`, nur Button klickbar) — überdeckt nie die Player-Controls; bei Bildern unten.
 
 ## 5. Verification

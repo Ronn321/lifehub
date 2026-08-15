@@ -5,7 +5,9 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from 'react';
+import { WifiOff } from 'lucide-react';
 
 export const BROWSER_VIEWPORT = { width: 1280, height: 720 } as const;
 
@@ -53,6 +55,7 @@ export const RemoteBrowserViewport = forwardRef<
   const inputChannelRef = useRef<RTCDataChannel | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [frameDead, setFrameDead] = useState(false);
 
   const sendInput = (payload: Record<string, unknown>) => {
     const data = JSON.stringify(payload);
@@ -99,6 +102,7 @@ export const RemoteBrowserViewport = forwardRef<
 
     const connect = () => {
       if (disposed) return;
+      setFrameDead(false);
       onStatus('connecting');
       const socket = new WebSocket(getRendererWebSocketUrl(streamPath, token));
       socketRef.current = socket;
@@ -215,10 +219,8 @@ export const RemoteBrowserViewport = forwardRef<
   const lastMovePointRef = useRef<{ x: number; y: number } | null>(null);
 
   // Frame-Watchdog: Wenn das Video eingefroren ist (currentTime bleibt stehen,
-  // obwohl die Verbindung offen ist), aktiv neu verbinden. 10s statt 5s: Unter
-  // Last (mehrere Sessions) dauert ein Frame gelegentlich länger als 5s — der
-  // Server erkennt Stalls bereits nach 10s und startet hart neu. Dieser Watchdog
-  // ist nur der Fallback und darf nicht zuerst feuern.
+  // obwohl die Verbindung offen ist), aktiv neu verbinden. 4s: kurze schwarze
+  // Fläche wird sofort durch ein sichtbares Overlay ersetzt.
   useEffect(() => {
     if (!streamPath || !token) return undefined;
     let lastTime = -1;
@@ -230,9 +232,11 @@ export const RemoteBrowserViewport = forwardRef<
       if (t !== lastTime) {
         lastTime = t;
         lastChangeAt = Date.now();
-      } else if (Date.now() - lastChangeAt > 10_000 && socketRef.current?.readyState === WebSocket.OPEN) {
-        console.error('[RemoteBrowserViewport] Stream eingefroren — Reconnect');
-        socketRef.current?.close();
+        setFrameDead(false); // Frame kommt an → Overlay schließen
+      } else if (Date.now() - lastChangeAt > 4_000 && socketRef.current?.readyState === WebSocket.OPEN) {
+        console.error('[RemoteBrowserViewport] Kein Frame — sichtbarer Reconnect');
+        setFrameDead(true);
+        socketRef.current?.close(); // löst die bestehende Reconnect-Eskalation aus
         lastChangeAt = Date.now();
       }
     }, 1000);
@@ -332,6 +336,18 @@ export const RemoteBrowserViewport = forwardRef<
           sendInput({ type: 'keyboard', action: 'up', key: event.key });
         }}
       />
+      {frameDead && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-zinc-950/85">
+          <WifiOff className="h-8 w-8 text-amber-500" />
+          <p className="text-sm text-zinc-300">Kein Videosignal — Verbindung wird wiederhergestellt…</p>
+          <button
+            onClick={() => { setFrameDead(false); socketRef.current?.close(); }}
+            className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700"
+          >
+            Neu verbinden
+          </button>
+        </div>
+      )}
     </div>
   );
 });

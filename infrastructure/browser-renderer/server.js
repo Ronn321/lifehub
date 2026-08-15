@@ -30,6 +30,8 @@ const MAX_DOWNLOAD_BYTES = Number(process.env.BROWSER_MAX_DOWNLOAD_BYTES || 500 
 const PULSE_SERVER = process.env.PULSE_SERVER || 'unix:/tmp/pulse/pulse/native';
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
 const DEFAULT_START_URL = 'https://www.google.com/';
+const LOG_DEBUG = process.env.LOG_LEVEL === 'debug';
+const AUDIO_ENABLED = process.env.BROWSER_AUDIO === '1';
 const INTERNAL_HOSTS = (process.env.BROWSER_INTERNAL_HOSTS || '')
   .split(',')
   .map((host) => host.trim().toLowerCase())
@@ -272,7 +274,7 @@ class BrowserSession {
       const profileDir = join(PROFILE_ROOT, this.id);
       await mkdir(profileDir, { recursive: true });
       await mkdir(this.downloadPath, { recursive: true });
-      await ensurePulseAudio();
+      if (AUDIO_ENABLED) await ensurePulseAudio();
       // Verwaiste Chromium-Profil-Locks entfernen: Nach harten Container-Kills
       // (docker restart, OOM) bleiben SingletonLock/Cookie/Socket im Profil zurück
       // und Chromium verweigert den Start ("profile appears to be in use").
@@ -521,31 +523,33 @@ class BrowserSession {
     this.peers.add(peer);
     if (!this.controlPeer) this.controlPeer = peer;
     pc.addTrack(source.createTrack());
-    try {
-      const audioSource = new RTCAudioSource();
-      const audioProcess = spawn('ffmpeg', [
-        '-hide_banner', '-loglevel', 'error',
-        '-f', 'pulse', '-i', 'lifehub_sink.monitor',
-        '-ac', '2', '-ar', '48000', '-f', 's16le', 'pipe:1',
-      ], { env: { ...process.env, PULSE_SERVER }, stdio: ['ignore', 'pipe', 'ignore'] });
-      peer.audioSource = audioSource;
-      peer.audioProcess = audioProcess;
-      audioProcess.once('error', () => undefined);
-      audioProcess.stdout.on('data', (chunk) => {
-        peer.audioBuffer = Buffer.concat([peer.audioBuffer, chunk]);
-        const frameBytes = 480 * 2 * 2;
-        while (peer.audioBuffer.length >= frameBytes) {
-          const frame = peer.audioBuffer.subarray(0, frameBytes);
-          const samples = new Int16Array(frameBytes / 2);
-          for (let index = 0; index < samples.length; index += 1) samples[index] = frame.readInt16LE(index * 2);
-          audioSource.onData({ samples, sampleRate: 48000, bitsPerSample: 16, channelCount: 2, numberOfFrames: 480 });
-          peer.audioBuffer = peer.audioBuffer.subarray(frameBytes);
-        }
-        if (peer.audioBuffer.length > frameBytes * 20) peer.audioBuffer = peer.audioBuffer.subarray(-frameBytes * 2);
-      });
-      pc.addTrack(audioSource.createTrack());
-    } catch {
-      // Video remains usable when the optional PulseAudio/FFmpeg path is unavailable.
+    if (AUDIO_ENABLED) {
+      try {
+        const audioSource = new RTCAudioSource();
+        const audioProcess = spawn('ffmpeg', [
+          '-hide_banner', '-loglevel', 'error',
+          '-f', 'pulse', '-i', 'lifehub_sink.monitor',
+          '-ac', '2', '-ar', '48000', '-f', 's16le', 'pipe:1',
+        ], { env: { ...process.env, PULSE_SERVER }, stdio: ['ignore', 'pipe', 'ignore'] });
+        peer.audioSource = audioSource;
+        peer.audioProcess = audioProcess;
+        audioProcess.once('error', () => undefined);
+        audioProcess.stdout.on('data', (chunk) => {
+          peer.audioBuffer = Buffer.concat([peer.audioBuffer, chunk]);
+          const frameBytes = 480 * 2 * 2;
+          while (peer.audioBuffer.length >= frameBytes) {
+            const frame = peer.audioBuffer.subarray(0, frameBytes);
+            const samples = new Int16Array(frameBytes / 2);
+            for (let index = 0; index < samples.length; index += 1) samples[index] = frame.readInt16LE(index * 2);
+            audioSource.onData({ samples, sampleRate: 48000, bitsPerSample: 16, channelCount: 2, numberOfFrames: 480 });
+            peer.audioBuffer = peer.audioBuffer.subarray(frameBytes);
+          }
+          if (peer.audioBuffer.length > frameBytes * 20) peer.audioBuffer = peer.audioBuffer.subarray(-frameBytes * 2);
+        });
+        pc.addTrack(audioSource.createTrack());
+      } catch {
+        // Video remains usable when the optional PulseAudio/FFmpeg path is unavailable.
+      }
     }
     pc.onicecandidate = ({ candidate }) => { if (candidate && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'candidate', candidate })); };
     pc.ondatachannel = ({ channel }) => {
@@ -617,7 +621,7 @@ class BrowserSession {
     this.ensureStallWatchdog();
     ws.on('message', (raw) => {
       try {
-        console.error('WS-MSG:', String(raw).slice(0, 120));
+        if (LOG_DEBUG) console.error('WS-MSG:', String(raw).slice(0, 120));
         void this.handleSignal(peer, JSON.parse(raw.toString())).catch((error) => {
           console.error('Signaling failed:', error.message);
         });

@@ -2,12 +2,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, Shuffle, Clock, ArrowLeft } from 'lucide-react';
+import { Play, Shuffle, Clock, ArrowLeft, ListPlus, Heart } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   useJellyfinServer,
   useAlbumSongs,
+  useItemDetail,
+  useToggleItemFavorite,
   getCoverUrl,
   jellyfinItemToTrack,
   usePlayTracks,
@@ -17,6 +20,8 @@ import { extractDominantColor, rgbToCss } from '@/lib/color-extraction';
 import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { SongRow, TracklistHeader } from '@/components/music/shared/SongRow';
 import { MusicImage, MusicLoader } from '@/components/music/shared/MusicCard';
+import { useAddToPlaylistMenu } from '@/components/music/shared/ContextMenu';
+import { songIdsFromItems } from '@/lib/music-playlist-utils';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
 
 /* ------------------------------------------------------------------ */
@@ -37,6 +42,22 @@ export default function AlbumDetailPage() {
   const imgRef = useRef<HTMLDivElement>(null);
 
   const currentTrack = useMusicPlayerStore((s) => s.currentTrack);
+  const showPlaylistMenu = useAddToPlaylistMenu({ serverId: server?.id });
+
+  // Album favorite state — fetched via the item detail endpoint, toggled via the
+  // generic favorite endpoint; kept in local state for immediate feedback.
+  const { data: albumDetail } = useItemDetail(server?.id, albumId);
+  const toggleItemFav = useToggleItemFavorite();
+  const [isAlbumFav, setIsAlbumFav] = useState(false);
+  useEffect(() => {
+    setIsAlbumFav(albumDetail?.UserData?.IsFavorite === true);
+  }, [albumDetail?.UserData?.IsFavorite, albumDetail?.Id]);
+
+  const handleToggleAlbumFavorite = () => {
+    const next = !isAlbumFav;
+    setIsAlbumFav(next);
+    toggleItemFav.mutate(albumId, { onError: () => setIsAlbumFav(!next) });
+  };
 
   if (!accessToken || !server) {
     return (
@@ -91,6 +112,16 @@ export default function AlbumDetailPage() {
 
   const handlePlayTrack = (index: number) => {
     playTracks(songs, index, server.id);
+  };
+
+  const handleAddToPlaylist = (e: React.MouseEvent) => {
+    const songIds = songIdsFromItems(albumSongs ?? []);
+    if (songIds.length === 0) return;
+    showPlaylistMenu(
+      e,
+      songIds,
+      `Zur Playlist hinzufügen (${songIds.length} Songs)`,
+    );
   };
 
   // Extract dominant color from cover image for gradient background
@@ -204,6 +235,27 @@ export default function AlbumDetailPage() {
                     aria-label="Zufallswiedergabe"
                   >
                     <Shuffle className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={handleAddToPlaylist}
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--music-text-secondary)] transition-all hover:scale-105 hover:text-[var(--music-text-primary)]"
+                    aria-label="Zur Playlist hinzufügen"
+                    title="Zur Playlist hinzufügen"
+                  >
+                    <ListPlus className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={handleToggleAlbumFavorite}
+                    className={cn(
+                      'flex h-9 w-9 items-center justify-center rounded-full transition-all hover:scale-105',
+                      isAlbumFav
+                        ? 'text-[var(--music-accent)]'
+                        : 'text-[var(--music-text-secondary)] hover:text-[var(--music-text-primary)]',
+                    )}
+                    aria-label={isAlbumFav ? 'Aus Favoriten entfernen' : 'Album favorisieren'}
+                    title={isAlbumFav ? 'Aus Favoriten entfernen' : 'Album favorisieren'}
+                  >
+                    <Heart className={cn('h-5 w-5', isAlbumFav && 'fill-[var(--music-accent)]')} />
                   </button>
                 </div>
               )}

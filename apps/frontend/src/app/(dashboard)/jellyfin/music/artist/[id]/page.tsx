@@ -1,15 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, ArrowLeft, Verified } from 'lucide-react';
+import { Play, ArrowLeft, Verified, Heart } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   useJellyfinServer,
   useTopSongs,
   useAlbums,
   useArtists,
+  useToggleItemFavorite,
   getCoverUrl,
   jellyfinItemToTrack,
   usePlayTracks,
@@ -40,6 +42,21 @@ export default function ArtistDetailPage() {
 
   const currentTrack = useMusicPlayerStore((s) => s.currentTrack);
 
+  // Artist favorite state — read from the artists list, toggled via the
+  // generic favorite endpoint; kept in local state for immediate feedback.
+  const toggleItemFav = useToggleItemFavorite();
+  const artistInfo = artists?.find((a) => a.Id === artistId);
+  const [isArtistFav, setIsArtistFav] = useState(false);
+  useEffect(() => {
+    setIsArtistFav(artistInfo?.UserData?.IsFavorite === true);
+  }, [artistInfo?.UserData?.IsFavorite, artistInfo?.Id]);
+
+  const handleToggleArtistFavorite = () => {
+    const next = !isArtistFav;
+    setIsArtistFav(next);
+    toggleItemFav.mutate(artistId, { onError: () => setIsArtistFav(!next) });
+  };
+
   if (!accessToken || !server) {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
@@ -62,7 +79,6 @@ export default function ArtistDetailPage() {
     ?? albums?.[0]?.Artist
     ?? 'Künstler';
   const artistCover = getCoverUrl(accessToken, server.id, artistId, 400, 400);
-  const artistInfo = artists?.find(a => a.Id === artistId);
   const overview = artistInfo?.Overview;
 
   const handlePlayTop = () => {
@@ -122,6 +138,19 @@ export default function ArtistDetailPage() {
                 {artistName}
               </h1>
               <Verified className="h-6 w-6 text-[var(--music-accent)]" />
+              <button
+                onClick={handleToggleArtistFavorite}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-full transition-all hover:scale-105',
+                  isArtistFav
+                    ? 'text-[var(--music-accent)]'
+                    : 'text-[var(--music-text-secondary)] hover:text-[var(--music-text-primary)]',
+                )}
+                aria-label={isArtistFav ? 'Aus Favoriten entfernen' : 'Künstler favorisieren'}
+                title={isArtistFav ? 'Aus Favoriten entfernen' : 'Künstler favorisieren'}
+              >
+                <Heart className={cn('h-5 w-5', isArtistFav && 'fill-[var(--music-accent)]')} />
+              </button>
             </div>
             <span className="text-sm text-[var(--music-text-secondary)]">
               Künstler

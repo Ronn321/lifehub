@@ -1,23 +1,32 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Heart } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import {
   useJellyfinServer,
-  useFavoriteSongs,
+  useFavorites,
   usePlayTracks,
   jellyfinItemToTrack,
+  getCoverUrl,
 } from '@/lib/music-api';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import type { MusicTrack } from '@/lib/music-player-store';
+import {
+  FAVORITE_TABS,
+  normalizeFavoriteTab,
+  type MusicFavoriteTab,
+} from '@/lib/music-favorites';
 import { MusicPageShell } from '@/components/music/layout/MusicPageShell';
 import { MusicPlayerWrapper } from '@/components/music/player/MusicPlayerWrapper';
 import { TrackTable } from '@/components/music/shared/TrackTable';
+import { MusicCard, MusicCardGrid, MusicLoader } from '@/components/music/shared/MusicCard';
 
 /* ------------------------------------------------------------------ */
-/*  Favorites Page — all favorited songs from Jellyfin                 */
+/*  Favorites Page — Songs | Alben | Künstler tabs                     */
 /* ------------------------------------------------------------------ */
 
 export default function MusicFavoritesPage() {
@@ -25,8 +34,12 @@ export default function MusicFavoritesPage() {
   const server = useJellyfinServer();
   const currentTrack = useMusicPlayerStore((s) => s.currentTrack);
   const playTracks = usePlayTracks();
+  const router = useRouter();
 
-  const { data: favorites, isLoading } = useFavoriteSongs(server?.id);
+  const [activeTab, setActiveTab] = useState<MusicFavoriteTab>('songs');
+  const tab = normalizeFavoriteTab(activeTab);
+
+  const { data: favorites, isLoading } = useFavorites(server?.id, tab);
 
   const tracks = useMemo((): MusicTrack[] => {
     if (!favorites || !accessToken || !server?.id) return [];
@@ -37,6 +50,16 @@ export default function MusicFavoritesPage() {
     if (!favorites || !server?.id || !favorites[index]) return;
     playTracks(favorites, index, server.id);
   };
+
+  const sectionTitle =
+    tab === 'songs' ? 'Lieblingssongs' : tab === 'albums' ? 'Lieblingsalben' : 'Lieblingskünstler';
+
+  const emptyHint =
+    tab === 'songs'
+      ? 'Tippe in der Liedliste auf das Herz, um Songs zu favorisieren.'
+      : tab === 'albums'
+        ? 'Favorisiere Alben mit dem Herz-Symbol auf der Album-Seite.'
+        : 'Favorisiere Künstler mit dem Herz-Symbol auf der Künstler-Seite.';
 
   return (
     <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
@@ -49,25 +72,43 @@ export default function MusicFavoritesPage() {
               <span className="text-sm font-medium text-[var(--music-text-primary)]">
                 Lieblingssongs
               </span>
-              {tracks.length > 0 && (
+              {favorites && favorites.length > 0 && (
                 <span className="text-xs text-[var(--music-text-tertiary)]">
-                  {tracks.length} Titel
+                  {favorites.length} Titel
                 </span>
               )}
             </div>
 
-            {/* ── TrackTable / Empty state ── */}
-            {!isLoading && tracks.length === 0 ? (
+            {/* ── Tabs ── */}
+            <div className="flex items-center gap-2 px-1">
+              {FAVORITE_TABS.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={cn(
+                    'rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors',
+                    tab === t.key
+                      ? 'bg-[var(--music-text-primary)] text-[var(--music-bg-base)]'
+                      : 'bg-[var(--music-bg-card)] text-[var(--music-text-secondary)] hover:text-[var(--music-text-primary)]',
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Content ── */}
+            {isLoading && favorites === undefined ? (
+              <MusicLoader />
+            ) : !favorites || favorites.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-2 py-20">
                 <Heart className="h-10 w-10 text-[var(--music-text-tertiary)]" />
                 <p className="text-sm font-medium text-[var(--music-text-primary)]">
-                  Noch keine Lieblingssongs
+                  {sectionTitle}
                 </p>
-                <p className="text-xs text-[var(--music-text-tertiary)]">
-                  Tippe in der Liedliste auf das Herz, um Songs zu favorisieren.
-                </p>
+                <p className="text-xs text-[var(--music-text-tertiary)]">{emptyHint}</p>
               </div>
-            ) : (
+            ) : tab === 'songs' ? (
               <TrackTable
                 tracks={tracks}
                 isLoading={isLoading}
@@ -77,6 +118,33 @@ export default function MusicFavoritesPage() {
                 accessToken={accessToken ?? undefined}
                 totalCount={tracks.length}
               />
+            ) : (
+              <MusicCardGrid>
+                {favorites.map((item) => {
+                  const coverUrl =
+                    accessToken && server?.id
+                      ? getCoverUrl(accessToken, server.id, item.Id, 300, 300)
+                      : undefined;
+                  const subtitle =
+                    tab === 'albums'
+                      ? (item.AlbumArtist ?? item.Artist ?? 'Album')
+                      : 'Künstler';
+                  const href =
+                    tab === 'albums'
+                      ? `/jellyfin/music/album/${item.Id}`
+                      : `/jellyfin/music/artist/${item.Id}`;
+                  return (
+                    <MusicCard
+                      key={item.Id}
+                      title={item.Name}
+                      subtitle={subtitle}
+                      coverUrl={coverUrl}
+                      rounded={tab === 'artists'}
+                      onClick={() => router.push(href)}
+                    />
+                  );
+                })}
+              </MusicCardGrid>
             )}
           </div>
         </MusicPageShell>

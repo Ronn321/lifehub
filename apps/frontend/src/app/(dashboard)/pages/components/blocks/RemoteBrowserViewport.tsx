@@ -87,6 +87,7 @@ export const RemoteBrowserViewport = forwardRef<
       reconnectTimerRef.current = null;
       if (handshakeTimeout) clearTimeout(handshakeTimeout);
       handshakeTimeout = null;
+      try { inputChannelRef.current?.send(JSON.stringify({ type: 'release' })); } catch { /* ignore */ }
       inputChannelRef.current?.close();
       inputChannelRef.current = null;
       socketRef.current?.close();
@@ -318,6 +319,9 @@ export const RemoteBrowserViewport = forwardRef<
           sendInput({ type: 'mouse', action: 'up', ...point, button: event.button === 2 ? 'right' : 'left' });
           try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* non-fatal */ }
         }}
+        onPointerCancel={() => sendInput({ type: 'release' })}
+        onLostPointerCapture={() => sendInput({ type: 'release' })}
+        onBlur={() => sendInput({ type: 'release' })}
         onContextMenu={(event) => event.preventDefault()}
         onKeyDown={(event) => {
           event.preventDefault();

@@ -370,6 +370,7 @@ class BrowserSession {
     const page = this.getActivePage();
     if (!page) throw new Error('Kein Browser-Tab verfügbar');
     this.lastUsed = Date.now();
+    await this.releaseButtons();
     await page.goto(target.href, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await this.broadcastState();
     return this.state();
@@ -387,6 +388,7 @@ class BrowserSession {
 
   async activate(tabId) {
     if (!this.pages.has(tabId)) throw new Error('Browser-Tab nicht gefunden');
+    await this.releaseButtons();
     this.activeTabId = tabId;
     await this.pages.get(tabId).bringToFront().catch(() => undefined);
     await this.broadcastState();
@@ -396,6 +398,7 @@ class BrowserSession {
   async closeTab(tabId) {
     const page = this.pages.get(tabId);
     if (!page) return this.state();
+    await this.releaseButtons();
     await page.close();
     return this.state();
   }
@@ -418,6 +421,7 @@ class BrowserSession {
       await this.broadcastState();
       return;
     }
+    if (message.type === 'release') return this.releaseButtons();
     // Auto-Take-Control: Jede Interaktion eines Nicht-Control-Peers übernimmt
     // die Kontrolle. Verhindert den "erster Peer blockiert alle Klicks"-Zustand
     // (z.B. nach Browser-Tab-Wechsel oder wenn ein alter Tab offen bleibt).
@@ -430,9 +434,9 @@ class BrowserSession {
     if (message.type === 'new-tab') return this.newTab(message.url || DEFAULT_START_URL);
     if (message.type === 'activate-tab') return this.activate(message.tabId);
     if (message.type === 'close-tab') return this.closeTab(message.tabId);
-    if (message.type === 'reload') { await page?.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 }); return this.broadcastState(); }
-    if (message.type === 'back') { await page?.goBack({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
-    if (message.type === 'forward') { await page?.goForward({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
+    if (message.type === 'reload') { await this.releaseButtons(); await page?.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 }); return this.broadcastState(); }
+    if (message.type === 'back') { await this.releaseButtons(); await page?.goBack({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
+    if (message.type === 'forward') { await this.releaseButtons(); await page?.goForward({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
     if (!page) return undefined;
 
     if (message.type === 'resize') return this.resize(message.width, message.height);
@@ -459,6 +463,17 @@ class BrowserSession {
       if (message.action === 'press') await page.keyboard.press(String(message.key));
       if (message.action === 'down') await page.keyboard.down(String(message.key));
       if (message.action === 'up') await page.keyboard.up(String(message.key));
+    }
+  }
+
+  // Garantiertes Loslassen aller Maustasten — deckt pointercancel,
+  // lostpointercapture, Disconnect und Tabwechsel ab. mouse.up ohne
+  // gedrückte Taste ist im CDP ein No-Op, also immer gefahrlos.
+  async releaseButtons() {
+    const page = this.getActivePage();
+    if (!page) return;
+    for (const button of ['left', 'right', 'middle']) {
+      await page.mouse.up({ button }).catch(() => undefined);
     }
   }
 
@@ -652,6 +667,10 @@ class BrowserSession {
 
   removePeer(peer) {
     if (!this.peers.delete(peer)) return;
+    // Noch in der Queue stehende Inputs abarbeiten, aber die Taste sicher loslassen
+    peer.inputQueue = peer.inputQueue
+      .then(() => this.releaseButtons())
+      .catch(() => undefined);
     if (this.controlPeer === peer) this.controlPeer = this.peers.values().next().value || null;
     if (peer.timer) clearInterval(peer.timer);
     if (peer.heartbeat) clearInterval(peer.heartbeat);

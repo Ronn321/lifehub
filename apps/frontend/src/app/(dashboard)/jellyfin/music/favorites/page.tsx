@@ -70,7 +70,7 @@ export default function MusicFavoritesPage() {
             <div className="flex items-center gap-2 border-b border-[var(--music-border)] px-1 pb-3">
               <Heart className="h-4 w-4 text-[var(--music-accent)]" />
               <span className="text-sm font-medium text-[var(--music-text-primary)]">
-                Lieblingssongs
+                {sectionTitle}
               </span>
               {favorites && favorites.length > 0 && (
                 <span className="text-xs text-[var(--music-text-tertiary)]">

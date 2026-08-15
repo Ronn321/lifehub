@@ -738,17 +738,19 @@ export class JellyfinService {
     const server = await this.findServerOrFallback(serverId, ownerId);
     const jellyfinUserId = await this.getJellyfinUserId(server);
     const baseUrl = server.url.replace(/\/$/, '');
-    const encodedName = encodeURIComponent(name);
-    const res = await fetch(`${baseUrl}/Playlists?name=${encodedName}`, {
+    const params = new URLSearchParams({
+      name,
+      userId: jellyfinUserId,
+      mediaType: 'Audio',
+    });
+    if (songIds && songIds.length > 0) {
+      params.set('ids', songIds.join(','));
+    }
+    const res = await fetch(`${baseUrl}/Playlists?${params.toString()}`, {
       method: 'POST',
       headers: {
         'Authorization': `MediaBrowser Token=${server.apiKey}`,
-        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        UserId: jellyfinUserId,
-        Ids: songIds ?? [],
-      }),
     });
     if (!res.ok) {
       throw new Error(`Jellyfin createPlaylist error: ${res.status} ${res.statusText}`);

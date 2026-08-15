@@ -8,6 +8,10 @@ import * as exifr from 'exifr';
 import sharp from 'sharp';
 import type { Dirent } from 'fs';
 import { createReadStream } from 'fs';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+
+const execFileAsync = promisify(execFile);
 
 const MEDIA_EXTENSIONS = new Set([
   'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif',
@@ -21,6 +25,9 @@ const MEDIA_EXTENSIONS = new Set([
 const IMAGE_EXTENSIONS = new Set([
   'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif', 'avif',
 ]);
+
+/** Video extensions that get a ffmpeg frame thumbnail */
+const VIDEO_EXTENSIONS = new Set(['mp4', 'mov', 'avi', 'mkv', 'webm']);
 
 const EXTENSION_MIME: Record<string, string> = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif',
@@ -71,10 +78,10 @@ export class MediaService {
   }
 
   // ========== FILES ==========
-  async listFiles(ownerId: string, options?: { sourceId?: string; limit?: number; offset?: number }) {
+  async listFiles(ownerId: string, options?: { sourceId?: string; favorite?: boolean; limit?: number; offset?: number }) {
     const [items, total] = await Promise.all([
       this.repo.findFilesByOwner(ownerId, options),
-      this.repo.countFilesByOwner(ownerId, options?.sourceId),
+      this.repo.countFilesByOwner(ownerId, options?.sourceId, options?.favorite),
     ]);
     return { items, total };
   }
@@ -251,6 +258,20 @@ export class MediaService {
         // Check for duplicate (sourceId + relativePath)
         const existing = await this.repo.findFileBySourceAndPath(sourceId, relativePath);
         if (existing) {
+          // Backfill missing thumbnails (e.g. videos indexed before ffmpeg support)
+          if (!existing.thumbnailPath && VIDEO_EXTENSIONS.has(ext)) {
+            try {
+              const thumb = await this.generateVideoThumbnail(filePath);
+              if (thumb) {
+                await this.repo.updateFileThumbnail(existing.id, thumb);
+                this.logger.log(`Thumbnail backfilled for ${relativePath}`);
+              } else {
+                this.logger.warn(`Thumbnail generation returned null for ${relativePath}`);
+              }
+            } catch (err) {
+              this.logger.warn(`Thumbnail backfill failed for ${relativePath}: ${err instanceof Error ? err.message : String(err)}`);
+            }
+          }
           result.skipped++;
           continue;
         }
@@ -312,6 +333,15 @@ export class MediaService {
           }
         }
 
+        // Video thumbnail via ffmpeg (single frame at ~2s, 480px wide)
+        if (VIDEO_EXTENSIONS.has(ext)) {
+          try {
+            thumbnailPath = (await this.generateVideoThumbnail(filePath)) ?? undefined;
+          } catch {
+            /* ffmpeg failed — store video without thumbnail */
+          }
+        }
+
         await this.repo.createFile({
           ownerId,
           sourceId,
@@ -346,6 +376,28 @@ export class MediaService {
     );
 
     return result;
+  }
+
+  /**
+   * Extract a single video frame (~2s in, 480px wide) as a base64 JPEG data URL.
+   * Returns null when ffmpeg fails or the file is not decodable.
+   */
+  private async generateVideoThumbnail(videoPath: string): Promise<string | null> {
+    // Temp file in /tmp — the media mount may be read-only!
+    const tmpOut = `/tmp/lhub-thumb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+    try {
+      await execFileAsync(
+        'ffmpeg',
+        ['-y', '-ss', '2', '-i', videoPath, '-vframes', '1', '-vf', 'scale=480:-1', '-q:v', '5', tmpOut],
+        { timeout: 25000 },
+      );
+      const buf = await fsp.readFile(tmpOut);
+      await fsp.unlink(tmpOut).catch(() => {});
+      return `data:image/jpeg;base64,${buf.toString('base64')}`;
+    } catch {
+      await fsp.unlink(tmpOut).catch(() => {});
+      return null;
+    }
   }
 
   /**

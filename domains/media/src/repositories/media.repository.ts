@@ -79,9 +79,10 @@ export class MediaRepository {
     return row ?? null;
   }
 
-  async findFilesByOwner(ownerId: string, options?: { sourceId?: string; limit?: number; offset?: number }) {
+  async findFilesByOwner(ownerId: string, options?: { sourceId?: string; favorite?: boolean; limit?: number; offset?: number }) {
     const conditions = [eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)];
     if (options?.sourceId) conditions.push(eq(mediaFiles.sourceId, options.sourceId));
+    if (options?.favorite) conditions.push(eq(mediaFiles.isFavorite, true));
     return this.db.select().from(mediaFiles)
       .where(and(...conditions))
       .orderBy(desc(mediaFiles.takenAt ?? mediaFiles.createdAt))
@@ -90,9 +91,10 @@ export class MediaRepository {
   }
 
   /** Total file count for pagination (same filters as findFilesByOwner) */
-  async countFilesByOwner(ownerId: string, sourceId?: string): Promise<number> {
+  async countFilesByOwner(ownerId: string, sourceId?: string, favorite?: boolean): Promise<number> {
     const conditions = [eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)];
     if (sourceId) conditions.push(eq(mediaFiles.sourceId, sourceId));
+    if (favorite) conditions.push(eq(mediaFiles.isFavorite, true));
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })
       .from(mediaFiles)
@@ -121,6 +123,13 @@ export class MediaRepository {
       .where(eq(mediaFiles.id, id))
       .returning();
     return row;
+  }
+
+  /** Backfill a generated thumbnail (e.g. ffmpeg frame for videos). */
+  async updateFileThumbnail(id: string, thumbnailPath: string) {
+    await this.db.update(mediaFiles)
+      .set({ thumbnailPath, updatedAt: sql`now()` })
+      .where(eq(mediaFiles.id, id));
   }
 
   async deleteFile(id: string, ownerId: string) {

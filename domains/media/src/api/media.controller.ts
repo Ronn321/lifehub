@@ -75,12 +75,14 @@ export class MediaController {
     @Query('sourceId') sourceId: string | undefined,
     @Query('limit') limit: string | undefined,
     @Query('offset') offset: string | undefined,
+    @Query('favorite') favorite: string | undefined,
     @CurrentUser() user: JwtPayload,
   ) {
     return this.media.listFiles(user.sub, {
       sourceId,
       limit: limit ? parseInt(limit) : undefined,
       offset: offset ? parseInt(offset) : undefined,
+      favorite: favorite === 'true' || favorite === '1',
     });
   }
 

@@ -168,7 +168,11 @@
    Activated via html.lifehub-tv (see src/lib/client-mode.ts). Larger type,
    visible focus rings, D-pad-friendly hit targets, thin scrollbars. */
 html.lifehub-tv { font-size: 125%; } /* Basis-Skalierung */
-html.lifehub-tv :focus-visible {
+/* TV-Modus: :focus (nicht :focus-visible) — der D-pad-Fokus wird
+   programmatisch per el.focus() gesetzt und löst :focus-visible auf dem
+   Android-WebView nicht aus. Ohne sichtbaren Ring ist die TV-Bedienung
+   praktisch blind (auf echter Hardware verifiziert). */
+html.lifehub-tv :focus {
   outline: 3px solid rgb(var(--brand-500));
   outline-offset: 2px;
 }

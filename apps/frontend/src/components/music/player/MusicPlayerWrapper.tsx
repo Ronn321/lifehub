@@ -135,6 +135,11 @@ export function MusicPlayerWrapper() {
 
   /* ── Store selectors ── */
   const currentTrack = useMusicPlayerStore((s) => s.currentTrack);
+  const favoriteIds = useMusicPlayerStore((s) => s.favoriteIds);
+  // Player-bar heart reads the store's favorite set (single source of truth).
+  const isLiked = currentTrack
+    ? favoriteIds.includes(currentTrack.id) || currentTrack.isFavorite === true
+    : false;
   const status = useMusicPlayerStore((s) => s.status);
   const volume = useMusicPlayerStore((s) => s.volume);
   const isMuted = useMusicPlayerStore((s) => s.isMuted);
@@ -158,7 +163,6 @@ export function MusicPlayerWrapper() {
   const isMiniPlayer = useMusicPlayerStore((s) => s.isMiniPlayer);
 
   /* ── Local UI state for the player bar ── */
-  const [isLiked, setIsLiked] = useState(false);
   const [isLyricsVisible, setIsLyricsVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isGaplessLoading, setIsGaplessLoading] = useState(false);
@@ -742,7 +746,6 @@ export function MusicPlayerWrapper() {
     (trackId: string) => {
       if (!currentTrack) return;
       toggleFavSong.mutate(trackId);
-      setIsLiked((prev) => !prev);
     },
     [currentTrack, toggleFavSong],
   );

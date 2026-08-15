@@ -75,6 +75,9 @@ export interface JellyfinServer {
   isActive: boolean;
 }
 
+/** Supported item types for the favorites page / endpoint. */
+export type MusicFavoriteType = 'songs' | 'albums' | 'artists';
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
@@ -169,7 +172,7 @@ export function jellyfinItemToTrack(
     genre: item.Genres?.[0],
     genreId: undefined,
     year: item.ProductionYear,
-    rating: item.CommunityRating,
+    rating: item.UserData?.Rating ?? item.CommunityRating,
     isFavorite: item.UserData?.IsFavorite ?? false,
     quality,
     bitrate,
@@ -418,13 +421,29 @@ export function useDeletePlaylist() {
 /*  Favorites API Hooks                                                */
 /* ------------------------------------------------------------------ */
 
-/** Fetch favorite songs from Jellyfin */
-export function useFavoriteSongs(serverId?: string) {
+/** Fetch favorites from Jellyfin, optionally filtered by item type (songs|albums|artists). */
+export function useFavorites(serverId?: string, type: MusicFavoriteType = 'songs') {
   return useQuery<JellyfinApiItem[]>({
-    queryKey: ['music-favorites', serverId],
+    queryKey: ['music-favorites', serverId, type],
     queryFn: () =>
-      api.get<JellyfinApiItem[]>(`/jellyfin/servers/${serverId}/favorites`),
+      api.get<JellyfinApiItem[]>(`/jellyfin/servers/${serverId}/favorites?type=${type}`),
     enabled: !!serverId,
+    staleTime: 60_000,
+  });
+}
+
+/** Fetch favorite songs from Jellyfin (legacy alias, defaults to songs). */
+export function useFavoriteSongs(serverId?: string) {
+  return useFavorites(serverId, 'songs');
+}
+
+/** Fetch a single Jellyfin item (e.g. an album) incl. its UserData favorite state. */
+export function useItemDetail(serverId?: string, itemId?: string | null) {
+  return useQuery<JellyfinApiItem>({
+    queryKey: ['music-item-detail', serverId, itemId],
+    queryFn: () =>
+      api.get<JellyfinApiItem>(`/jellyfin/servers/${serverId}/items/${itemId}/detail`),
+    enabled: !!serverId && !!itemId,
     staleTime: 60_000,
   });
 }
@@ -439,10 +458,17 @@ export function useToggleFavoriteSong() {
       api.post<{ isFavorite: boolean }>(
         `/jellyfin/servers/${server!.id}/items/${trackId}/favorite`,
       ),
-    onSuccess: async (_data, trackId) => {
-      // Optimistically update the local favorites set, then refetch from Jellyfin
+    onMutate: (trackId) => {
+      // Optimistically flip the local favorites set so every heart updates instantly.
       toggleFavorite(trackId);
+    },
+    onSuccess: async () => {
+      // Refetch from Jellyfin (server is the source of truth).
       await qc.invalidateQueries({ queryKey: ['music-favorites', server?.id] });
+    },
+    onError: (_err, trackId) => {
+      // Roll back the optimistic flip on failure.
+      toggleFavorite(trackId);
     },
   });
 }
@@ -457,6 +483,47 @@ export function useToggleFavorite() {
     },
     [],
   );
+}
+
+/**
+ * Persist a favorite toggle for any Jellyfin item (album, artist, ...) and
+ * refresh the favorites + library lists afterwards. Used by album/artist hearts.
+ */
+export function useToggleItemFavorite() {
+  const qc = useQueryClient();
+  const server = useJellyfinServer();
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      api.post<{ isFavorite: boolean }>(
+        `/jellyfin/servers/${server!.id}/items/${itemId}/favorite`,
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['music-favorites', server?.id] });
+      await qc.invalidateQueries({ queryKey: ['music-albums'] });
+      await qc.invalidateQueries({ queryKey: ['music-artists'] });
+      await qc.invalidateQueries({ queryKey: ['music-album-songs'] });
+      await qc.invalidateQueries({ queryKey: ['music-top-songs'] });
+    },
+  });
+}
+
+/** Persist a user rating (0–5) for a track on Jellyfin and sync the player store. */
+export function useRateSong() {
+  const qc = useQueryClient();
+  const server = useJellyfinServer();
+  const setTrackRating = useMusicPlayerStore((s) => s.setTrackRating);
+  return useMutation({
+    mutationFn: ({ trackId, rating }: { trackId: string; rating: number }) =>
+      api.post<{ rating: number }>(
+        `/jellyfin/servers/${server!.id}/items/${trackId}/rating`,
+        { rating },
+      ),
+    onSuccess: async (_data, { trackId, rating }) => {
+      // Optimistically update the local rating map
+      setTrackRating(trackId, rating);
+      await qc.invalidateQueries({ queryKey: ['music-favorites', server?.id] });
+    },
+  });
 }
 
 /* ------------------------------------------------------------------ */

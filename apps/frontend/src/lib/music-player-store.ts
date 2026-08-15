@@ -219,6 +219,11 @@ interface MusicPlayerStore {
     getFavoriteTracks: () => MusicTrack[];
     syncFavorites: (tracks: MusicTrack[]) => void;
 
+  /* ── Rating Actions ── */
+  trackRatings: Record<string, number>;
+  setTrackRating: (trackId: string, rating: number) => void;
+  getTrackRating: (trackId: string) => number;
+
   /* ── Now Playing panel ── */
   nowPlayingTab: NowPlayingTab;
   setNowPlayingTab: (tab: NowPlayingTab) => void;
@@ -343,6 +348,7 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
       /* ── Favorites (persisted) ── */
       favoriteIds: [],
       favoriteTracks: {},
+      trackRatings: {},
 
       errorMessage: null,
       retryTrigger: 0,
@@ -881,6 +887,13 @@ export const useMusicPlayerStore = create<MusicPlayerStore>()(
       isFavorite: (trackId) => {
         return get().favoriteIds.includes(trackId);
       },
+
+      /* ── Rating Actions ── */
+
+      setTrackRating: (trackId, rating) =>
+        set((s) => ({ trackRatings: { ...s.trackRatings, [trackId]: rating } })),
+
+      getTrackRating: (trackId) => get().trackRatings[trackId] ?? 0,
 
       getFavoriteTracks: () => {
         const { favoriteIds, favoriteTracks } = get();

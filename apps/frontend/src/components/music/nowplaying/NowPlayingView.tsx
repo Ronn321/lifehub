@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import { MusicImage } from '@/components/music/shared/MusicCard';
-import { formatTime } from '@/lib/music-api';
+import { formatTime, useToggleFavoriteSong, useRateSong } from '@/lib/music-api';
 import { LyricsOverlay } from '@/components/music/player/LyricsOverlay';
 import { extractDominantColor, rgbToCss } from '@/lib/color-extraction';
 import {
@@ -291,9 +291,24 @@ function NowPlayingTab({
   track: ReturnType<typeof useMusicPlayerStore.getState>['currentTrack'];
 }) {
   const { status, togglePlay, next, previous } = useMusicPlayerStore();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const favoriteIds = useMusicPlayerStore((s) => s.favoriteIds);
+  // Single reactive source of truth: the player store's favorite set.
+  const isFavorite = track
+    ? favoriteIds.includes(track.id) || track.isFavorite === true
+    : false;
   const [rating, setRating] = useState(0);
+  const toggleFavMut = useToggleFavoriteSong();
+  const rateMut = useRateSong();
   const isPlaying = status === 'playing';
+
+  // Sync the local rating from the track / store whenever the track changes
+  useEffect(() => {
+    if (!track) return;
+    setRating(
+      useMusicPlayerStore.getState().getTrackRating(track.id) ||
+      Math.round((track.rating ?? 0) / 2),
+    );
+  }, [track?.id, track?.isFavorite, track?.rating]);
 
   if (!track) {
     return (
@@ -335,7 +350,7 @@ function NowPlayingTab({
       {/* Favorite + Rating */}
       <div className="flex flex-col items-center gap-2">
         <button
-          onClick={() => setIsFavorite(!isFavorite)}
+          onClick={() => toggleFavMut.mutate(track.id)}
           className="flex items-center gap-1.5 text-xs font-medium"
           style={{
             color: isFavorite ? 'var(--music-accent)' : 'var(--music-text-tertiary)',
@@ -349,7 +364,14 @@ function NowPlayingTab({
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
-              onClick={() => setRating(star === rating ? 0 : star)}
+              onClick={() => {
+                const next = star === rating ? 0 : star;
+                setRating(next);
+                rateMut.mutate(
+                  { trackId: track.id, rating: next },
+                  { onError: () => setRating(rating) },
+                );
+              }}
               className="p-0.5 transition-transform hover:scale-110"
             >
               <Star

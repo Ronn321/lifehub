@@ -46,7 +46,8 @@ function SongRowImpl({
   const toggleFav = useToggleFavoriteSong();
   const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
   const addToQueueNext = useMusicPlayerStore((s) => s.addToQueueNext);
-  const isFav = useMusicPlayerStore((s) => s.isFavorite);
+  const isFav = useMusicPlayerStore((s) => s.favoriteIds);
+  const isFavTrack = isFav.includes(track.id) || track.isFavorite === true;
   const playbackStatus = useMusicPlayerStore((s) => s.status);
   const onSongContextMenu = useSongContextMenu({ serverId: server?.id });
 
@@ -102,7 +103,7 @@ function SongRowImpl({
           onGoToAlbum: track.albumId
             ? () => router.push(`/jellyfin/music/album/${track.albumId}`)
             : undefined,
-          isFavorite: track.isFavorite ?? isFav(track.id),
+          isFavorite: isFavTrack,
           songId: track.id,
         })
       }
@@ -180,7 +181,7 @@ function SongRowImpl({
         <Heart
           className={
             'h-4 w-4 ' +
-            (track.isFavorite ?? isFav(track.id)
+            (isFavTrack
               ? 'fill-[var(--music-accent)] text-[var(--music-accent)]'
               : 'text-[var(--music-text-secondary)] hover:text-[var(--music-accent)]')
           }
@@ -210,7 +211,7 @@ function SongRowImpl({
               onGoToAlbum: track.albumId
                 ? () => router.push(`/jellyfin/music/album/${track.albumId}`)
                 : undefined,
-              isFavorite: track.isFavorite ?? isFav(track.id),
+              isFavorite: isFavTrack,
               songId: track.id,
             });
           }}

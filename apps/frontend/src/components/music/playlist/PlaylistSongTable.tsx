@@ -98,7 +98,7 @@ export function PlaylistSongTable({
   const addToQueue = useMusicPlayerStore((s) => s.addToQueue);
   const addToQueueNext = useMusicPlayerStore((s) => s.addToQueueNext);
   const toggleFav = useToggleFavoriteSong();
-  const isFav = useMusicPlayerStore((s) => s.isFavorite);
+  const favoriteIds = useMusicPlayerStore((s) => s.favoriteIds);
 
   // Convert items to tracks once
   const tracks = useMemo(
@@ -364,6 +364,7 @@ export function PlaylistSongTable({
             const isSelected = selectedIds.has(track.id);
             const isHovered = hoveredIndex === sortedIdx;
             const isTrackPlaying = isPlaying(track);
+            const isFavTrack = favoriteIds.includes(track.id);
 
             return (
               <div
@@ -479,7 +480,7 @@ export function PlaylistSongTable({
                   <Heart
                     className={cn(
                       'h-4 w-4',
-                      isFav(track.id)
+                      isFavTrack
                         ? 'fill-[var(--music-accent)] text-[var(--music-accent)]'
                         : 'text-[var(--music-text-secondary)] hover:text-[var(--music-accent)]',
                     )}

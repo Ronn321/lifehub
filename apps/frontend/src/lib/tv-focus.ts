@@ -64,11 +64,15 @@ const DIRECTION_MAP: Record<string, 'up' | 'down' | 'left' | 'right'> = {
   ArrowRight: 'right',
 };
 
+// Expose the global API immediately at module load, so calls from the
+// Flutter app (window.lifehubTvFocus / lifehubTvClick) work on EVERY route —
+// even if initTvFocus ran before the TV class was applied (boot ordering).
+window.lifehubTvFocus = step;
+window.lifehubTvClick = click;
+
 // Expose the global API and (only when the TV class is active) wire up keyboard
 // navigation. Returns a cleanup that removes the listener.
 export function initTvFocus(): () => void {
-  window.lifehubTvFocus = step;
-  window.lifehubTvClick = click;
   if (!document.documentElement.classList.contains('lifehub-tv')) {
     return () => {};
   }

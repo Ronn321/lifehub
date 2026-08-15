@@ -221,6 +221,7 @@ class BrowserSession {
     this.controlPeer = null;
     this.downloadPath = join(PROFILE_ROOT, id, 'downloads');
     this.lastUsed = Date.now();
+    this.lastInputAt = 0;
     this.captureFailures = 0;
     this.captureInFlight = false;
     this.lastFrameAt = Date.now();
@@ -413,6 +414,7 @@ class BrowserSession {
 
   async input(peer, message) {
     this.lastUsed = Date.now();
+    if (['mouse', 'wheel', 'keyboard'].includes(message.type)) this.lastInputAt = Date.now();
     if (message.type === 'take-control') {
       this.controlPeer = peer;
       await this.broadcastState();
@@ -482,8 +484,10 @@ class BrowserSession {
   async captureFrame() {
     const page = this.getActivePage();
     if (!page) return null;
-    const screenshot = await page.screenshot({ type: 'jpeg', quality: 65 });
-    const raw = await sharp(screenshot).raw().toBuffer({ resolveWithObject: true });
+    const screenshot = await page.screenshot({ type: 'jpeg', quality: 60 });
+    // 960px Breite spart ~40 % Pixel: JPEG-Decode, I420-Konvertierung und
+    // VP8-Encode werden spürbar billiger; das Video-Element streckt auf Fill.
+    const raw = await sharp(screenshot).resize({ width: 960, withoutEnlargement: true }).raw().toBuffer({ resolveWithObject: true });
     const width = raw.info.width - (raw.info.width % 2);
     const height = raw.info.height - (raw.info.height % 2);
     return { width, height, data: rgbToI420(raw.data, raw.info.width, raw.info.height) };
@@ -615,9 +619,22 @@ class BrowserSession {
         this.captureInFlight = false;
       }
     };
-    // 500ms = 4 FPS: für UI-Browsing ausreichend und halbiert die CPU-Last
-    // (mehrere Browser-Blöcke = mehrere parallele Screenshot-Timer).
-    peer.timer = setInterval(() => void capture(), 500);
+    // Adaptiv: ~15 FPS innerhalb von 2 s nach der letzten Eingabe (flüssiges
+    // Scrollen/Klicken), sonst 4 FPS im Leerlauf (CPU-schonend bei mehreren
+    // parallelen Browser-Blöcken). Die In-Flight-Sperre bleibt bestehen: Ist
+    // ein Screenshot langsamer als das Intervall, werden Ticks übersprungen.
+    const FAST_MS = 66;
+    const IDLE_MS = 500;
+    const scheduleCapture = (delay) => {
+      peer.timer = setTimeout(() => {
+        void capture().finally(() => {
+          if (this.peers.has(peer)) {
+            scheduleCapture(Date.now() - this.lastInputAt < 2_000 ? FAST_MS : IDLE_MS);
+          }
+        });
+      }, delay);
+    };
+    scheduleCapture(IDLE_MS);
     this.ensureStallWatchdog();
     ws.on('message', (raw) => {
       try {

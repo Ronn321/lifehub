@@ -16,10 +16,13 @@ const ADDABLE_TYPES: { type: WidgetType; description: string }[] = [
 
 interface WidgetAddButtonProps {
   onAdd: (type: WidgetType) => void;
+  visible?: boolean;
 }
 
-export function WidgetAddButton({ onAdd }: WidgetAddButtonProps) {
+export function WidgetAddButton({ onAdd, visible = true }: WidgetAddButtonProps) {
   const [open, setOpen] = useState(false);
+
+  if (!visible) return null;
 
   return (
     <div className="relative">

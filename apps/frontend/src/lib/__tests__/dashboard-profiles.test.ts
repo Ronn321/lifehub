@@ -43,7 +43,8 @@ describe('dashboard-profiles', () => {
     const rects = out.map((w) => ({ x1: w.x, x2: w.x + w.w, y1: w.y, y2: w.y + w.h }));
     for (let i = 0; i < rects.length; i++) {
       for (let j = i + 1; j < rects.length; j++) {
-        const a = rects[i], b = rects[j];
+        const a = rects[i]!;
+        const b = rects[j]!;
         const overlap = a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
         expect(overlap).toBe(false);
       }
@@ -62,6 +63,35 @@ describe('dashboard-profiles', () => {
       for (const w of p.defaultLayout) {
         expect(w.x + w.w).toBeLessThanOrEqual(p.columns);
       }
+    }
+  });
+});
+
+import { cycleWidgetSize } from '../grid-utils';
+
+describe('cycleWidgetSize', () => {
+  it('liefert die nächste erlaubte Größe (zyklisch)', () => {
+    // phone weather (min 2x1): erlaubt sind 2x2 und 2x3 (2x1 gibt es in
+    // ALLOWED_SIZES nicht) → von 2x2 aus kommt 2x3, von 2x3 wickelt es zu 2x2.
+    const next = cycleWidgetSize({ w: 2, h: 2 }, PROFILES.phone, 'weather');
+    expect(next).toEqual({ w: 2, h: 3 });
+    const wrapped = cycleWidgetSize({ w: 2, h: 3 }, PROFILES.phone, 'weather');
+    expect(wrapped).toEqual({ w: 2, h: 2 });
+  });
+
+  it('Größen unter dem Minimum springen auf die erste erlaubte Größe', () => {
+    const next = cycleWidgetSize({ w: 1, h: 1 }, PROFILES.phone, 'media');
+    expect(next).toEqual({ w: 2, h: 2 });
+  });
+
+  it('niemals kleiner als Profil-Mindestgröße, niemals breiter als Spalten', () => {
+    const p = PROFILES.phone;
+    let current = { w: 2, h: 1 };
+    for (let i = 0; i < 20; i++) {
+      current = cycleWidgetSize(current, p, 'media');
+      expect(current.w).toBeGreaterThanOrEqual(p.minSizes.media.w);
+      expect(current.h).toBeGreaterThanOrEqual(p.minSizes.media.h);
+      expect(current.w).toBeLessThanOrEqual(p.columns);
     }
   });
 });

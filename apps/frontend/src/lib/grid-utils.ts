@@ -1,3 +1,5 @@
+import type { DashboardProfile } from './dashboard-profiles';
+
 export type WidgetType = 'media' | 'calendar' | 'weather' | 'savings';
 
 export interface Widget {
@@ -214,4 +216,20 @@ export function defaultConfig(type: WidgetType): WidgetConfig {
     default:
       return {};
   }
+}
+
+// Nächste erlaubte Größe (zyklisch), eingeschränkt auf Profil-Spalten und
+// Mindestgrößen des Widget-Typs. Für den TV-Editor-Dialog.
+export function cycleWidgetSize(
+  current: { w: number; h: number },
+  profile: DashboardProfile,
+  type: WidgetType,
+): { w: number; h: number } {
+  const min = profile.minSizes[type] ?? { w: 1, h: 1 };
+  const candidates = ALLOWED_SIZES.filter(
+    ([w, h]) => w <= profile.columns && w >= min.w && h >= min.h,
+  );
+  const idx = candidates.findIndex(([w, h]) => w === current.w && h === current.h);
+  const next = candidates[(idx + 1) % candidates.length];
+  return next ? { w: next[0], h: next[1] } : { ...min };
 }

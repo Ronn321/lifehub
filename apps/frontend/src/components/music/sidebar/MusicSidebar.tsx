@@ -13,7 +13,9 @@ import {
   useArtists,
   useRecentAlbums,
   useRecentlyPlayed,
+  usePlaylists,
   getCoverUrl,
+  getPlaylistCoverUrl,
 } from '@/lib/music-api';
 import { useAuthStore } from '@/lib/auth-store';
 import { CreatePlaylistDialog } from '@/components/music/playlist/CreatePlaylistDialog';
@@ -86,6 +88,27 @@ export function MusicSidebar({
   const { data: artists } = useArtists(server?.id);
   const { data: albums } = useRecentAlbums(server?.id, 20);
   const { data: recentItems } = useRecentlyPlayed(server?.id, 5);
+  const { data: playlistData } = usePlaylists(server?.id);
+
+  // Fetch playlists internally so the sidebar works on every music page,
+  // falling back to the passed-in prop if a page provides its own list.
+  const internalPlaylists = React.useMemo(
+    (): PlaylistItemData[] =>
+      (playlistData ?? []).map((p) => ({
+        id: p.Id,
+        name: p.Name,
+        coverUrl:
+          accessToken && server?.id
+            ? getPlaylistCoverUrl(accessToken, server.id, p.Id, 64, 64)
+            : undefined,
+        songCount: p.ChildCount ?? 0,
+      })),
+    [playlistData, accessToken, server?.id],
+  );
+  const effectivePlaylists =
+    playlists && playlists.length > 0 ? playlists : internalPlaylists;
+  const handlePlaylistClick =
+    onPlaylistClick ?? ((id: string) => router.push(`/jellyfin/music/playlist/${id}`));
   // Manage tab state locally as fallback when no onTabChange from parent
   const [localTab, setLocalTab] = useState<LibraryTab>(activeTab);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -267,7 +290,7 @@ export function MusicSidebar({
       <div className="flex-1 overflow-y-auto px-3 music-scroll">
         {effectiveTab === 'playlists' && (
           <>
-            {playlists.length === 0 && (
+            {effectivePlaylists.length === 0 && (
               <p
                 className="px-2 py-4 text-xs text-center"
                 style={{ color: 'var(--music-text-tertiary)' }}
@@ -275,7 +298,7 @@ export function MusicSidebar({
                 {collapsed ? '—' : 'Keine Playlists'}
               </p>
             )}
-            {playlists.map((pl) => (
+            {effectivePlaylists.map((pl) => (
               <SidebarPlaylistItem
                 key={pl.id}
                 name={pl.name}
@@ -283,7 +306,7 @@ export function MusicSidebar({
                 coverUrl={pl.coverUrl}
                 songCount={pl.songCount}
                 active={pl.id === activePlaylistId}
-                onClick={onPlaylistClick}
+                onClick={handlePlaylistClick}
                 collapsed={collapsed}
               />
             ))}

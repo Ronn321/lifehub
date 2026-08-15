@@ -3,6 +3,7 @@
 import React from 'react';
 import { MusicAppShell } from '@/components/music/layout/MusicAppShell';
 import { NowPlayingView } from '@/components/music/nowplaying/NowPlayingView';
+import { ContextMenuProvider } from '@/components/music/shared/ContextMenu';
 import { useMusicPlayerStore } from '@/lib/music-player-store';
 import type { MusicSidebarProps } from '@/components/music/sidebar/MusicSidebar';
 
@@ -30,18 +31,20 @@ export function MusicPageShell({
   }, [isExpanded]);
 
   return (
-    <MusicAppShell
-      sidebarProps={sidebarProps}
-      className={className}
-      topBar={topBar}
-      stickyTitle={stickyTitle}
-      rightSidebar={
-        isExpanded
-          ? <NowPlayingView mode="sidebar" onClose={toggleExpanded} />
-          : undefined
-      }
-    >
-      {children}
-    </MusicAppShell>
+    <ContextMenuProvider>
+      <MusicAppShell
+        sidebarProps={sidebarProps}
+        className={className}
+        topBar={topBar}
+        stickyTitle={stickyTitle}
+        rightSidebar={
+          isExpanded
+            ? <NowPlayingView mode="sidebar" onClose={toggleExpanded} />
+            : undefined
+        }
+      >
+        {children}
+      </MusicAppShell>
+    </ContextMenuProvider>
   );
 }

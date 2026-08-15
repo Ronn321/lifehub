@@ -2,41 +2,10 @@
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePlaylists, useAddToPlaylist } from '@/lib/music-api';
 import type { JellyfinPlaylist } from '@/lib/music-api';
-
-/* ------------------------------------------------------------------ */
-/*  Toast (simple inline implementation)                                */
-/* ------------------------------------------------------------------ */
-
-function toast(message: string) {
-  const el = document.createElement('div');
-  el.textContent = message;
-  Object.assign(el.style, {
-    position: 'fixed',
-    bottom: '16px',
-    right: '16px',
-    zIndex: '9999',
-    backgroundColor: '#22c55e',
-    color: 'white',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    fontSize: '14px',
-    lineHeight: '20px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-  });
-  // Start invisible then fade in
-  el.style.opacity = '0';
-  document.body.appendChild(el);
-  requestAnimationFrame(() => {
-    el.style.transition = 'opacity 300ms';
-    el.style.opacity = '1';
-  });
-  setTimeout(() => {
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 300);
-  }, 2500);
-}
+import { toastSuccess, toastError } from '@/lib/music-toast';
 
 /* ------------------------------------------------------------------ */
 /*  Context Menu System                                                */
@@ -244,15 +213,24 @@ export function ContextMenuProvider({ children }: { children: React.ReactNode })
 
 export function useSongContextMenu(options?: { serverId?: string }) {
   const { showMenu } = useContextMenu();
+  const qc = useQueryClient();
   const { data: playlists } = usePlaylists(options?.serverId);
   const addToPlaylistApi = useAddToPlaylist();
 
   const addToPlaylistFn = useCallback(
-    async (playlistId: string, songIds: string[]) => {
+    async (playlistId: string, songIds: string[], playlistName: string) => {
       if (!options?.serverId) return;
-      await addToPlaylistApi(options.serverId, playlistId, songIds);
+      try {
+        await addToPlaylistApi(options.serverId, playlistId, songIds);
+        toastSuccess(`Song zu „${playlistName}" hinzugefügt`);
+        // Refresh playlist metadata + item lists after the change.
+        await qc.invalidateQueries({ queryKey: ['music-playlists', options.serverId] });
+        await qc.invalidateQueries({ queryKey: ['music-playlist-items', options.serverId] });
+      } catch {
+        toastError(`Hinzufügen zu „${playlistName}" fehlgeschlagen`);
+      }
     },
-    [options?.serverId, addToPlaylistApi],
+    [options?.serverId, addToPlaylistApi, qc],
   );
 
   return useCallback(
@@ -292,8 +270,7 @@ export function useSongContextMenu(options?: { serverId?: string }) {
           submenu: playlists.map((p: JellyfinPlaylist) => ({
             label: p.Name,
             onClick: async () => {
-              await addToPlaylistFn(p.Id, [actions.songId!]);
-              toast(`Song zu „${p.Name}" hinzugefügt`);
+              await addToPlaylistFn(p.Id, [actions.songId!], p.Name);
             },
           })),
         });
@@ -328,6 +305,57 @@ export function useSongContextMenu(options?: { serverId?: string }) {
       showMenu(e.clientX, e.clientY, items);
     },
     [showMenu, playlists, options?.serverId, addToPlaylistFn],
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Hook: useAddToPlaylistMenu                                         */
+/*  Generic "add these song ids to a playlist" picker (songs OR        */
+/*  albums/artists — pass the resolved song ids).                      */
+/* ------------------------------------------------------------------ */
+
+export function useAddToPlaylistMenu(options?: { serverId?: string }) {
+  const { showMenu } = useContextMenu();
+  const qc = useQueryClient();
+  const { data: playlists } = usePlaylists(options?.serverId);
+  const addToPlaylistApi = useAddToPlaylist();
+
+  return useCallback(
+    (
+      e: { clientX: number; clientY: number; preventDefault?: () => void },
+      songIds: string[],
+      label: string,
+    ) => {
+      e.preventDefault?.();
+      if (!options?.serverId || songIds.length === 0) return;
+
+      if (!playlists || playlists.length === 0) {
+        showMenu(e.clientX, e.clientY, [
+          { label: 'Keine Playlists vorhanden', disabled: true },
+        ]);
+        return;
+      }
+
+      showMenu(e.clientX, e.clientY, [
+        {
+          label,
+          submenu: playlists.map((p: JellyfinPlaylist) => ({
+            label: p.Name,
+            onClick: async () => {
+              try {
+                await addToPlaylistApi(options.serverId!, p.Id, songIds);
+                toastSuccess(`Zu „${p.Name}" hinzugefügt`);
+                await qc.invalidateQueries({ queryKey: ['music-playlists', options.serverId] });
+                await qc.invalidateQueries({ queryKey: ['music-playlist-items', options.serverId] });
+              } catch {
+                toastError(`Hinzufügen zu „${p.Name}" fehlgeschlagen`);
+              }
+            },
+          })),
+        },
+      ]);
+    },
+    [showMenu, playlists, options?.serverId, addToPlaylistApi, qc],
   );
 }
 

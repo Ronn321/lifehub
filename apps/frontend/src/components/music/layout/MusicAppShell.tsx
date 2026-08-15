@@ -56,6 +56,7 @@ export function MusicAppShell({
           collapsed={collapsed}
           onToggleCollapse={() => setCollapsed(!collapsed)}
           toggleStyle={sidebarStyle}
+          onCreatePlaylist={() => {}}
           {...sidebarProps}
         />
       </div>

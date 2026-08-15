@@ -3,6 +3,7 @@
 import React, { useState, type FormEvent } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { useCreatePlaylist } from '@/lib/music-api';
+import { toastSuccess, toastError } from '@/lib/music-toast';
 
 /* ------------------------------------------------------------------ */
 /*  CreatePlaylistDialog Props                                         */
@@ -38,9 +39,11 @@ export function CreatePlaylistDialog({ serverId, onCreated, onClose }: CreatePla
 
     try {
       await createPlaylist(serverId, trimmed);
+      toastSuccess(`Playlist „${trimmed}" erstellt`);
       onCreated();
     } catch (err: any) {
       setError(err?.message ?? 'Fehler beim Erstellen der Playlist');
+      toastError('Playlist konnte nicht erstellt werden');
     } finally {
       setLoading(false);
     }

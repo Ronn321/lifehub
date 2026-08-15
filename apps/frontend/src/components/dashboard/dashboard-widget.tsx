@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { MIN_ROW_HEIGHT, defaultConfig } from '@/lib/grid-utils';
 import type { Widget, WidgetConfig } from '@/lib/grid-utils';
+import { clampWidgetToProfile } from '@/lib/dashboard-profiles';
+import type { DashboardProfile } from '@/lib/dashboard-profiles';
 import {
   WIDGET_ICONS,
   CalendarWidget,
@@ -21,11 +23,14 @@ interface DashboardWidgetProps {
   widget: Widget;
   isDragging: boolean;
   isResizing: boolean;
-  onDragStart: (e: React.DragEvent, widget: Widget) => void;
-  onDragEnd: (e: React.DragEvent) => void;
-  onResizeStart: (e: React.MouseEvent | React.TouchEvent, widgetId: string) => void;
+  onDragStart: ((e: React.DragEvent, widget: Widget) => void) | undefined;
+  onDragEnd: ((e: React.DragEvent) => void) | undefined;
+  onResizeStart: ((e: React.MouseEvent | React.TouchEvent, widgetId: string) => void) | undefined;
   onDelete: (id: string) => void;
   onConfigChange: (id: string, config: Record<string, unknown>) => void;
+  editMode: boolean;
+  profile: DashboardProfile | null;
+  columns: number;
 }
 
 function parseConfig<T extends WidgetConfig>(widget: Widget, fallback: T): T {
@@ -41,6 +46,9 @@ export function DashboardWidget({
   onResizeStart,
   onDelete,
   onConfigChange,
+  editMode,
+  profile,
+  columns,
 }: DashboardWidgetProps) {
   const router = useRouter();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -49,8 +57,8 @@ export function DashboardWidget({
   const handleSettingsOpen = () => setSettingsOpen(true);
 
   const handleConfigChange = (newConfig: WidgetConfig) => {
+    // Keep the settings panel open — it closes only via "Fertig" or outside click
     onConfigChange(widget.id, newConfig as Record<string, unknown>);
-    setSettingsOpen(false);
   };
 
   const content = (() => {
@@ -73,8 +81,11 @@ export function DashboardWidget({
     }
   })();
 
-  const clampedW = Math.min(widget.w, 6);
-  const clampedX = Math.min(widget.x, 6 - clampedW);
+  // Rendering klemmt auf Profil-Regeln (Mindestgrößen, Spaltenmaximum, x-Rand).
+  const clamped = profile ? clampWidgetToProfile(widget, profile) : widget;
+  const w = Math.min(clamped.w, columns);
+  const x = Math.min(clamped.x, columns - w);
+  const h = clamped.h;
 
   return (
     <div
@@ -87,29 +98,32 @@ export function DashboardWidget({
         isResizing && 'ring-2 ring-brand-400',
       )}
       style={{
-        gridColumn: `${clampedX + 1} / span ${clampedW}`,
-        gridRow: `${widget.y + 1} / span ${widget.h}`,
-        minHeight: `${widget.h * MIN_ROW_HEIGHT}px`,
+        gridColumn: `${x + 1} / span ${w}`,
+        gridRow: `${widget.y + 1} / span ${h}`,
+        minHeight: `${h * MIN_ROW_HEIGHT}px`,
       }}
-      draggable
-      onDragStart={(e) => onDragStart(e, widget)}
-      onDragEnd={onDragEnd}
+      draggable={editMode}
+      onDragStart={editMode && onDragStart ? (e) => onDragStart(e, widget) : undefined}
+      onDragEnd={editMode ? onDragEnd : undefined}
     >
       <WidgetHeader
         widget={widget}
         icon={WIDGET_ICONS[widget.type]}
         onSettingsOpen={handleSettingsOpen}
         onDelete={onDelete}
+        showDelete={editMode}
       />
 
       <div className="flex-1 min-h-0 px-4 pb-4 pt-2">
         {content}
       </div>
 
-      <WidgetResizeHandle
-        onResizeStart={(e) => onResizeStart(e, widget.id)}
-        isResizing={isResizing}
-      />
+      {editMode && (
+        <WidgetResizeHandle
+          onResizeStart={(e) => onResizeStart?.(e, widget.id)}
+          isResizing={isResizing}
+        />
+      )}
 
       <SettingsPanel
         open={settingsOpen}

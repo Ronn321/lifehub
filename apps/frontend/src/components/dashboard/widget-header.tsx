@@ -10,9 +10,10 @@ interface WidgetHeaderProps {
   icon: React.ReactNode;
   onSettingsOpen: (id: string) => void;
   onDelete: (id: string) => void;
+  showDelete?: boolean;
 }
 
-export function WidgetHeader({ widget, icon, onSettingsOpen, onDelete }: WidgetHeaderProps) {
+export function WidgetHeader({ widget, icon, onSettingsOpen, onDelete, showDelete = true }: WidgetHeaderProps) {
   return (
     <div className="flex items-center gap-2 px-4 pt-3 pb-0 shrink-0">
       <button
@@ -50,18 +51,20 @@ export function WidgetHeader({ widget, icon, onSettingsOpen, onDelete }: WidgetH
         <Settings className="h-4 w-4" />
       </button>
 
-      <button
-        onClick={() => onDelete(widget.id)}
-        className={cn(
-          'rounded-md p-1 text-fg-subtle',
-          'opacity-0 group-hover/widget:opacity-100',
-          'hover:text-danger hover:bg-danger/10',
-          'transition-opacity duration-150',
-        )}
-        title="Widget entfernen"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
+      {showDelete && (
+        <button
+          onClick={() => onDelete(widget.id)}
+          className={cn(
+            'rounded-md p-1 text-fg-subtle',
+            'opacity-0 group-hover/widget:opacity-100',
+            'hover:text-danger hover:bg-danger/10',
+            'transition-opacity duration-150',
+          )}
+          title="Widget entfernen"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

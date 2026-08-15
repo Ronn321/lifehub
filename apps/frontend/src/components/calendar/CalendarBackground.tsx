@@ -16,7 +16,7 @@ export function CalendarBackground({ settings }: { settings: CalendarUserSetting
           style={{ filter: `blur(${settings.backgroundBlur}px)`, opacity: 1 - settings.backgroundOverlay * 0.4 }}
         />
       </div>
-      <div className="absolute inset-0" style={{ backgroundColor: `rgb(var(--bg) / ${settings.backgroundOverlay})` }} />
+      <div className="absolute inset-0" style={{ backgroundColor: `rgb(9 9 11 / ${settings.backgroundOverlay})` }} />
     </div>
   );
 }

@@ -63,8 +63,8 @@ export function CalendarToolbar({
       {/* Header row: title + view switcher + actions */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Kalender</h1>
-          <p className="text-fg-subtle mt-1">Deine Termine und Ereignisse</p>
+          <h1 className="text-3xl font-bold tracking-tight [text-shadow:0_1px_4px_rgba(0,0,0,0.7)]">Kalender</h1>
+          <p className="text-fg-muted mt-1 [text-shadow:0_1px_3px_rgba(0,0,0,0.8)]">Deine Termine und Ereignisse</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-lg border border-border bg-bg-surface p-1">

@@ -12,6 +12,8 @@ import {
 import { cn } from '@/lib/cn';
 import dynamic from 'next/dynamic';
 import { VideoPreviewTile } from './components/VideoPreviewTile';
+import { LazyMediaTile } from './components/LazyMediaTile';
+import PaginationBar from './components/PaginationBar';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -779,19 +781,24 @@ function GalleryTab() {
     const saved = parseInt(localStorage.getItem('lifehub-media-page-size') ?? '50', 10);
     return Number.isFinite(saved) && saved > 0 ? saved : 50;
   });
-  const [page, setPage] = useState(0);
-  const [customSizeOpen, setCustomSizeOpen] = useState(false);
-  const changePageSize = (n: number) => {
-    setPageSize(n);
-    setPage(0);
-    setCustomSizeOpen(false);
-    localStorage.setItem('lifehub-media-page-size', String(n));
-  };
+  const [page, setPage] = useState(1);
+
+  // Sequential lazy-loading + video warmup state
+  const [activatedUpTo, setActivatedUpTo] = useState(0);
+  const [pageReady, setPageReady] = useState(false);
+  const videoEls = useRef<(HTMLVideoElement | null)[]>([]);
 
   // Reset to first page when the source/favorite filter changes
   useEffect(() => {
-    setPage(0);
+    setPage(1);
   }, [sourceFilter, favoriteFilter]);
+
+  // Reset the sequential-loading state whenever any query input changes
+  useEffect(() => {
+    setActivatedUpTo(0);
+    setPageReady(false);
+    videoEls.current = [];
+  }, [page, pageSize, sourceFilter, favoriteFilter]);
 
   // Get sources for the filter dropdown
   const { data: sources } = useQuery<MediaSource[]>({
@@ -802,32 +809,83 @@ function GalleryTab() {
 
   // Fetch files (paginated — API returns { items, total })
   const {
-    data: allFiles,
+    data,
     isLoading,
     error,
-    refetch,
+    isFetching,
   } = useQuery<{ items: MediaFile[]; total: number }>({
     queryKey: ['media-files', sourceFilter, favoriteFilter, page, pageSize],
     queryFn: () => {
       const params = new URLSearchParams();
       if (sourceFilter) params.set('sourceId', sourceFilter);
+      if (favoriteFilter) params.set('favorite', 'true');
       params.set('limit', String(pageSize));
-      params.set('offset', String(page * pageSize));
+      params.set('offset', String((page - 1) * pageSize));
       return api.get<{ items: MediaFile[]; total: number }>(`/media/files?${params.toString()}`);
     },
-    staleTime: 10_000,
+    placeholderData: (prev) => prev, // TanStack v5 keepPreviousData
+    staleTime: 30_000,
   });
 
-  const totalFiles = allFiles?.total ?? 0;
+  const totalFiles = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalFiles / pageSize));
-  const rawFiles = Array.isArray(allFiles)
-    ? (allFiles as unknown as MediaFile[])
-    : (allFiles?.items ?? []);
-  const files = rawFiles.filter(f => {
+
+  // Client-side search filter on top of the fetched page
+  const files = (data?.items ?? []).filter((f) => {
     if (search && !f.filename.toLowerCase().includes(search.toLowerCase())) return false;
-    if (favoriteFilter && !f.isFavorite) return false;
     return true;
   });
+
+  // Prefetch neighbouring pages for instant navigation
+  useEffect(() => {
+    const buildParams = (p: number) => {
+      const params = new URLSearchParams();
+      if (sourceFilter) params.set('sourceId', sourceFilter);
+      if (favoriteFilter) params.set('favorite', 'true');
+      params.set('limit', String(pageSize));
+      params.set('offset', String((p - 1) * pageSize));
+      return params.toString();
+    };
+    for (const p of [page - 1, page + 1]) {
+      if (p < 1 || p > totalPages) continue;
+      qc.prefetchQuery({
+        queryKey: ['media-files', sourceFilter, favoriteFilter, p, pageSize],
+        queryFn: () => api.get<{ items: MediaFile[]; total: number }>(`/media/files?${buildParams(p)}`),
+        staleTime: 60_000,
+      });
+    }
+  }, [page, pageSize, sourceFilter, favoriteFilter, totalPages, qc]);
+
+  // Sequential queue: advancing the gate as tiles report load completion
+  const handleTileLoaded = useCallback((index: number) => {
+    setActivatedUpTo((prev) => Math.max(prev, index + 1));
+  }, []);
+
+  // Mark the page ready once every tile on it has been activated
+  useEffect(() => {
+    if (files.length > 0 && activatedUpTo >= files.length) {
+      setPageReady(true);
+    }
+  }, [files.length, activatedUpTo]);
+
+  // Video warmup: seek each loaded video to its middle once the page is ready
+  useEffect(() => {
+    if (!pageReady) return;
+    const els = videoEls.current;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    els.forEach((video, i) => {
+      timers.push(
+        setTimeout(() => {
+          if (!video) return;
+          const dur = video.duration;
+          if (!Number.isFinite(dur) || dur <= 0) return;
+          video.currentTime = dur / 2;
+          video.play().then(() => video.pause()).catch(() => {});
+        }, i * 120)
+      );
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [pageReady]);
 
   // Selection helpers
   function toggleSelect(id: string) {
@@ -899,6 +957,9 @@ function GalleryTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightboxFile, lightboxIndex, files]);
 
+  // Continuous tile index across all month groups on this page
+  let tileIndex = 0;
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -968,66 +1029,35 @@ function GalleryTab() {
           </div>
         )}
 
-        {/* Page size + pagination */}
-        <div className="flex items-center gap-2 ml-auto">
-          <select
-            value={customSizeOpen ? 'custom' : String(pageSize)}
-            onChange={(e) => {
-              if (e.target.value === 'custom') setCustomSizeOpen(true);
-              else changePageSize(parseInt(e.target.value, 10));
-            }}
-            title="Medien pro Seite"
-            className="rounded-md border border-border bg-bg-surface px-2 py-1.5 text-xs text-fg focus:outline-none focus:ring-2 focus:ring-brand-500/50"
-          >
-            {[25, 50, 100, 150, 200].map((n) => (
-              <option key={n} value={n}>{n} pro Seite</option>
-            ))}
-            <option value="custom">Eigene…</option>
-          </select>
-          {customSizeOpen && (
-            <input
-              type="number"
-              min={1}
-              max={500}
-              placeholder="Anzahl"
-              autoFocus
-              className="w-20 rounded-md border border-border bg-bg-surface px-2 py-1.5 text-xs text-fg focus:outline-none focus:ring-2 focus:ring-brand-500/50"
-              onBlur={(e) => {
-                const n = parseInt(e.target.value, 10);
-                if (Number.isFinite(n) && n > 0) changePageSize(n);
-                else setCustomSizeOpen(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-              }}
-            />
-          )}
-          <span className="text-xs text-fg-muted whitespace-nowrap">
-            Seite {page + 1} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-fg-muted transition-colors hover:text-fg disabled:opacity-30"
-            aria-label="Vorherige Seite"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-fg-muted transition-colors hover:text-fg disabled:opacity-30"
-            aria-label="Nächste Seite"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-
+        {/* Total count */}
         <span className="text-xs text-fg-muted">
           {totalFiles} Dateien
           {sourceFilter && sources ? ` · ${sources.find((s) => s.id === sourceFilter)?.name ?? ''}` : ''}
         </span>
       </div>
+
+      {/* Pagination (top) — only when there are files */}
+      {totalFiles > 0 && (
+        <div className="flex items-center gap-3">
+          <PaginationBar
+            page={page}
+            total={totalFiles}
+            pageSize={pageSize}
+            onPageChange={(p) => {
+              setPage(p);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              localStorage.setItem('lifehub-media-page-size', String(size));
+              setPage(1);
+            }}
+          />
+          {isFetching && data && (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-fg-muted" />
+          )}
+        </div>
+      )}
 
       {/* Loading state */}
       {isLoading && (
@@ -1071,7 +1101,9 @@ function GalleryTab() {
                 <span className="text-xs ml-2 text-fg-subtle">{groupFiles.length} Dateien</span>
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {groupFiles.map((file) => (
+                {groupFiles.map((file) => {
+                  const idx = tileIndex++;
+                  return (
                   <div
                     key={file.id}
                     className={`group relative aspect-[4/3] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
@@ -1091,26 +1123,37 @@ function GalleryTab() {
                         </div>
                       </div>
                     )}
-                    {/* Thumbnail first — instant base64 thumb, original only in lightbox */}
-                    {isImage(file.mimeType) ? (
-                      <img
-                        src={file.thumbnailPath ?? getStreamUrl(file.id)}
-                        alt={file.filename}
-                        className="h-full w-full object-contain bg-bg-raised"
-                        loading="lazy"
-                      />
-                    ) : isVideo(file.mimeType) ? (
-                      <VideoPreviewTile
-                        src={getStreamUrl(file.id)}
-                        alt={file.filename}
-                        thumbnail={file.thumbnailPath}
-                        className="h-full w-full object-contain bg-bg-raised"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center bg-bg-raised">
-                        <FileText className="h-10 w-10 opacity-30" />
-                      </div>
-                    )}
+                    {/* Lazy-loaded media tile (sequential + prefetch) */}
+                    <LazyMediaTile
+                      index={idx}
+                      activatedUpTo={activatedUpTo}
+                      onTileLoaded={handleTileLoaded}
+                      className="h-full w-full"
+                      renderContent={() =>
+                        isImage(file.mimeType) ? (
+                          <img
+                            src={getStreamUrl(file.id)}
+                            alt={file.filename}
+                            className="h-full w-full object-contain bg-bg-raised"
+                            loading="lazy"
+                            style={{ imageRendering: 'crisp-edges' }}
+                          />
+                        ) : isVideo(file.mimeType) ? (
+                          <VideoPreviewTile
+                            src={getStreamUrl(file.id)}
+                            alt={file.filename}
+                            thumbnail={file.thumbnailPath}
+                            className="h-full w-full object-contain bg-bg-raised"
+                            onMetadataLoaded={() => handleTileLoaded(idx)}
+                            registerVideo={(el) => { videoEls.current[idx] = el; }}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-bg-raised">
+                            <FileText className="h-10 w-10 opacity-30" />
+                          </div>
+                        )
+                      }
+                    />
 
                     {/* GPS indicator */}
                     {file.gpsLat != null && file.gpsLng != null && (
@@ -1150,12 +1193,31 @@ function GalleryTab() {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
 
         </div>
+      )}
+
+      {/* Pagination (bottom) — only when there are files */}
+      {totalFiles > 0 && (
+        <PaginationBar
+          page={page}
+          total={totalFiles}
+          pageSize={pageSize}
+          onPageChange={(p) => {
+            setPage(p);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            localStorage.setItem('lifehub-media-page-size', String(size));
+            setPage(1);
+          }}
+        />
       )}
 
       {/* Lightbox */}

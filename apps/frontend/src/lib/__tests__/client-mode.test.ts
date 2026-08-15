@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveClientMode, CLIENT_KEY } from '../client-mode';
+import { resolveClientMode, CLIENT_KEY, useClientModeStore, setClientMode } from '../client-mode';
 
 describe('resolveClientMode', () => {
   it('erkennt tv aus dem Query-Param', () => {
@@ -19,5 +19,14 @@ describe('resolveClientMode', () => {
   });
   it('exportiert konstanten Storage-Key', () => {
     expect(CLIENT_KEY).toBe('lifehub:client');
+  });
+});
+
+describe('client mode store', () => {
+  it('setClientMode aktualisiert den Store', () => {
+    setClientMode('phone');
+    expect(useClientModeStore.getState().mode).toBe('phone');
+    setClientMode('browser');
+    expect(useClientModeStore.getState().mode).toBe('browser');
   });
 });

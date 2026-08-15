@@ -1,7 +1,16 @@
 // Client mode bootstrap: the mobile app passes its device profile via ?client=
 // on first load; the web app persists it and switches the TV CSS class.
+import { create } from 'zustand';
+
 export type ClientMode = 'browser' | 'phone' | 'tablet' | 'tv';
 export const CLIENT_KEY = 'lifehub:client';
+
+// App-weiter, reaktiver Zugriff auf den aktiven Client-Modus.
+export const useClientModeStore = create<{ mode: ClientMode }>(() => ({ mode: 'browser' }));
+
+export function setClientMode(mode: ClientMode): void {
+  useClientModeStore.setState({ mode });
+}
 
 // Parse the ?client= query parameter; anything unknown falls back to 'browser'.
 export function resolveClientMode(search: string): ClientMode {
@@ -23,5 +32,7 @@ export function initClientMode(): ClientMode {
   if (fromQuery !== 'browser') applyClientMode(fromQuery);
   const stored = window.localStorage.getItem(CLIENT_KEY) as ClientMode | null;
   if (stored === 'tv') document.documentElement.classList.add('lifehub-tv');
-  return fromQuery !== 'browser' ? fromQuery : stored === null ? 'browser' : stored;
+  const resolved = fromQuery !== 'browser' ? fromQuery : stored === null ? 'browser' : stored;
+  setClientMode(resolved);
+  return resolved;
 }

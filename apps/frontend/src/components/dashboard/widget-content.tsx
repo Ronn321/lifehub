@@ -706,12 +706,15 @@ export function MediaWidget({ config }: { config: MediaConfig }) {
       }
       // Album selected -> fetch each album and merge its files.
       // The album endpoint returns [{ file, sortOrder }], so map to file.
-      const results = await Promise.all(
+      // allSettled: a deleted album id in the stored config must not fail the whole widget.
+      const results = await Promise.allSettled(
         config.albumIds.map((id) =>
           api.get<{ file: MediaFile; sortOrder: number }[]>(`/media/albums/${id}/media`),
         ),
       );
-      return results.flat().map((entry) => entry.file);
+      return results
+        .filter((r): r is PromiseFulfilledResult<{ file: MediaFile; sortOrder: number }[]> => r.status === 'fulfilled')
+        .flatMap((r) => r.value.map((entry) => entry.file));
     },
     staleTime: 30_000,
   });

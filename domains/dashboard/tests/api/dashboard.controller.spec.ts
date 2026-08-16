@@ -18,7 +18,7 @@ const service = {
 
 function authGuardValue(user?: { sub: string }) {
   return {
-    canActivate: (ctx: { switchToHttp: () => { getRequest: () => Record<string, unknown> } }) => {
+    canActivate: async (ctx: { switchToHttp: () => { getRequest: () => Record<string, unknown> } }) => {
       if (!user) throw new UnauthorizedException('Missing token');
       ctx.switchToHttp().getRequest().user = user;
       return true;

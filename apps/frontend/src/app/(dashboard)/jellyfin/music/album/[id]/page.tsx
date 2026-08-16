@@ -59,7 +59,7 @@ export default function AlbumDetailPage() {
     toggleItemFav.mutate(albumId, { onError: () => setIsAlbumFav(!next) });
   };
 
-  const coverUrl = server ? getCoverUrl(accessToken, server.id, albumId, 400, 400) : null;
+  const coverUrl = server && accessToken ? (getCoverUrl(accessToken, server.id, albumId, 400, 400) ?? null) : null;
 
   // Extract dominant color from cover image for gradient background
   useEffect(() => {

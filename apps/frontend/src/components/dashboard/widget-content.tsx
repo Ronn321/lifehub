@@ -604,13 +604,12 @@ export function CalendarWidget({ config, onNavigate }: { config: CalendarConfig;
 
 export function WeatherWidget({ config, onConfigChange }: { config: WeatherConfig; onConfigChange: (c: WeatherConfig) => void }) {
   const activeLocation = config.locations[config.activeLocationIndex] ?? config.locations[0];
-  if (!activeLocation) return <div className="text-sm text-fg-muted">Kein Standort ausgewählt</div>;
 
   const { data: current, isLoading: currentLoading } = useQuery({
-    queryKey: ['weather-current', activeLocation.lat, activeLocation.lng],
+    queryKey: ['weather-current', activeLocation?.lat, activeLocation?.lng],
     queryFn: async () => {
       const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${activeLocation.lat}&longitude=${activeLocation.lng}&current_weather=true&timezone=auto`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${activeLocation?.lat}&longitude=${activeLocation?.lng}&current_weather=true&timezone=auto`,
       );
       if (!res.ok) throw new Error('Weather API failed');
       return res.json();
@@ -624,7 +623,7 @@ export function WeatherWidget({ config, onConfigChange }: { config: WeatherConfi
     queryKey: ['weather-forecast', activeLocation?.lat, activeLocation?.lng],
     queryFn: async () => {
       const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${activeLocation.lat}&longitude=${activeLocation.lng}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=5`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${activeLocation?.lat}&longitude=${activeLocation?.lng}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=5`,
       );
       if (!res.ok) throw new Error('Weather forecast API failed');
       return res.json();
@@ -633,6 +632,8 @@ export function WeatherWidget({ config, onConfigChange }: { config: WeatherConfi
     retry: 1,
     enabled: !!activeLocation && config.expanded,
   });
+
+  if (!activeLocation) return <div className="text-sm text-fg-muted">Kein Standort ausgewählt</div>;
 
   if (currentLoading) return <div className="flex items-center justify-center h-full"><Loader2 className="h-6 w-6 animate-spin opacity-40" /></div>;
   if (!current) return <div className="text-sm text-fg-muted">Wetter nicht verfügbar</div>;

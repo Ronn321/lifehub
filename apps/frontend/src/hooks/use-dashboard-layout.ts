@@ -7,12 +7,13 @@ import type { DashboardLayout, Widget, WidgetType } from '@/lib/grid-utils';
 import { findFreePosition, normalizeLayout, defaultConfig } from '@/lib/grid-utils';
 import { generateId } from '@/lib/generate-id';
 import { useAuthStore } from '@/lib/auth-store';
-import { useClientModeStore } from '@/lib/client-mode';
+import { useClientModeStore, getStoredDeviceId } from '@/lib/client-mode';
 import {
   getProfile, normalizeForProfile, defaultWidgetSizeForProfile,
 } from '@/lib/dashboard-profiles';
 import {
   readLocalLayout, writeLocalLayout, seedLocalLayout, clearLocalLayout,
+  pickInitialLayout,
 } from '@/lib/dashboard-local-storage';
 import type { DashboardProfile } from '@/lib/dashboard-profiles';
 import type { ClientMode } from '@/lib/client-mode';
@@ -25,6 +26,12 @@ function debounce<A extends unknown[]>(fn: (...args: A) => void, ms: number): (.
   };
 }
 
+// Phase 2.5 — Remote-Sync-Endpoints für ein Gerät. Der lokale Cache (localStorage)
+// bleibt der schnelle Lese-/Schreibpfad; das Backend sichert als Reinstall-Recovery.
+function deviceLayoutPath(deviceId: string, action: '' | 'reset' = ''): string {
+  return `/dashboard/layout/device/${deviceId}${action}`;
+}
+
 export function useDashboardLayout() {
   const qc = useQueryClient();
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -33,19 +40,48 @@ export function useDashboardLayout() {
   const isLocal = profile !== null;
   const queryKey = ['dashboard-layout', isLocal ? mode : 'browser'];
   const cols = profile?.columns ?? 6;
+  const deviceId = getStoredDeviceId();
+
+  // Rückspielen des lokalen Cache in das Backend (Reinstall-Recovery).
+  // 404/Netzwerkabsagen werden still ignoriert — localStorage bleibt die Quelle.
+  const persistToBackend = useCallback((widgets: Widget[]): void => {
+    if (!deviceId) return;
+    void api
+      .put<DashboardLayout>(deviceLayoutPath(deviceId), { widgets })
+      .catch(() => undefined);
+  }, [deviceId]);
 
   // Quelle: Browser → Backend (wie bisher), Geräteprofil → localStorage mit
   // Default-Seeding. Geräteprofile sind per App-Installation isoliert →
   // jedes Gerät hat sein eigenes Layout, Desktop bleibt unberührt.
+  // Phase 2.5: Ist der lokale Cache leer (Neuinstallation), wird das zuletzt
+  // gesicherte Layout vom Backend geladen und der Cache neu befüllt.
   const { data: layout, isLoading, isError } = useQuery({
     queryKey,
-    queryFn: () => {
+    queryFn: async () => {
       if (isLocal) {
-        const stored = readLocalLayout(mode as Exclude<ClientMode, 'browser'>);
-        if (stored) {
-          return { widgets: normalizeForProfile(stored.widgets, profile) };
+        const local = readLocalLayout(mode as Exclude<ClientMode, 'browser'>);
+        if (deviceId) {
+          try {
+            const remote = await api.get<DashboardLayout>(deviceLayoutPath(deviceId));
+            const localOrRemote = pickInitialLayout(local, remote);
+            const restored = normalizeForProfile(
+              localOrRemote?.widgets ?? [],
+              profile as DashboardProfile,
+            );
+            if (restored.length === 0) return seedLocalLayout(mode as Exclude<ClientMode, 'browser'>, profile as DashboardProfile);
+            writeLocalLayout(mode as Exclude<ClientMode, 'browser'>, { widgets: restored });
+            return { widgets: restored };
+          } catch {
+            // Backend nicht erreichbar / 404 → nur lokaler Cache, sonst seeden
+            if (local) return { widgets: normalizeForProfile(local.widgets, profile as DashboardProfile) };
+            return seedLocalLayout(mode as Exclude<ClientMode, 'browser'>, profile as DashboardProfile);
+          }
         }
-        return seedLocalLayout(mode as Exclude<ClientMode, 'browser'>, profile);
+        if (local) {
+          return { widgets: normalizeForProfile(local.widgets, profile as DashboardProfile) };
+        }
+        return seedLocalLayout(mode as Exclude<ClientMode, 'browser'>, profile as DashboardProfile);
       }
       return api.get<DashboardLayout>('/dashboard/layout');
     },
@@ -69,11 +105,12 @@ export function useDashboardLayout() {
     },
   });
 
-  // Lokale Geräteprofile: synchron in localStorage schreiben (kein Debounce
-  // nötig — schmerzlos, und Reloads sehen sofort den Stand).
+  // Lokale Geräteprofile: direkt in localStorage kopieren (kein Debounce nötig)
+  // UND — Phase 2.5 — zum Backend spiegeln (Reinstall-Recovery, fire-and-forget).
   const saveLocal = useCallback((widgets: Widget[]) => {
     writeLocalLayout(mode as Exclude<ClientMode, 'browser'>, { widgets });
-  }, [mode]);
+    persistToBackend(widgets);
+  }, [mode, persistToBackend]);
 
   const optimisticSave = useCallback(
     (nextWidgets: Widget[]) => {
@@ -202,6 +239,12 @@ export function useDashboardLayout() {
   const resetLayout = useCallback(async (): Promise<DashboardLayout> => {
     if (isLocal) {
       clearLocalLayout(mode as Exclude<ClientMode, 'browser'>);
+      // Phase 2.5 — gerätespezifisches Backend-Layout ebenfalls zurücksetzen.
+      if (deviceId) {
+        void api
+          .post<DashboardLayout>(deviceLayoutPath(deviceId, 'reset'))
+          .catch(() => undefined);
+      }
       const fresh = seedLocalLayout(mode as Exclude<ClientMode, 'browser'>, profile as DashboardProfile);
       qc.setQueryData(queryKey, fresh);
       return fresh;
@@ -209,7 +252,7 @@ export function useDashboardLayout() {
     const res = await api.post<DashboardLayout>('/dashboard/layout/reset');
     qc.setQueryData(queryKey, res);
     return res;
-  }, [isLocal, mode, profile, qc, queryKey]);
+  }, [isLocal, mode, profile, qc, queryKey, deviceId]);
 
   return {
     widgets: layout?.widgets ?? [],

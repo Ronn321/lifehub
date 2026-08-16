@@ -22,30 +22,44 @@ interface RecipeSummary {
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const router = useRouter();
 
-  useEffect(() => {
-    fetchRecipes();
-  }, []);
-
   const fetchRecipes = async () => {
     try {
+      setError(null);
+      setLoading(true);
       const token = (JSON.parse(localStorage.getItem('lifehub-auth') ?? '{}')?.state?.accessToken ?? '');
+      if (!token) {
+        setError('auth');
+        return;
+      }
       const res = await fetch('/api/v1/recipes', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setRecipes(data);
+      if (res.status === 401) {
+        setError('auth');
+        return;
       }
+      if (!res.ok) {
+        setError(`server:${res.status}`);
+        return;
+      }
+      const data = await res.json();
+      setRecipes(data);
     } catch (err) {
       console.error('Failed to fetch recipes:', err);
+      setError('network');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
 
   const filtered = recipes
     .filter(r => {
@@ -71,6 +85,44 @@ export default function RecipesPage() {
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} className="animate-pulse bg-muted rounded-lg h-64" />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    const isAuth = error === 'auth';
+    return (
+      <div className="p-4 md:p-8">
+        <h1 className="text-3xl font-bold mb-6">Rezepte</h1>
+        <div className="border border-danger/30 bg-danger/10 rounded-lg p-6 max-w-xl">
+          <h2 className="text-lg font-semibold text-fg mb-2">
+            {isAuth ? 'Sitzung abgelaufen' : 'Rezepte konnten nicht geladen werden'}
+          </h2>
+          <p className="text-sm text-fg-muted">
+            {isAuth
+              ? 'Deine Anmeldung ist abgelaufen oder ungültig. Bitte logge dich neu ein.'
+              : error.startsWith('server:')
+                ? `Der Server meldet einen Fehler (HTTP ${error.split(':')[1]}). Bitte versuche es erneut.`
+                : 'Das Backend ist nicht erreichbar. Bitte prüfe, ob der Server läuft, und versuche es erneut.'}
+          </p>
+          <div className="flex gap-2 mt-4">
+            {isAuth ? (
+              <button
+                onClick={() => router.push('/login')}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
+              >
+                Zur Anmeldung
+              </button>
+            ) : (
+              <button
+                onClick={fetchRecipes}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
+              >
+                Erneut versuchen
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );

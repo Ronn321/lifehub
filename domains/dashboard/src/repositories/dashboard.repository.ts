@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
-import { DbService, dashboardLayouts, type Db } from '@lifehub/db';
+import { and, eq, sql } from 'drizzle-orm';
+import { DbService, dashboardLayouts, dashboardDeviceLayouts, type Db } from '@lifehub/db';
 import type { DashboardLayout } from '../entities/dashboard';
 
 export class DashboardRepository {
@@ -26,5 +26,37 @@ export class DashboardRepository {
         target: dashboardLayouts.userId,
         set: { layout: sql`${JSON.stringify(layout)}::jsonb`, updatedAt: sql`now()` },
       });
+  }
+
+  // ===================== Geräte-Layouts (Phase 2.5) =====================
+
+  async getDeviceLayout(userId: string, deviceId: string): Promise<DashboardLayout | null> {
+    const [row] = await this.db
+      .select()
+      .from(dashboardDeviceLayouts)
+      .where(and(
+        eq(dashboardDeviceLayouts.userId, userId),
+        eq(dashboardDeviceLayouts.deviceId, deviceId),
+      ));
+    return (row?.layout as unknown as DashboardLayout) ?? null;
+  }
+
+  async upsertDeviceLayout(userId: string, deviceId: string, layout: DashboardLayout): Promise<void> {
+    await this.db
+      .insert(dashboardDeviceLayouts)
+      .values({ userId, deviceId, layout: sql`${JSON.stringify(layout)}::jsonb`, updatedAt: sql`now()` })
+      .onConflictDoUpdate({
+        target: [dashboardDeviceLayouts.userId, dashboardDeviceLayouts.deviceId],
+        set: { layout: sql`${JSON.stringify(layout)}::jsonb`, updatedAt: sql`now()` },
+      });
+  }
+
+  async deleteDeviceLayout(userId: string, deviceId: string): Promise<void> {
+    await this.db
+      .delete(dashboardDeviceLayouts)
+      .where(and(
+        eq(dashboardDeviceLayouts.userId, userId),
+        eq(dashboardDeviceLayouts.deviceId, deviceId),
+      ));
   }
 }

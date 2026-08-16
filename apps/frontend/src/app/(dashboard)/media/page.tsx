@@ -1616,7 +1616,7 @@ function SourceDialog({ onClose }: { onClose: () => void }) {
             />
           </div>
           <p className="mt-1 text-xs text-fg-subtle">
-            Tipp: „Durchsuchen" öffnet den Windows-Explorer (Chromium/Edge).
+            Tipp: „Durchsuchen&quot; öffnet den Windows-Explorer (Chromium/Edge).
             Für NAS-Pfade auf Linux manuell eingeben.
             Unterstützte Formate: JPG, PNG, RAW, WEBP, GIF, SVG, BMP, MP4, MOV, MKV, MP3, WAV, FLAC, PDF, DOCX
           </p>

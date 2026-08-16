@@ -214,6 +214,18 @@ export function PageHeader({
 function CoverImage({ mediaId }: { mediaId: string }) {
   const [src, setSrc] = useState<string | null>(null);
 
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await api.get<{ url: string }>(`/media/${mediaId}`);
+        setSrc(res.url);
+      } catch {
+        setSrc(null);
+      }
+    }
+    load();
+  }, [mediaId]);
+
   // Built-in covers render directly (photo or gradient), no media lookup needed
   if (isBuiltinCover(mediaId)) {
     const cover = getBuiltinCover(mediaId);
@@ -228,18 +240,6 @@ function CoverImage({ mediaId }: { mediaId: string }) {
       />
     );
   }
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await api.get<{ url: string }>(`/media/${mediaId}`);
-        setSrc(res.url);
-      } catch {
-        setSrc(null);
-      }
-    }
-    load();
-  }, [mediaId]);
 
   if (!src) {
     return (

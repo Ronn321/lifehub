@@ -156,7 +156,7 @@ function GeneralSettings() {
           <option value="Europe/Zurich">Europe/Zurich</option>
           <option value="UTC">UTC</option>
         </select>
-        <p className="text-xs text-fg-subtle mt-1">„Automatisch (System)" übernimmt die Zeitzone des Servers.</p>
+        <p className="text-xs text-fg-subtle mt-1">„Automatisch (System)&quot; übernimmt die Zeitzone des Servers.</p>
       </Field>
 
       <div className="flex items-center gap-3 pt-2">

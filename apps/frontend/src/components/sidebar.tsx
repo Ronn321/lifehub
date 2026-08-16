@@ -7,7 +7,7 @@ import {
   Server, Key, Menu, X, Users, Plane, Code2, Notebook,
   FileText, FolderLock, Calendar, Search, Puzzle, ShieldCheck,
   ScrollText, Settings, Monitor, ChevronRight, ChevronDown, Pin, Plus,
-  PanelLeftClose, PanelLeftOpen, Mail,
+  PanelLeftClose, PanelLeftOpen, Mail, BookUser,
 } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -51,6 +51,7 @@ const navItems = [
   { href: '/projects', label: 'Projekte', icon: Code2, disabled: false },
   { href: '/recipes', label: 'Rezepte', icon: BookOpen, disabled: false },
   { href: '/shopping', label: 'Einkauf', icon: ShoppingCart, disabled: false },
+  { href: '/contacts', label: 'Kontakte', icon: BookUser, disabled: false },
   { href: '/finance', label: 'Finanzen', icon: PiggyBank, disabled: false },
   { href: '/insurance', label: 'Versicherung', icon: ShieldCheck, disabled: false },
   { href: '/vault', label: 'Tresor', icon: FolderLock, disabled: false },

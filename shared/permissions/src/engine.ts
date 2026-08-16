@@ -8,13 +8,13 @@ export type Domain =
   | 'users' | 'media' | 'travel' | 'projects' | 'recipes' | 'shopping'
   | 'finance' | 'insurance' | 'vault' | 'documents' | 'calendar'
   | 'it_inventory' | 'jellyfin' | 'search' | 'dashboard' | 'plugins' | 'pages'
-  | 'email' | 'integrations';
+  | 'email' | 'integrations' | 'contacts';
 
 export const ALL_DOMAINS: Domain[] = [
   'users', 'media', 'travel', 'projects', 'recipes', 'shopping',
   'finance', 'insurance', 'vault', 'documents', 'calendar',
   'it_inventory', 'jellyfin', 'search', 'dashboard', 'plugins', 'pages',
-  'email', 'integrations',
+  'email', 'integrations', 'contacts',
 ];
 
 export const ALL_ACTIONS: Action[] = ['read', 'create', 'update', 'delete', 'share', 'admin'];

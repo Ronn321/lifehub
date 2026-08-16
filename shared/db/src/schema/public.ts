@@ -1348,3 +1348,19 @@ export const pluginData = pgTable('plugin_data', {
 }, (t) => [
   uniqueIndex('plugin_data_plugin_key_uq').on(t.pluginId, t.key),
 ]);
+
+// ===================== contacts =====================
+export const contacts = pgTable('contacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ownerId: uuid('owner_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  notes: text('notes'),
+  color: text('color'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (t) => [
+  index('contacts_owner_idx').on(t.ownerId, t.deletedAt),
+]);

@@ -24,6 +24,7 @@ import { CalendarModule } from '@lifehub/calendar-domain';
 import { IntegrationsModule } from '@lifehub/integrations-domain';
 import { EmailModule } from '@lifehub/email-domain';
 import { SystemModule } from './system/system.module.js';
+import { ContactsModule } from '../../../domains/contacts/src/api/contacts.module.js';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { SystemModule } from './system/system.module.js';
     CalendarModule,
     IntegrationsModule,
     EmailModule,
+    ContactsModule,
     SystemModule,
   ],
   controllers: [HealthController],

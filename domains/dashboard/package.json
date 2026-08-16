@@ -5,12 +5,24 @@
   "main": "dist/index.js",
   "types": "src/index.ts",
   "scripts": {
-    "build": "tsc --outDir dist --rootDir src --module CommonJS --moduleResolution Node --experimentalDecorators --emitDecoratorMetadata --esModuleInterop --skipLibCheck"
+    "build": "tsc --outDir dist --rootDir src --module CommonJS --moduleResolution Node --experimentalDecorators --emitDecoratorMetadata --esModuleInterop --skipLibCheck",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@lifehub/auth": "workspace:*",
     "@lifehub/permissions": "workspace:*",
     "@lifehub/db": "workspace:*",
     "@nestjs/common": "^10.4.0"
+  },
+  "devDependencies": {
+    "@nestjs/core": "^10.4.0",
+    "@nestjs/swagger": "^7.4.0",
+    "@nestjs/testing": "^10.4.0",
+    "@types/node": "^22.7.0",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
   }
 }

@@ -11,7 +11,7 @@
 import { sql, relations } from 'drizzle-orm';
 import {
   pgTable, pgSchema, uuid, text, timestamp, boolean, jsonb, inet, bigint, char, customType, integer, numeric,
-  real, date as dateCol, index, uniqueIndex, type AnyPgColumn,
+  real, date as dateCol, index, uniqueIndex, type AnyPgColumn, primaryKey,
 } from 'drizzle-orm/pg-core';
 
 // bytea-Spalten brauchen customType in Drizzle 0.36+
@@ -295,6 +295,18 @@ export const dashboardLayouts = pgTable('dashboard_layouts', {
   layout: jsonb('layout').notNull().default({ widgets: [] }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ===================== dashboard_device_layouts =====================
+// Phase 2.5: Geräte-Layouts (phone/tablet/tv) backend-persistiert, damit sie
+// App-Reinstalls überleben. Composite-PK (user_id, device_id).
+export const dashboardDeviceLayouts = pgTable('dashboard_device_layouts', {
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  deviceId: text('device_id').notNull(),
+  layout: jsonb('layout').notNull().default({ widgets: [] }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  primaryKey(t.userId, t.deviceId),
+]);
 
 // ===================== projects =====================
 export const projects = pgTable('projects', {

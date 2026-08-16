@@ -13,6 +13,8 @@ Persönliches Hub-UI. Widget-basiert, Drag & Drop, Layout pro User persistiert. 
 
 **Phase 2 (Geräte-Dashboards):** Layouts pro Geräteprofil (`phone`/`tablet`/`tv`) werden pro Gerät im WebView-`localStorage` (`lifehub:dashboard:<mode>`) gespeichert und sind unabhängig vom Desktop-Layout (weiterhin backend-persistiert) sowie von anderen Geräten. Profil-Regeln (Spaltenzahl, Mindestgrößen pro Widget-Typ, Standard-Layouts) liegen zentral in `apps/frontend/src/lib/dashboard-profiles.ts`; Klemmung/Normalisierung garantieren überlagerungsfreie Layouts. Phone/Tablet haben einen Bearbeiten-Modus, TV einen D-pad-Widget-Verwaltungs-Dialog.
 
+**Phase 2.5 (Geräte-Layouts Backend-Persistenz / Reinstall-Recovery):** Zusätzlich zur localStorage-Speicherung werden Geräte-Layouts pro `user_id` + `device_id` in `dashboard_device_layouts` (Tabelle `public`, Composite-PK `(user_id, device_id)`, via Migration `apps/backend/drizzle/0024_dashboard_device_layouts.sql`, Drizzle-Definition `dashboardDeviceLayouts` in `shared/db/src/schema/public.ts`) backend-persistiert. API: `GET|PUT /api/v1/dashboard/layout/device/:deviceId` sowie `POST .../device/:deviceId/reset`. Die `device_id` kommt vom WebView als `?device=`-Query-Param (Frontend-Key `lifehub:device`, Validierung `^[A-Za-z0-9._-]{1,128}$`). **localStorage bleibt der Cache** — der Backend-Abruf ist nur Reinstall-Recovery (wenn localStorage leer UND deviceId vorhanden → GET; bei 200 übernehmen, sonst Profil-Defaults). Speichern = localStorage schreiben + fire-and-forget PUT (Fehler/offline werden ignoriert). Desktop-Pfad (`/dashboard/layout`) bleibt **unverändert**.
+
 ## 2. Scope
 
 - Schema `dashboard`: `dashboard_layouts`, `widgets`

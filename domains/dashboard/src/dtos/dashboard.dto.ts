@@ -19,6 +19,10 @@ export const layoutSchema = z.object({
   widgets: z.array(widgetSchema),
 });
 
+// device_id kommt vom WebView als ?device=-Query-Param. Erlaubte Zeichen:
+// [A-Za-z0-9._-], max 128.
+export const deviceIdSchema = z.string().regex(/^[A-Za-z0-9._-]{1,128}$/);
+
 export const DEFAULT_WIDGETS: { type: WidgetType; label: string; w: number; h: number }[] = [
   { type: 'media', label: 'Letzte Medien', w: 2, h: 2 },
   { type: 'weather', label: 'Wetter', w: 1, h: 1 },

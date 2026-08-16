@@ -59,6 +59,16 @@ export default function AlbumDetailPage() {
     toggleItemFav.mutate(albumId, { onError: () => setIsAlbumFav(!next) });
   };
 
+  const coverUrl = server ? getCoverUrl(accessToken, server.id, albumId, 400, 400) : null;
+
+  // Extract dominant color from cover image for gradient background
+  useEffect(() => {
+    if (!coverUrl) return;
+    extractDominantColor(coverUrl)
+      .then((rgb) => setGradientColor(rgbToCss(rgb)))
+      .catch(() => setGradientColor('#1e1e1e'));
+  }, [coverUrl]);
+
   if (!accessToken || !server) {
     return (
       <div className="flex flex-col -m-6 lg:-m-8" style={{ height: 'calc(100% + 48px)' }}>
@@ -95,7 +105,6 @@ export default function AlbumDetailPage() {
   const artistName = albumInfo?.AlbumArtist ?? albumInfo?.Artist ?? 'Unbekannter Künstler';
   const year = albumInfo?.ProductionYear;
   const genre = albumInfo?.Genres?.[0];
-  const coverUrl = getCoverUrl(accessToken, server.id, albumId, 400, 400);
 
   const handlePlayAll = () => {
     if (songs.length > 0) {
@@ -123,14 +132,6 @@ export default function AlbumDetailPage() {
       `Zur Playlist hinzufügen (${songIds.length} Songs)`,
     );
   };
-
-  // Extract dominant color from cover image for gradient background
-  useEffect(() => {
-    if (!coverUrl) return;
-    extractDominantColor(coverUrl)
-      .then((rgb) => setGradientColor(rgbToCss(rgb)))
-      .catch(() => setGradientColor('#1e1e1e'));
-  }, [coverUrl]);
 
   if (!accessToken || !server) {
     return (

@@ -786,7 +786,9 @@ function GalleryTab() {
   const [page, setPage] = useState(1);
 
   // Sequential lazy-loading state
-  const [activatedUpTo, setActivatedUpTo] = useState(0);
+  // Starts at 1 so the FIRST tile (index 0) is immediately eligible
+  // (tile i renders when i < activatedUpTo); see handleTileLoaded below.
+  const [activatedUpTo, setActivatedUpTo] = useState(1);
 
   // Reset to first page when the source/favorite filter changes
   useEffect(() => {
@@ -795,7 +797,7 @@ function GalleryTab() {
 
   // Reset the sequential-loading state whenever any query input changes
   useEffect(() => {
-    setActivatedUpTo(0);
+    setActivatedUpTo(1);
   }, [page, pageSize, sourceFilter, favoriteFilter]);
 
   // Get sources for the filter dropdown
@@ -854,9 +856,11 @@ function GalleryTab() {
     }
   }, [page, pageSize, sourceFilter, favoriteFilter, totalPages, qc]);
 
-  // Sequential queue: advancing the gate as tiles report load completion
+  // Sequential queue: advancing the gate as tiles report load completion.
+  // Tile i rendert when i < activatedUpTo. Once tile i finishes, release i+1:
+  // max(prev, i + 2) so the NEXT tile (index i+1) becomes eligible (i+1 < i+2).
   const handleTileLoaded = useCallback((index: number) => {
-    setActivatedUpTo((prev) => Math.max(prev, index + 1));
+    setActivatedUpTo((prev) => Math.max(prev, index + 2));
   }, []);
 
   // Selection helpers

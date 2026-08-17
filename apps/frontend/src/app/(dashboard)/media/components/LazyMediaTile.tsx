@@ -70,6 +70,16 @@ export function LazyMediaTile({
     const node = wrapperRef.current;
     if (!node) return;
 
+    // Deterministic start: if the tile is already within the expanded viewport
+    // on mount (common for the first screen), mark it visible immediately instead
+    // of waiting for an IO callback (avoids stalls with content-visibility:auto).
+    const rect = node.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    if (rect.top < vh + 300 && rect.bottom > -300) {
+      setVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {

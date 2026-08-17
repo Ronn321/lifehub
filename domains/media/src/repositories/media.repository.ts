@@ -83,7 +83,25 @@ export class MediaRepository {
     const conditions = [eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)];
     if (options?.sourceId) conditions.push(eq(mediaFiles.sourceId, options.sourceId));
     if (options?.favorite) conditions.push(eq(mediaFiles.isFavorite, true));
-    return this.db.select().from(mediaFiles)
+    return this.db.select({
+      id: mediaFiles.id,
+      ownerId: mediaFiles.ownerId,
+      sourceId: mediaFiles.sourceId,
+      filename: mediaFiles.filename,
+      relativePath: mediaFiles.relativePath,
+      mimeType: mediaFiles.mimeType,
+      fileSize: mediaFiles.fileSize,
+      width: mediaFiles.width,
+      height: mediaFiles.height,
+      duration: mediaFiles.duration,
+      gpsLat: mediaFiles.gpsLat,
+      gpsLng: mediaFiles.gpsLng,
+      takenAt: mediaFiles.takenAt,
+      createdAt: mediaFiles.createdAt,
+      updatedAt: mediaFiles.updatedAt,
+      deletedAt: mediaFiles.deletedAt,
+      isFavorite: mediaFiles.isFavorite,
+    }).from(mediaFiles)
       .where(and(...conditions))
       .orderBy(desc(mediaFiles.takenAt ?? mediaFiles.createdAt))
       .limit(options?.limit ?? 50)
@@ -184,7 +202,25 @@ export class MediaRepository {
 
   async findAlbumMedia(albumId: string) {
     return this.db.select({
-      file: mediaFiles,
+      file: {
+        id: mediaFiles.id,
+        ownerId: mediaFiles.ownerId,
+        sourceId: mediaFiles.sourceId,
+        filename: mediaFiles.filename,
+        relativePath: mediaFiles.relativePath,
+        mimeType: mediaFiles.mimeType,
+        fileSize: mediaFiles.fileSize,
+        width: mediaFiles.width,
+        height: mediaFiles.height,
+        duration: mediaFiles.duration,
+        gpsLat: mediaFiles.gpsLat,
+        gpsLng: mediaFiles.gpsLng,
+        takenAt: mediaFiles.takenAt,
+        createdAt: mediaFiles.createdAt,
+        updatedAt: mediaFiles.updatedAt,
+        deletedAt: mediaFiles.deletedAt,
+        isFavorite: mediaFiles.isFavorite,
+      },
       sortOrder: albumItems.sortOrder,
     }).from(albumItems)
       .innerJoin(mediaFiles, eq(albumItems.mediaId, mediaFiles.id))

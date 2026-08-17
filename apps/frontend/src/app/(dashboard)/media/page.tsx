@@ -14,6 +14,7 @@ import dynamic from 'next/dynamic';
 import { VideoPreviewTile } from './components/VideoPreviewTile';
 import { LazyMediaTile } from './components/LazyMediaTile';
 import PaginationBar from './components/PaginationBar';
+import { getThumbnailUrl } from '@/lib/media';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -698,21 +699,22 @@ function AlbumDetailView({
                 {groupFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
+                    className="group relative aspect-square [content-visibility:auto] [contain-intrinsic-size:320px] rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
                   >
                     {/* Thumbnail first — instant base64 thumb, original only in lightbox */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={file.thumbnailPath ?? getStreamUrl(file.id)}
+                        src={getThumbnailUrl(file.id, 512)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : isVideo(file.mimeType) ? (
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
-                        thumbnail={file.thumbnailPath}
+                        thumbnail={getThumbnailUrl(file.id, 512)}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -783,10 +785,8 @@ function GalleryTab() {
   });
   const [page, setPage] = useState(1);
 
-  // Sequential lazy-loading + video warmup state
+  // Sequential lazy-loading state
   const [activatedUpTo, setActivatedUpTo] = useState(0);
-  const [pageReady, setPageReady] = useState(false);
-  const videoEls = useRef<(HTMLVideoElement | null)[]>([]);
 
   // Reset to first page when the source/favorite filter changes
   useEffect(() => {
@@ -796,8 +796,6 @@ function GalleryTab() {
   // Reset the sequential-loading state whenever any query input changes
   useEffect(() => {
     setActivatedUpTo(0);
-    setPageReady(false);
-    videoEls.current = [];
   }, [page, pageSize, sourceFilter, favoriteFilter]);
 
   // Get sources for the filter dropdown
@@ -860,32 +858,6 @@ function GalleryTab() {
   const handleTileLoaded = useCallback((index: number) => {
     setActivatedUpTo((prev) => Math.max(prev, index + 1));
   }, []);
-
-  // Mark the page ready once every tile on it has been activated
-  useEffect(() => {
-    if (files.length > 0 && activatedUpTo >= files.length) {
-      setPageReady(true);
-    }
-  }, [files.length, activatedUpTo]);
-
-  // Video warmup: seek each loaded video to its middle once the page is ready
-  useEffect(() => {
-    if (!pageReady) return;
-    const els = videoEls.current;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    els.forEach((video, i) => {
-      timers.push(
-        setTimeout(() => {
-          if (!video) return;
-          const dur = video.duration;
-          if (!Number.isFinite(dur) || dur <= 0) return;
-          video.currentTime = dur / 2;
-          video.play().then(() => video.pause()).catch(() => {});
-        }, i * 120)
-      );
-    });
-    return () => timers.forEach(clearTimeout);
-  }, [pageReady]);
 
   // Selection helpers
   function toggleSelect(id: string) {
@@ -1106,7 +1078,7 @@ function GalleryTab() {
                   return (
                   <div
                     key={file.id}
-                    className={`group relative aspect-[4/3] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
+                    className={`group relative aspect-[4/3] [content-visibility:auto] [contain-intrinsic-size:320px] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
                       selectMode && selectedIds.has(file.id)
                         ? 'border-brand-500 ring-2 ring-brand-500/30'
                         : selectMode
@@ -1132,20 +1104,18 @@ function GalleryTab() {
                       renderContent={() =>
                         isImage(file.mimeType) ? (
                           <img
-                            src={getStreamUrl(file.id)}
+                            src={getThumbnailUrl(file.id, 512)}
                             alt={file.filename}
                             className="h-full w-full object-contain bg-bg-raised"
                             loading="lazy"
-                            style={{ imageRendering: 'crisp-edges' }}
+                            decoding="async"
                           />
                         ) : isVideo(file.mimeType) ? (
                           <VideoPreviewTile
                             src={getStreamUrl(file.id)}
                             alt={file.filename}
-                            thumbnail={file.thumbnailPath}
+                            thumbnail={getThumbnailUrl(file.id, 512)}
                             className="h-full w-full object-contain bg-bg-raised"
-                            onMetadataLoaded={() => handleTileLoaded(idx)}
-                            registerVideo={(el) => { videoEls.current[idx] = el; }}
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-bg-raised">

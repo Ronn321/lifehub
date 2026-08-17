@@ -32,8 +32,10 @@ export class MediaThumbnailService {
     if (!file) throw new NotFoundException('Media file not found');
 
     const isVideo = file.mimeType.startsWith('video/');
-    const ext = isVideo ? 'jpg' : 'webp';
-    const cachedMimeType = isVideo ? 'image/jpeg' : 'image/webp';
+    // Serve EVERYTHING as JPEG: guaranteed to decode in any browser/Electron,
+    // while WebP is not rendered in some gallery <img> pipelines (observed).
+    const ext = 'jpg';
+    const cachedMimeType = 'image/jpeg';
     const cached = join(THUMB_CACHE_ROOT, `${fileId}_${size}.${ext}`);
 
     // Cache hit — return the existing thumbnail immediately.
@@ -61,10 +63,6 @@ export class MediaThumbnailService {
     return { path: cached, mimeType: cachedMimeType, size: generatedStats.size };
   }
 
-  /**
-   * Generate a WebP thumbnail from an image using sharp.
-   * Fails non-fatally on malformed input via `failOn: 'none'`.
-   */
   private async generateImageThumb(
     src: string,
     dest: string,
@@ -74,7 +72,7 @@ export class MediaThumbnailService {
       await sharp(src, { failOn: 'none' })
         .rotate()
         .resize({ width: size, height: size, fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 80 })
+        .jpeg({ quality: 80, mozjpeg: false })
         .toFile(dest);
     } catch (err) {
       this.logger.warn(`Thumbnail generation failed for ${src}: ${err instanceof Error ? err.message : String(err)}`);

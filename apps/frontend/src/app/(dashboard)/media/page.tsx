@@ -699,7 +699,7 @@ function AlbumDetailView({
                 {groupFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="group relative aspect-square [content-visibility:auto] [contain-intrinsic-size:320px] rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
+                    className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
                   >
                     {/* Thumbnail first — instant base64 thumb, original only in lightbox */}
                     {isImage(file.mimeType) ? (
@@ -707,8 +707,7 @@ function AlbumDetailView({
                         src={getThumbnailUrl(file.id, 512)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
+                                                decoding="async"
                       />
                     ) : isVideo(file.mimeType) ? (
                       <VideoPreviewTile
@@ -1082,7 +1081,7 @@ function GalleryTab() {
                   return (
                   <div
                     key={file.id}
-                    className={`group relative aspect-[4/3] [content-visibility:auto] [contain-intrinsic-size:320px] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
+                    className={`group relative aspect-[4/3] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
                       selectMode && selectedIds.has(file.id)
                         ? 'border-brand-500 ring-2 ring-brand-500/30'
                         : selectMode
@@ -1111,8 +1110,7 @@ function GalleryTab() {
                             src={getThumbnailUrl(file.id, 512)}
                             alt={file.filename}
                             className="h-full w-full object-contain bg-bg-raised"
-                            loading="lazy"
-                            decoding="async"
+                                                        decoding="async"
                           />
                         ) : isVideo(file.mimeType) ? (
                           <VideoPreviewTile

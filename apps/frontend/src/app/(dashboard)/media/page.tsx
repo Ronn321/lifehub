@@ -12,9 +12,7 @@ import {
 import { cn } from '@/lib/cn';
 import dynamic from 'next/dynamic';
 import { VideoPreviewTile } from './components/VideoPreviewTile';
-import { LazyMediaTile } from './components/LazyMediaTile';
 import PaginationBar from './components/PaginationBar';
-import { getThumbnailUrl } from '@/lib/media';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -701,19 +699,20 @@ function AlbumDetailView({
                     key={file.id}
                     className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
                   >
-                    {/* Thumbnail first — instant base64 thumb, original only in lightbox */}
+                    {/* Thumbnail — stream URL in direct img (verified paint path) */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={getThumbnailUrl(file.id, 512)}
+                        src={getStreamUrl(file.id)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
-                                                decoding="async"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : isVideo(file.mimeType) ? (
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
-                        thumbnail={getThumbnailUrl(file.id, 512)}
+                        thumbnail={getStreamUrl(file.id)}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -784,20 +783,10 @@ function GalleryTab() {
   });
   const [page, setPage] = useState(1);
 
-  // Sequential lazy-loading state
-  // Starts at 1 so the FIRST tile (index 0) is immediately eligible
-  // (tile i renders when i < activatedUpTo); see handleTileLoaded below.
-  const [activatedUpTo, setActivatedUpTo] = useState(1);
-
   // Reset to first page when the source/favorite filter changes
   useEffect(() => {
     setPage(1);
   }, [sourceFilter, favoriteFilter]);
-
-  // Reset the sequential-loading state whenever any query input changes
-  useEffect(() => {
-    setActivatedUpTo(1);
-  }, [page, pageSize, sourceFilter, favoriteFilter]);
 
   // Get sources for the filter dropdown
   const { data: sources } = useQuery<MediaSource[]>({
@@ -854,13 +843,6 @@ function GalleryTab() {
       });
     }
   }, [page, pageSize, sourceFilter, favoriteFilter, totalPages, qc]);
-
-  // Sequential queue: advancing the gate as tiles report load completion.
-  // Tile i rendert when i < activatedUpTo. Once tile i finishes, release i+1:
-  // max(prev, i + 2) so the NEXT tile (index i+1) becomes eligible (i+1 < i+2).
-  const handleTileLoaded = useCallback((index: number) => {
-    setActivatedUpTo((prev) => Math.max(prev, index + 2));
-  }, []);
 
   // Selection helpers
   function toggleSelect(id: string) {
@@ -931,9 +913,6 @@ function GalleryTab() {
     return () => window.removeEventListener('keydown', handleKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightboxFile, lightboxIndex, files]);
-
-  // Continuous tile index across all month groups on this page
-  let tileIndex = 0;
 
   return (
     <div className="space-y-4">
@@ -1076,9 +1055,7 @@ function GalleryTab() {
                 <span className="text-xs ml-2 text-fg-subtle">{groupFiles.length} Dateien</span>
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {groupFiles.map((file) => {
-                  const idx = tileIndex++;
-                  return (
+                {groupFiles.map((file) => (
                   <div
                     key={file.id}
                     className={`group relative aspect-[4/3] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
@@ -1098,34 +1075,27 @@ function GalleryTab() {
                         </div>
                       </div>
                     )}
-                    {/* Lazy-loaded media tile (sequential + prefetch) */}
-                    <LazyMediaTile
-                      index={idx}
-                      activatedUpTo={activatedUpTo}
-                      onTileLoaded={handleTileLoaded}
-                      className="h-full w-full"
-                      renderContent={() =>
-                        isImage(file.mimeType) ? (
-                          <img
-                            src={getThumbnailUrl(file.id, 512)}
-                            alt={file.filename}
-                            className="h-full w-full object-contain bg-bg-raised"
-                                                        decoding="async"
-                          />
-                        ) : isVideo(file.mimeType) ? (
-                          <VideoPreviewTile
-                            src={getStreamUrl(file.id)}
-                            alt={file.filename}
-                            thumbnail={getThumbnailUrl(file.id, 512)}
-                            className="h-full w-full object-contain bg-bg-raised"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-bg-raised">
-                            <FileText className="h-10 w-10 opacity-30" />
-                          </div>
-                        )
-                      }
-                    />
+                    {/* Tile media — direct img with stream URL (verified paint path) */}
+                    {isImage(file.mimeType) ? (
+                      <img
+                        src={getStreamUrl(file.id)}
+                        alt={file.filename}
+                        className="h-full w-full object-contain bg-bg-raised"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : isVideo(file.mimeType) ? (
+                      <VideoPreviewTile
+                        src={getStreamUrl(file.id)}
+                        alt={file.filename}
+                        thumbnail={getStreamUrl(file.id)}
+                        className="h-full w-full object-contain bg-bg-raised"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-bg-raised">
+                        <FileText className="h-10 w-10 opacity-30" />
+                      </div>
+                    )}
 
                     {/* GPS indicator */}
                     {file.gpsLat != null && file.gpsLng != null && (
@@ -1165,8 +1135,7 @@ function GalleryTab() {
                       )}
                     </div>
                   </div>
-                  );
-                })}
+                ))}
               </div>
             </div>
           ))}

@@ -13,7 +13,7 @@ export interface JwtPayload {
 }
 
 const ALG = 'RS256';
-const ACCESS_TTL = '15m';
+const ACCESS_TTL = '24h'; // private family NAS — enough for URL-bound stream/thumbnail tokens
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 const KEYS_DIR = process.env.LIFEHUB_DATA_PATH

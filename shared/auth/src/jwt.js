@@ -10,7 +10,7 @@ const node_crypto_1 = require("node:crypto");
 const node_fs_1 = require("node:fs");
 const node_path_1 = require("node:path");
 const ALG = 'RS256';
-const ACCESS_TTL = '15m';
+const ACCESS_TTL = '24h'; // private family NAS — enough for URL-bound stream/thumbnail tokens
 const REFRESH_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const KEYS_DIR = process.env.LIFEHUB_DATA_PATH
     ? (0, node_path_1.join)(process.env.LIFEHUB_DATA_PATH, 'keys')

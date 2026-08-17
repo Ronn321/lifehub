@@ -49,3 +49,15 @@ export function seedLocalLayout(
 export function clearLocalLayout(mode: Exclude<ClientMode, 'browser'>): void {
   window.localStorage.removeItem(layoutKey(mode));
 }
+
+// Phase 2.5 — Entscheidet das initiale Layout eines Geräts beim App-Start
+// (Reinstall-Recovery): der lokale Cache hat Vorrang; sonst das vom Backend
+// geladene Layout, sofern es Widgets enthält; sonst null (Aufrufer seedet
+// Profil-Defaults).
+export function pickInitialLayout(
+  local: DashboardLayout | null,
+  remote: DashboardLayout | null,
+): DashboardLayout | null {
+  if (local) return local;
+  return remote && remote.widgets.length > 0 ? remote : null;
+}

@@ -95,7 +95,7 @@ export function DashboardWidget({
         'flex flex-col overflow-hidden',
         'transition-all duration-200 ease-in-out',
         isDragging && 'opacity-30 scale-[1.02] rotate-[1deg] shadow-2xl',
-        isResizing && 'ring-2 ring-brand-400',
+        isResizing && 'ring-2 ring-[var(--lh-accent)]',
       )}
       style={{
         gridColumn: `${x + 1} / span ${w}`,

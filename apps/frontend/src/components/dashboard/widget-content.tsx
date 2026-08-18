@@ -104,7 +104,7 @@ export function SettingsPanel({
           <h3 className="font-semibold text-fg">{title}</h3>
           <button
             onClick={onClose}
-            className="text-sm rounded-md bg-brand-500 px-3 py-1 text-white hover:bg-brand-600"
+            className="text-sm rounded-md bg-[var(--lh-accent)] px-3 py-1 text-white hover:bg-[var(--lh-accent-90)]"
           >
             Fertig
           </button>
@@ -134,7 +134,7 @@ function CalendarSettings({
                 name="weekStart"
                 checked={config.weekStart === day}
                 onChange={() => onChange({ ...config, weekStart: day })}
-                className="accent-brand-500"
+                className="accent-[var(--lh-accent)]"
               />
               {day === 'monday' ? 'Montag' : 'Sonntag'}
             </label>
@@ -146,7 +146,7 @@ function CalendarSettings({
           type="checkbox"
           checked={config.showWeekNumbers}
           onChange={(e) => onChange({ ...config, showWeekNumbers: e.target.checked })}
-          className="accent-brand-500"
+          className="accent-[var(--lh-accent)]"
         />
         Wochennummern anzeigen
       </label>
@@ -220,7 +220,7 @@ function WeatherSettings({
               {i !== config.activeLocationIndex && (
                 <button
                   onClick={() => onChange({ ...config, activeLocationIndex: i })}
-                  className="text-xs rounded bg-brand-500/10 text-brand-500 px-2 py-0.5 hover:bg-brand-500/20"
+                  className="text-xs rounded bg-[var(--lh-accent-10)] text-[var(--lh-accent)] px-2 py-0.5 hover:bg-[var(--lh-accent-20)]"
                 >
                   Aktivieren
                 </button>
@@ -248,12 +248,12 @@ function WeatherSettings({
             onChange={(e) => { setQuery(e.target.value); setResults(null); setSearched(false); }}
             onKeyDown={(e) => e.key === 'Enter' && searchCity()}
             placeholder="Stadtname (z.B. Berlin)"
-            className="flex-1 rounded-md border border-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-brand-500"
+            className="flex-1 rounded-md border border-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-[var(--lh-accent)]"
           />
           <button
             onClick={searchCity}
             disabled={searching || !query.trim()}
-            className="flex items-center gap-1 text-sm rounded-md bg-brand-500 px-3 py-1.5 text-white hover:bg-brand-600 disabled:opacity-50"
+            className="flex items-center gap-1 text-sm rounded-md bg-[var(--lh-accent)] px-3 py-1.5 text-white hover:bg-[var(--lh-accent-90)] disabled:opacity-50"
           >
             {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
             Suchen
@@ -320,7 +320,7 @@ function MediaSettings({
                 type="checkbox"
                 checked={config.albumIds.includes(album.id)}
                 onChange={() => toggleAlbum(album.id)}
-                className="accent-brand-500"
+                className="accent-[var(--lh-accent)]"
               />
               {album.name}
             </label>
@@ -340,7 +340,7 @@ function MediaSettings({
           step={1}
           value={config.slideshowInterval}
           onChange={(e) => onChange({ ...config, slideshowInterval: Number(e.target.value) })}
-          className="w-full accent-brand-500"
+          className="w-full accent-[var(--lh-accent)]"
         />
         <div className="flex justify-between text-xs text-fg-subtle">
           <span>3s</span>
@@ -518,12 +518,12 @@ export function CalendarWidget({ config, onNavigate }: { config: CalendarConfig;
                     <span
                       className={cn(
                         'relative inline-flex items-center justify-center w-6 h-6 rounded',
-                        d === today.getDate() ? 'bg-brand-500 text-white font-medium' : 'hover:bg-bg-raised',
+                        d === today.getDate() ? 'bg-[var(--lh-accent)] text-white font-medium' : 'hover:bg-bg-raised',
                       )}
                     >
                       {d}
                       {eventsOnDay(isoForDay(d)).length > 0 && (
-                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand-500" />
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-[var(--lh-accent)]" />
                       )}
                     </span>
                   </div>
@@ -649,7 +649,7 @@ export function WeatherWidget({ config, onConfigChange }: { config: WeatherConfi
           className={cn(
             'text-xs rounded-md px-2 py-0.5 border transition-colors',
             config.expanded
-              ? 'bg-brand-500/10 border-brand-500/30 text-brand-500'
+              ? 'bg-[var(--lh-accent-10)] border-[var(--lh-accent-30)] text-[var(--lh-accent)]'
               : 'border-border text-fg-muted hover:text-fg',
           )}
         >

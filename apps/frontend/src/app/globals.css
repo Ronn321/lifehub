@@ -5,6 +5,18 @@
 @layer base {
   :root {
     --radius: 0.5rem;
+    /* Dynamic brand accent, set by the Flutter WebView host via runJavaScript('setWebAccent("<hex>")').
+       Default #D97706 (amber). The host writes the chosen hex onto document.documentElement
+       (the HTML root) as an inline style, which overrides this stylesheet default and is
+       inherited by every element. Consumed via Tailwind arbitrary values, e.g. text-[var(--lh-accent)]. */
+    --lh-accent: #d97706;
+    /* Translucent tints of --lh-accent (Tailwind can't apply a /opacity modifier to a raw
+       var() value, so we derive them here via color-mix; they follow the dynamic accent).
+       Consumed as e.g. bg-[var(--lh-accent-10)] in sidebar/dashboard. */
+    --lh-accent-10: color-mix(in srgb, var(--lh-accent) 10%, transparent);
+    --lh-accent-20: color-mix(in srgb, var(--lh-accent) 20%, transparent);
+    --lh-accent-30: color-mix(in srgb, var(--lh-accent) 30%, transparent);
+    --lh-accent-90: color-mix(in srgb, var(--lh-accent) 90%, transparent);
     /* Light mode (default) */
     --bg: 255 255 255;
     --bg-surface: 244 244 245;

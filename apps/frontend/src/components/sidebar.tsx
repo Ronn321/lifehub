@@ -205,7 +205,7 @@ export function Sidebar() {
         <div className={cn(
           'flex items-center border-b border-border gap-2 px-6 py-5',
         )}>
-          <Shield className="h-6 w-6 shrink-0 text-brand-500" />
+          <Shield className="h-6 w-6 shrink-0 text-[var(--lh-accent)]" />
           {!desktopCollapsed && (
             <>
               <span className="flex-1 text-lg font-semibold">{brandName}</span>
@@ -243,7 +243,7 @@ export function Sidebar() {
                 className={cn(
                   'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
                   active
-                    ? 'bg-brand-500/10 text-brand-500 font-medium'
+                    ? 'bg-[var(--lh-accent-10)] text-[var(--lh-accent)] font-medium'
                     : item.disabled
                       ? 'text-fg-subtle cursor-not-allowed opacity-40'
                       : 'text-fg-muted hover:text-fg hover:bg-bg',
@@ -272,7 +272,7 @@ export function Sidebar() {
                 className={cn(
                   'flex w-full items-center rounded-md text-sm transition-colors',
                   pathname.startsWith('/pages')
-                    ? 'bg-brand-500/10 text-brand-500 font-medium'
+                    ? 'bg-[var(--lh-accent-10)] text-[var(--lh-accent)] font-medium'
                     : 'text-fg-muted hover:text-fg hover:bg-bg',
                 )}
               >
@@ -323,7 +323,7 @@ export function Sidebar() {
                           e.preventDefault();
                           unpinMutation.mutate(page.id);
                         }}
-                        className="p-1 rounded text-fg-subtle hover:text-brand-500 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                        className="p-1 rounded text-fg-subtle hover:text-[var(--lh-accent)] opacity-0 group-hover:opacity-100 transition-all shrink-0"
                         title="Loslösen"
                       >
                         <Pin className="h-3 w-3 fill-current" />
@@ -356,7 +356,7 @@ export function Sidebar() {
                             e.preventDefault();
                             pinMutation.mutate(page.id);
                           }}
-                          className="p-1 rounded text-fg-subtle hover:text-brand-500 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                          className="p-1 rounded text-fg-subtle hover:text-[var(--lh-accent)] opacity-0 group-hover:opacity-100 transition-all shrink-0"
                           title="Anheften"
                         >
                           <Pin className="h-3 w-3" />
@@ -381,7 +381,7 @@ export function Sidebar() {
             className={cn(
               'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
               pathname === '/settings'
-                ? 'bg-brand-500/10 text-brand-500 font-medium'
+                ? 'bg-[var(--lh-accent-10)] text-[var(--lh-accent)] font-medium'
                 : 'text-fg-muted hover:text-fg hover:bg-bg',
             )}
             title={desktopCollapsed ? 'Einstellungen' : undefined}

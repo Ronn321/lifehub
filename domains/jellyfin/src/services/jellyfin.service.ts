@@ -875,12 +875,19 @@ export class JellyfinService {
   }
 
   async getItemPeople(ownerId: string, serverId: string, externalId: string): Promise<any[]> {
-    const server = await this.findServerOrFallback(serverId, ownerId);
-    const data = await this.fetchFromJellyfin(
-      server,
-      `/Items/${externalId}/People`,
-    );
-    return data.Items ?? [];
+    try {
+      const server = await this.findServerOrFallback(serverId, ownerId);
+      const data = await this.fetchFromJellyfin(
+        server,
+        `/Items/${externalId}/People`,
+      );
+      const raw = Array.isArray(data) ? data : data.Items;
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      // People sind optional — fehlende Besetzung darf den Detail-Screen
+      // nicht blockieren (war ein stiller 500 auf dem Handy).
+      return [];
+    }
   }
 
   async searchMedia(ownerId: string, serverId: string, query: string, limit = 30): Promise<{ Movies: any[]; Series: any[]; Episodes: any[]; Collections: any[] }> {
@@ -960,6 +967,24 @@ export class JellyfinService {
       if (!res.ok) throw new Error(`Favorite add failed: ${res.status}`);
       return { isFavorite: true };
     }
+  }
+
+  /** Set a user rating (0–5) for an item on Jellyfin. */
+  async setRating(ownerId: string, serverId: string, externalId: string, rating: number): Promise<{ rating: number }> {
+    const server = await this.findServerOrFallback(serverId, ownerId);
+    const userId = await this.getJellyfinUserId(server);
+    const baseUrl = server.url.replace(/\/$/, '');
+    const clamped = Math.max(0, Math.min(5, Math.round(rating)));
+    const res = await fetch(`${baseUrl}/Users/${userId}/Items/${externalId}/Rating`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `MediaBrowser Token=${server.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ Rating: clamped * 2 }),
+    });
+    if (!res.ok) throw new Error(`Rating update failed: ${res.status}`);
+    return { rating: clamped };
   }
 
   // =================== Playback Reporting ===================

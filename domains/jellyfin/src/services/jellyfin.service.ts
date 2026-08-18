@@ -482,9 +482,13 @@ export class JellyfinService {
     const mediaSourceId = infoData?.MediaSources?.[0]?.Id;
     if (!mediaSourceId) throw new Error('No MediaSource');
 
-    // Fetch HLS playlist from Jellyfin — force H.264 for browser compatibility
+    // Fetch HLS playlist from Jellyfin — force H.264 + AAC for browser/ExoPlayer compatibility
     const params = new URLSearchParams({ MediaSourceId: mediaSourceId });
-    if (mediaType === 'Video') params.set('VideoCodec', 'h264');
+    if (mediaType === 'Video') {
+      params.set('VideoCodec', 'h264');
+      // Ohne AudioCodec liefert Jellyfin eine Video-only-Playlist (kein Ton).
+      params.set('AudioCodec', 'aac');
+    }
     if (audioStreamIndex !== undefined) params.set('AudioStreamIndex', String(audioStreamIndex));
     if (subtitleStreamIndex !== undefined) params.set('SubtitleStreamIndex', String(subtitleStreamIndex));
     const hlsUrl = `${baseUrl}/${mediaType === 'Video' ? 'Videos' : 'Audio'}/${externalId}/master.m3u8?${params.toString()}`;

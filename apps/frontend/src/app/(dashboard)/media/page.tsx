@@ -13,6 +13,7 @@ import { cn } from '@/lib/cn';
 import dynamic from 'next/dynamic';
 import { VideoPreviewTile } from './components/VideoPreviewTile';
 import PaginationBar from './components/PaginationBar';
+import { getThumbnailUrl } from '@/lib/media';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -699,10 +700,10 @@ function AlbumDetailView({
                     key={file.id}
                     className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-bg-surface hover:border-brand-500/50 transition-colors"
                   >
-                    {/* Thumbnail — stream URL in direct img (verified paint path) */}
+                    {/* Thumbnail — direct img (verified paint path) at ~20% resolution */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={getStreamUrl(file.id)}
+                        src={getThumbnailUrl(file.id, 768)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
                         loading="lazy"
@@ -712,7 +713,7 @@ function AlbumDetailView({
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
-                        thumbnail={getStreamUrl(file.id)}
+                        thumbnail={getThumbnailUrl(file.id, 768)}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -1075,10 +1076,10 @@ function GalleryTab() {
                         </div>
                       </div>
                     )}
-                    {/* Tile media — direct img with stream URL (verified paint path) */}
+                    {/* Tile media — direct img at ~20% resolution (verified paint path) */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={getStreamUrl(file.id)}
+                        src={getThumbnailUrl(file.id, 768)}
                         alt={file.filename}
                         className="h-full w-full object-contain bg-bg-raised"
                         loading="lazy"
@@ -1088,7 +1089,7 @@ function GalleryTab() {
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
-                        thumbnail={getStreamUrl(file.id)}
+                        thumbnail={getThumbnailUrl(file.id, 768)}
                         className="h-full w-full object-contain bg-bg-raised"
                       />
                     ) : (

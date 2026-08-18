@@ -3,6 +3,11 @@ import { verifyAccessToken } from '@lifehub/auth';
 import { MediaService } from '../services/media.service';
 import type { Request, Response } from 'express';
 import * as fs from 'fs';
+import sharp from 'sharp';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+
+const execFileAsync = promisify(execFile);
 
 const corsOrigins = (process.env.CORS_ORIGINS ?? '').replace(/'/g, '');
 function resolveOrigin(reqOrigin: string | undefined): string {
@@ -35,6 +40,7 @@ export class MediaStreamController {
     @Res() res: Response,
     @Req() req: Request,
     @Query('token') token?: string,
+    @Query('size') size?: string,
   ) {
     // Auth from query token
     if (!token) throw new UnauthorizedException('Missing token parameter');
@@ -46,6 +52,38 @@ export class MediaStreamController {
     }
 
     const { filePath, mimeType, filename, fileSize } = await this.media.getFileStreamInfo(payload.sub, id);
+
+    // ?size= — downscaled still/preview via the SAME stream endpoint that is
+    // verified to paint in the browser. Images -> sharp JPEG; videos -> ffmpeg frame.
+    if (size) {
+      const s = Math.min(Math.max(parseInt(size, 10) || 512, 64), 2048);
+      try {
+        let buf: Buffer;
+        if (mimeType.startsWith('video/')) {
+          const { stdout } = await execFileAsync('ffmpeg', [
+            '-ss', '60', '-i', filePath, '-frames:v', '1',
+            '-vf', `scale=${s}:-2`, '-q:v', '5', '-f', 'image2', '-v', 'error', 'pipe:1',
+          ], { maxBuffer: 16 * 1024 * 1024 });
+          buf = Buffer.from(stdout);
+        } else {
+          buf = await sharp(filePath, { failOn: 'none' })
+            .rotate()
+            .resize({ width: s, height: s, fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+        }
+        res.writeHead(200, {
+          ...CORS_HEADERS(req),
+          'Content-Type': 'image/jpeg',
+          'Content-Length': buf.length,
+          'Content-Disposition': 'inline; filename="preview.jpg"',
+        });
+        res.end(buf);
+        return;
+      } catch {
+        // fall back to the full stream below
+      }
+    }
 
     const range = req.headers.range;
     if (range) {

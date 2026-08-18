@@ -13,7 +13,6 @@ import { cn } from '@/lib/cn';
 import dynamic from 'next/dynamic';
 import { VideoPreviewTile } from './components/VideoPreviewTile';
 import PaginationBar from './components/PaginationBar';
-import { getThumbnailUrl } from '@/lib/media';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -703,7 +702,7 @@ function AlbumDetailView({
                     {/* Thumbnail — direct img (verified paint path) at ~20% resolution */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={getThumbnailUrl(file.id, 768)}
+                        src={getStreamUrl(file.id, 768)}
                         alt={file.filename}
                         className="h-full w-full object-cover"
                         loading="lazy"
@@ -713,7 +712,7 @@ function AlbumDetailView({
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
-                        thumbnail={getThumbnailUrl(file.id, 768)}
+                        thumbnail={getStreamUrl(file.id, 768)}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -1079,7 +1078,7 @@ function GalleryTab() {
                     {/* Tile media — direct img at ~20% resolution (verified paint path) */}
                     {isImage(file.mimeType) ? (
                       <img
-                        src={getThumbnailUrl(file.id, 768)}
+                        src={getStreamUrl(file.id, 768)}
                         alt={file.filename}
                         className="h-full w-full object-contain bg-bg-raised"
                         loading="lazy"
@@ -1089,7 +1088,7 @@ function GalleryTab() {
                       <VideoPreviewTile
                         src={getStreamUrl(file.id)}
                         alt={file.filename}
-                        thumbnail={getThumbnailUrl(file.id, 768)}
+                        thumbnail={getStreamUrl(file.id, 768)}
                         className="h-full w-full object-contain bg-bg-raised"
                       />
                     ) : (
@@ -1227,12 +1226,13 @@ function AddSelectedToAlbum({ mediaIds, onClose }: { mediaIds: string[]; onClose
 /*  Lightbox Component                                                */
 /* ------------------------------------------------------------------ */
 
-function getStreamUrl(fileId: string): string {
+function getStreamUrl(fileId: string, size?: number): string {
   const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
   const token = typeof window !== 'undefined'
     ? (JSON.parse(localStorage.getItem('lifehub-auth') || '{}')?.state?.accessToken ?? '')
     : '';
-  return `http://${host}:3007/api/v1/media/files/${fileId}/stream?token=${token}`;
+  const sizeQ = size ? `&size=${size}` : '';
+  return `http://${host}:3007/api/v1/media/files/${fileId}/stream?token=${token}${sizeQ}`;
 }
 
 function Lightbox({

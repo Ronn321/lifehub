@@ -62,6 +62,21 @@ export const PROFILES: Record<Exclude<ClientMode, 'browser'>, DashboardProfile> 
       make('d-calendar', 'calendar', 2, 2, 2, 2),
     ],
   },
+  desktop: {
+    mode: 'desktop',
+    columns: 4,
+    minSizes: {
+      media: { w: 4, h: 2 },
+      weather: { w: 2, h: 2 },
+      calendar: { w: 2, h: 2 },
+      savings: { w: 2, h: 2 },
+    },
+    defaultLayout: [
+      make('d-media', 'media', 0, 0, 4, 2),
+      make('d-weather', 'weather', 0, 2, 2, 2),
+      make('d-calendar', 'calendar', 2, 2, 2, 2),
+    ],
+  },
 };
 
 export function getProfile(mode: ClientMode): DashboardProfile | null {

@@ -2,7 +2,7 @@
 // on first load; the web app persists it and switches the TV CSS class.
 import { create } from 'zustand';
 
-export type ClientMode = 'browser' | 'phone' | 'tablet' | 'tv';
+export type ClientMode = 'browser' | 'phone' | 'tablet' | 'tv' | 'desktop';
 export const CLIENT_KEY = 'lifehub:client';
 
 // Geräte-ID (Phase 2.5): kommt vom WebView als ?device= und wird für die
@@ -18,7 +18,9 @@ export function setClientMode(mode: ClientMode): void {
 }
 
 // Parse the ?client= query parameter; anything unknown falls back to 'browser'.
+// Desktop: window.lifehub.isDesktop (Electron preload) → 'desktop' (LifeHub-Desktop PLAN.md §6.2)
 export function resolveClientMode(search: string): ClientMode {
+  if (typeof window !== 'undefined' && (window as unknown as { lifehub?: { isDesktop: boolean } }).lifehub?.isDesktop) return 'desktop'
   const mode = new URLSearchParams(search).get('client');
   return mode === 'phone' || mode === 'tablet' || mode === 'tv' ? mode : 'browser';
 }
@@ -41,16 +43,24 @@ export function applyClientMode(mode: ClientMode): void {
   if (mode === 'browser') return;
   window.localStorage.setItem(CLIENT_KEY, mode);
   if (mode === 'tv') document.documentElement.classList.add('lifehub-tv');
+  if (mode === 'desktop') document.documentElement.classList.add('lifehub-desktop');
 }
 
 // One-shot bootstrap for the boot path (client-only; call inside useEffect).
 // Checks the query param, persists it, then restores a stored mode. Persistiert
 // zusätzlich eine gültige ?device= Geräte-ID unter DEVICE_KEY.
 export function initClientMode(): ClientMode {
+  // Electron Desktop: Preload setzt window.lifehub.isDesktop → sofort desktop
+  if (typeof window !== 'undefined' && (window as unknown as { lifehub?: { isDesktop: boolean } }).lifehub?.isDesktop) {
+    document.documentElement.classList.add('lifehub-desktop');
+    setClientMode('desktop');
+    return 'desktop';
+  }
   const fromQuery = resolveClientMode(window.location.search);
   if (fromQuery !== 'browser') applyClientMode(fromQuery);
   const stored = window.localStorage.getItem(CLIENT_KEY) as ClientMode | null;
   if (stored === 'tv') document.documentElement.classList.add('lifehub-tv');
+  if (stored === 'desktop') document.documentElement.classList.add('lifehub-desktop');
   const resolved = fromQuery !== 'browser' ? fromQuery : stored === null ? 'browser' : stored;
   setClientMode(resolved);
   const deviceFromQuery = resolveDeviceId(window.location.search);

@@ -1,9 +1,20 @@
 // Minimal API-Client: native fetch + JSON, typed via zod
 import { z } from 'zod';
 
-const API_BASE = typeof window !== 'undefined'
-  ? `http://${window.location.hostname}:3007/api/v1`
-  : 'http://backend:3007/api/v1';
+declare global {
+  interface Window {
+    lifehub?: { isDesktop: boolean }
+  }
+}
+
+// CSR: window.location.hostname → Host-Port 3007; Electron (isDesktop) → explizit localhost:3007 (file:// Fallback)
+// SSR: backend:3007 (Docker-DNS). Entspricht PLAN.md §6.1 (LifeHub-Desktop Rev.2)
+const API_BASE =
+  typeof window !== 'undefined' && window.lifehub?.isDesktop
+    ? 'http://localhost:3007/api/v1'
+    : typeof window !== 'undefined'
+      ? `http://${window.location.hostname || 'localhost'}:3007/api/v1`
+      : 'http://backend:3007/api/v1';
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;

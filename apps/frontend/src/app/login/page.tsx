@@ -41,6 +41,35 @@ export default function LoginPage() {
       if (err instanceof ApiError) {
         setError(err.status === 401 ? 'E-Mail oder Passwort falsch' : `Fehler: ${err.status}`);
       } else {
+        // Offline/Desktop: Server nicht erreichbar → trotzdem UI zeigen (1:1 alle Seiten+Sidebar)
+        // Prüfen ob Desktop (window.lifehub.isDesktop) oder Tailscale/Local Docker down
+        const isDesktop = typeof window !== 'undefined' && (window as unknown as { lifehub?: { isDesktop: boolean } }).lifehub?.isDesktop;
+        if (isDesktop) {
+          // Mock-Auth für Offline-Login (zeigt Dashboard auch ohne Backend)
+          const mockAuth = {
+            accessToken: 'offline-mock-token',
+            refreshToken: 'offline-mock-refresh',
+            user: {
+              id: 'offline-user',
+              email: email || 'admin@lifehub.local',
+              displayName: 'Offline User',
+              avatarUrl: null,
+              isActive: true,
+              locale: 'de',
+              timezone: 'Europe/Berlin',
+              theme: 'dark' as const,
+              brandColor: '#d97706',
+              lastLoginAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            roles: ['admin'],
+          };
+          // Direkt setzen und weiterleiten, auch ohne Server
+          setAuth(mockAuth as unknown as import('@/lib/api').AuthResponse);
+          router.push('/dashboard');
+          return;
+        }
         setError('Verbindung zum Server fehlgeschlagen');
       }
     },

@@ -1,6 +1,6 @@
 # LifeHub Code-/Funktions-/Security-/Performance-/Docker-Review 2026-08-22
 
-> **Ergebnis:** TypeScript und Builds sind syntaktisch stabil, aber die Live- und Betriebsreife ist kritisch. 15 P0-Findings betreffen gültige Default-Admin-Zugangsdaten, fehlendes Login-Throttling, Klartext-Vault, Pages-IDOR, Browser-SSRF/Sandbox/Black-Screen, mehrere komplett ausgefallene Domains und eine nicht reproduzierbare Container-Releasekette.
+> **Ergebnis:** TypeScript und Builds sind syntaktisch stabil, aber die Live- und Betriebsreife ist kritisch. 17 P0-Findings betreffen gültige Default-Admin-Zugangsdaten, fehlendes Login-Throttling, Klartext-Vault, einen hartcodierten Jellyfin-API-Key-Fallback, Pages-IDOR, Browser-SSRF/Sandbox/Black-Screen, ausgefallene Domains, fehlschlagende Filmwiedergabe und eine nicht reproduzierbare Container-Releasekette.
 
 | Feld | Wert |
 |---|---|
@@ -8,11 +8,11 @@
 | Live-Ziel | http://100.124.4.24:3100 |
 | Repository-SHA | 333398d2a6665becf49eaa0df6c0b40e7a8c32ae |
 | Routen | 56 authentifiziert inventarisiert |
-| Controls | 1.983 Source-Evidenzen; 365 Pages/Browser-Kernpfade live vertieft |
-| Screenshots | 182 redigierte Captures |
-| Evidence-Dateien | 224 |
-| Findings | 60 Findings — 15 P0, 38 P1, 7 P2 |
-| Subagenten | 8 dispatcht; Provider-401 vor Dateizugriff, daher nicht als Evidenz verwendet |
+| Controls | 1.983 Source-Evidenzen; 365 Pages/Browser-Kernpfade und 62 Jellyfin-Zustände live vertieft |
+| Screenshots | 249 redigierte Captures |
+| Evidence-Dateien | 298 |
+| Findings | 72 Findings — 17 P0, 44 P1, 11 P2 |
+| Subagenten | 15 dispatcht; Provider-401 jeweils vor Dateizugriff, daher nicht als Evidenz verwendet |
 
 ## 1. Executive Summary
 
@@ -25,6 +25,9 @@
 - Travel ruft acht falsche API-Pfade auf; der korrekte Controllerpfad liefert zusätzlich 500.
 - Der Browser bleibt beim Cold Start hängen und zeigt nach Remount einen schwarzen Reconnect-Viewport.
 - Der Vault speichert Passwörter/TOTP nachweislich ohne Kryptografie.
+- Der reale Jellyfin-Filmplayer scheitert auf Desktop und Mobile mit `ERR_BLOCKED_BY_ORB`.
+- Die Musik-Shell ist auf 375 px durch die permanente zweite Sidebar praktisch unbenutzbar.
+- Der Jellyfin-Service enthält einen hartcodierten Default-API-Key-Fallback; der Keywert ist in allen Berichten redigiert.
 - Der Tag-Dockerjob kann aus Clean Checkout weder `.next` noch `dist` bereitstellen.
 
 ## 2. Scorecard
@@ -49,6 +52,7 @@
 - 28 Pages-Blocktypen live Create→GET→Delete gegen die API geprüft.
 - Pages Delete zusätzlich über reale UI-Aktion und Read-back verifiziert.
 - Browser Cold Start, Remount, Streamticket, Video/Track-Status und Screenshots live geprüft.
+- Jellyfin mit realen IDs vertieft: 40 Musik- und 22 Videozustände inklusive Library-/Favorite-/Search-/Now-Playing-Tabs, Film-/Serien-/Album-/Artist-/Playlist-Details, Watchlists und Mobile.
 - Builds/Tests in separatem Git-Worktree; originaler dirty Arbeitsbaum unangetastet.
 - Compose-Konfiguration statisch validiert; Docker Runtime auf Review-VM blockiert, weil Docker Desktop nicht läuft.
 - Secrets/JWTs wurden aus allen Textartefakten redigiert.
@@ -121,7 +125,43 @@ Der Deep-Link-Fehler ist ein Zustand-Hydration-Race: mehrere Pages prüfen initi
 
 Rohmatrix: `evidence/2026-08-22-lifehub/api-contracts.csv`.
 
-## 7. Pages/Notion Deep Dive
+## 7. Jellyfin Musik, Filme & Serien — Deep Dive
+
+### Abdeckung
+
+| Bereich | reale Zustände | Enthalten |
+|---|---:|---|
+| Musik | 40 | Home, Albums, Artists, Genres, Tracks, Playlists, Recent, Search+4 Filter, Album/Artist/Genre/Playlist-Detail, Library+5 Tabs, Favorites+3 Tabs, Sidebar+3 Tabs, Now Playing/Lyrics/Queue, echte Wiedergabe, Mobile |
+| Filme & Serien | 22 | Hub, Browse, Grid Alle/Filme/Serien, Movies, Series, Favorites, Collections, Watchlists+2 Listen, Search leer+Resultate, Photos, reale Film-/Seriendetails, Player, Mobile |
+| Gesamt | **62** | sämtliche Captures einzeln im interaktiven HTML eingebettet und annotierbar |
+
+Maschinenlesbar: `evidence/2026-08-22-lifehub/jellyfin-music-coverage.csv` und `jellyfin-video-coverage.csv`.
+
+### Verifizierte Stärken
+
+- Musikstream mit echtem CDP-Click geprüft: Track geladen, Pause-Status aktiv, Zeit von 0:00 auf 0:04 fortgeschritten.
+- Now Playing, Lyrics und Queue wurden während realer Wiedergabe einzeln erfasst; Lyrics zeigt einen verständlichen Leerzustand.
+- Reale Film-, Serien-, Album-, Künstler- und Playlist-IDs rendern ihre Detailseiten.
+- Watchlists zeigen mehrere Listen samt Umbenennen/Löschen/Entfernen; Browse-Grid besitzt Alle/Filme/Serien; Search liefert echte Resultate.
+- Film- und Seriendetails besitzen starke Hero-Hierarchie, Metadaten, Watchlist/Favorit und klare CTAs.
+
+### Neue kritische Befunde
+
+1. **Filmwiedergabe blockiert:** derselbe reale Film endet auf Desktop und 375 px in `Wiedergabefehler`; CDP meldet `net::ERR_BLOCKED_BY_ORB`.
+2. **Musik mobil unbenutzbar:** die permanente 240-px-Musik-Sidebar lässt auf 375 px nur rund 135 px Inhalt; Tabelle und Player überlappen.
+3. **463 Bild-404s:** der 44-State-Basislauf erzeugt massenhaft fehlgeschlagene Künstler-/Genre-/Track-/Playlist-/Serienbilder. Fallbacks verhindern teilweise Broken-Image-Icons, nicht aber Netzwerk- und Layoutschäden.
+4. **Now-Playing-Kontrast:** gemessener Hintergrund Ø RGB 171/160/164; Weiß erreicht etwa 2,53:1, graue Metadaten nur rund 1,01:1.
+5. **Künstler-ID-Contract:** `artistId` wird aus dem Künstlernamen statt `ArtistItems[].Id` gebildet; Kontextnavigation kann auf `/artist/Queen` statt eine Jellyfin-ID führen.
+6. **Server-ID-Drift:** mehrere Video-Routen hardcoden `default`, obwohl ein realer ownergebundener Server vorhanden ist.
+7. **Secret-Fallback:** der Jellyfin-Service enthält einen hartcodierten Default-API-Key; Wert redigiert, Rotation erforderlich.
+
+![Musik Mobile](evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-music-home__375x812.png)
+
+![Now Playing Kontrast](evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-now-playing__1440x1000.png)
+
+![Filmplayer Fehler](evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-player__1440x1000.png)
+
+## 8. Pages/Notion Deep Dive
 
 ### Kernaussagen zu den Nutzerhinweisen
 
@@ -137,7 +177,7 @@ Rohmatrix: `evidence/2026-08-22-lifehub/api-contracts.csv`.
 
 Vollständige 38-Zeilen-Matrix: `evidence/2026-08-22-lifehub/pages-notion-matrix.csv`.
 
-## 8. BrowserBlock/WebRTC Deep Dive
+## 9. BrowserBlock/WebRTC Deep Dive
 
 ### Live-Reproduktion
 
@@ -161,13 +201,14 @@ Vollständige 38-Zeilen-Matrix: `evidence/2026-08-22-lifehub/pages-notion-matrix
 
 Vollständige 40-Zeilen-Matrix: `evidence/2026-08-22-lifehub/browser-matrix.csv`.
 
-## 9. Security
+## 10. Security
 
 ### P0
 
 - öffentlich vorbefüllte und angezeigte, live gültige Default-Admin-Zugangsdaten;
 - `@Throttle` ohne registrierten `ThrottlerGuard` — effektives Login-Limit: keines;
 - Vault-Passwortfeld ist `type=text`, wird als `encryptedPassword` unverändert gespeichert und von der API wieder ausgegeben; TOTP ebenso;
+- hartcodierter Default-Jellyfin-API-Key-Fallback im Service (Wert redigiert; Rotation erforderlich);
 - Pages Block-IDOR;
 - Browser Redirect-/Subresource-SSRF;
 - Browser `--no-sandbox`.
@@ -179,7 +220,7 @@ Vollständige 40-Zeilen-Matrix: `evidence/2026-08-22-lifehub/browser-matrix.csv`
 - feste DB/Redis/Meili-Credentials in Compose;
 - 22 hohe Dependency-Advisories.
 
-## 10. Performance und Servereffizienz
+## 11. Performance und Servereffizienz
 
 - Vorhandener Build: 110 JS-Chunks, 3.766.597 Bytes raw; größter Chunk 513.444 Bytes.
 - Next Build meldet 88,1 KB shared First Load; einzelne Routensummen bis etwa 130 KB, zusätzlich Daten/Bilder.
@@ -187,11 +228,13 @@ Vollständige 40-Zeilen-Matrix: `evidence/2026-08-22-lifehub/browser-matrix.csv`
 - Pages-Chunk raw 137.427 Bytes; Route-Komponente 1.622 LOC.
 - Media 1.704 LOC; 38 Lint-Warnungen für direkte `<img>`.
 - Jellyfin Movies erzeugte bis 862 sichtbare Interactives.
+- Der Jellyfin-Deep-Lauf erzeugte 463 Bild-404s; 404s werden weder vorab über ImageTags vermieden noch negativ gecacht.
+- Mobile Musik hält eine 240-px-Sidebar plus globale Shell und Playerbar gleichzeitig aktiv; 375 px sind dadurch funktional unbrauchbar.
 - Browser: Screenshot→Sharp→RGB→JS-I420 bei bis 15 FPS pro Session.
 - Pages Reorder: N sequenzielle Updates ohne Transaction.
 - Users Admin List: N+1-Rollenquery.
 
-## 11. Wartbarkeit
+## 12. Wartbarkeit
 
 | Metrik | Wert |
 |---|---|
@@ -205,7 +248,7 @@ Vollständige 40-Zeilen-Matrix: `evidence/2026-08-22-lifehub/browser-matrix.csv`
 
 Haupt-Hotspots: Media Page 1.704 LOC, Pages Page 1.622, DB Schema 1.379, Jellyfin Service 1.178 mit 59 `any`, TrackTable 1.032, Music Store 977, NowPlaying 976, Renderer 877.
 
-## 12. Docker/NAS-Deployability
+## 13. Docker/NAS-Deployability
 
 ### Aktueller kritischer Releasepfad
 
@@ -240,28 +283,31 @@ Internet/Tailscale
                                       └── bounded sandboxed Chromium pool
 ```
 
-## 13. Positive technische Grundlagen
+## 14. Positive technische Grundlagen
 
 - 28 Workspace-Typechecks und beide Builds sind grün.
 - DTO-Zod-Schemas, Nest-Layering und Guards sind breit vorhanden.
 - Frontend besitzt 87 stabile Utility-/Store-Tests.
+- Jellyfin-Musikstream, Pause/Play, Fortschritt sowie Now-Playing/Lyrics/Queue funktionieren mit echtem Input; reale Details und Watchlist-Tabs rendern.
 - Renderer besitzt HMAC/timing-safe Tokenprüfung, Download-Basename-Check, Bodylimit, Heartbeat, serielle Inputqueue, Maus-Release und adaptive FPS.
 - Browser-Container läuft als eigener non-root User und Compose nutzt `no-new-privileges`.
 - Pages besitzt Block-/Page-Versionierung, Events und flexible JSONB-Basis.
 - Compose Dev/Prod ist syntaktisch gültig.
 
-## 14. Priorisierte Umsetzung
+## 15. Priorisierte Umsetzung
 
 ### Welle 0 — sofort
 
 1. Default-Admin-Zugangsdaten entfernen/rotieren; First-run Setup.
-2. ThrottlerGuard aktivieren.
-3. Vault bis zu echter Verschlüsselung sperren/migrieren.
-4. Pages-IDOR schließen.
-5. Browser egress/sandbox/quotas und Black-Screen-Retry.
-6. Finance/Shopping/Email Migration-/Runtimefehler beheben.
-7. Travel API-Vertrag korrigieren.
-8. Release-Dockerfiles hermetisch bauen lassen.
+2. Hartcodierten Jellyfin-Key entfernen und rotieren; Serverauflösung fail-closed machen.
+3. Film-/Serien-Streamproxy (`ERR_BLOCKED_BY_ORB`) reparieren und realen Playback-E2E hinzufügen.
+4. ThrottlerGuard aktivieren.
+5. Vault bis zu echter Verschlüsselung sperren/migrieren.
+6. Pages-IDOR schließen.
+7. Browser egress/sandbox/quotas und Black-Screen-Retry.
+8. Finance/Shopping/Email Migration-/Runtimefehler beheben.
+9. Travel API-Vertrag korrigieren.
+10. Release-Dockerfiles hermetisch bauen lassen.
 
 ### Welle 1 — Zuverlässigkeit
 
@@ -275,7 +321,7 @@ Internet/Tailscale
 
 - Database Vertical Slice, Views/Properties/Formulas; danach optionale Themes/Glass.
 
-## 15. Finding-Index
+## 16. Finding-Index
 
 | ID | Prio | Kategorie | Titel | Status |
 |---|---|---|---|---|
@@ -294,6 +340,8 @@ Internet/Tailscale
 | SEC-001 | P0 | Authentication | Gültige Default-Admin-Zugangsdaten sind vorbefüllt und öffentlich angezeigt | BOTH |
 | SEC-002 | P0 | Authentication | @Throttle ist wirkungslos, weil ThrottlerGuard nicht registriert ist | CODE_CONFIRMED |
 | SEC-003 | P0 | Vault | Vault-Passwörter und TOTP-Secrets werden im Klartext transportiert/gespeichert/ausgegeben | CODE_CONFIRMED |
+| SEC-008 | P0 | Security | Jellyfin-Service enthält einen hartcodierten Default-API-Key-Fallback | CODE_CONFIRMED |
+| JELV-001 | P0 | Jellyfin Video / Playback | Realer Filmplayer scheitert auf Desktop und Mobile | LIVE_CONFIRMED |
 | BROW-003 | P1 | Browser Auth | Stream-Ticket gilt 24h und WebSocket prüft keinen Origin | CODE_CONFIRMED |
 | BROW-007 | P1 | Browser Legacy | Legacy-Proxy-Vertrag und POST sind weiterhin kaputt | CODE_CONFIRMED |
 | BROW-008 | P1 | Browser Isolation | Legacy-Renderer teilt Session „legacy“ zwischen Nutzern | CODE_CONFIRMED |
@@ -332,6 +380,12 @@ Internet/Tailscale
 | SEC-005 | P1 | CORS | Live/Dev-Compose erlaubt CORS * mit credentials | CODE_CONFIRMED |
 | SEC-006 | P1 | Secrets | Dev-Compose enthält feste DB/Redis/Meili-Secrets | CODE_CONFIRMED |
 | SEC-007 | P1 | Dependencies | Produktions-Audit meldet 49 Vulnerabilities, 22 hoch | BOTH |
+| JELM-001 | P1 | Jellyfin Music / Responsive | Musik-Shell ist auf 375 px praktisch unbenutzbar | BOTH |
+| JELM-002 | P1 | Jellyfin Music / Images | Deep-Audit erzeugt 463 HTTP-404-Bildanfragen | BOTH |
+| JELM-003 | P1 | Jellyfin Music / Accessibility | Cover-abgeleiteter Now-Playing-Hintergrund bricht den Textkontrast | BOTH |
+| JELM-004 | P1 | Jellyfin Music / Data Contract | Track-Mapper speichert Künstlername statt Jellyfin-Künstler-ID | CODE_CONFIRMED |
+| JELV-002 | P1 | Jellyfin Video / Server Contract | Video-Routen hardcoden serverId=default trotz realem Server | CODE_CONFIRMED |
+| JELV-003 | P1 | Jellyfin Video / Images | Videoansichten erzeugen Bild-404s und leere Poster | BOTH |
 | DOCKER-008 | P2 | Release | Production nutzt mutable latest-Tags ohne Digest/Rollbackvertrag | CODE_CONFIRMED |
 | FUNC-006 | P2 | Error Contracts | Ungültige Jellyfin-IDs führen häufig zu 500 statt 404 | OBSERVED |
 | FUNC-008 | P2 | Dead Code | Alte Media-MusicLibrary ruft drei nicht existente Endpunkte | CODE_CONFIRMED |
@@ -339,8 +393,12 @@ Internet/Tailscale
 | MAINT-003 | P2 | Quality | Lint besteht trotz 76 Warnungen | BOTH |
 | PERF-004 | P2 | DOM/A11y | Jellyfin-Seiten rendern bis 862 Interactives | OBSERVED |
 | PERF-006 | P2 | Database | Userliste lädt Rollen in N+1-Schleife | CODE_CONFIRMED |
+| JELM-005 | P2 | Jellyfin Music / UX | Globale Playerbar zeigt vor Wiedergabe einen vollwertigen Nullzustand | LIVE_CONFIRMED |
+| JELM-006 | P2 | Jellyfin Music / Queue | Queue-Reorder ist technisch vorhanden, aber visuell nicht erkennbar | BOTH |
+| JELM-007 | P2 | Jellyfin Music / Data Hygiene | Songlisten enthalten nicht abspielbare Metadatenzeilen mit 0:00 | LIVE_CONFIRMED |
+| JELV-004 | P2 | Jellyfin Video / Error Recovery | Playerfehler nennt weder Ursache noch verwertbaren Diagnosekontext | BOTH |
 
-## 16. Findings im Detail
+## 17. Findings im Detail
 
 ### BROW-001 · Browser Cold Start bleibt nach erstem Fehler im Endlos-Spinner
 
@@ -1482,11 +1540,238 @@ Internet/Tailscale
 
 ---
 
+### SEC-008 · Jellyfin-Service enthält einen hartcodierten Default-API-Key-Fallback
 
-## 17. Grenzen und Wahrheitsstandard
+**Priorität:** P0
+**Kategorie:** Security
+**Evidenzstatus:** CODE_CONFIRMED
+**Evidenz:** `domains/jellyfin/src/services/jellyfin.service.ts:13-31` (Wert redigiert)
+
+**Auswirkung:** Ein Repository-/Image-Leak oder eine fehlende Environment-Konfiguration legt den Jellyfin-Zugriff offen und umgeht Rotation.
+
+**Diagnose/Ursache:** `JELLYFIN_API_KEY` fällt auf ein Quellcode-Literal plus Default-Server zurück.
+
+**Empfehlung:** Literal entfernen, Key rotieren und ohne explizite ownergebundene Serverkonfiguration fail-closed arbeiten.
+
+**Akzeptanzkriterium:** Kein Key-Literal im Repo; alter Key rotiert; Secret-Scan grün; fehlendes Secret erzeugt einen verständlichen Fehler.
+
+**Aufwand/Abhängigkeiten:** S · keine
+
+---
+
+### JELV-001 · Realer Filmplayer scheitert auf Desktop und Mobile
+
+**Priorität:** P0
+**Kategorie:** Jellyfin Video / Playback
+**Evidenzstatus:** LIVE_CONFIRMED
+**Evidenz:** `video-player__1440x1000.png`, `mobile-player__375x812.png`, CDP `net::ERR_BLOCKED_BY_ORB`
+
+**Auswirkung:** Die Kernfunktion Filmwiedergabe ist vollständig blockiert.
+
+**Diagnose/Ursache:** Stream-/HLS-Proxy erfüllt den Browservertrag für MIME, Range, CORS/CORP oder Playlist-Rewrite nicht zuverlässig.
+
+**Empfehlung:** Proxyantworten korrigieren und einen echten Browser-Playback-E2E ergänzen.
+
+**Akzeptanzkriterium:** Reales Medium spielt Desktop und 375 px mindestens 60 Sekunden; Seek, Audio/Subtitel, Retry und Reporting funktionieren ohne ORB.
+
+**Aufwand/Abhängigkeiten:** L · SEC-004
+
+---
+
+### JELM-001 · Musik-Shell ist auf 375 px praktisch unbenutzbar
+
+**Priorität:** P1
+**Kategorie:** Jellyfin Music / Responsive
+**Evidenzstatus:** BOTH
+**Evidenz:** `mobile-music-home__375x812.png`, `mobile-music-library__375x812.png`
+
+**Auswirkung:** Nur etwa 135 px bleiben für Inhalte; Tabellen, Cards und Player werden abgeschnitten oder überlagert.
+
+**Diagnose/Ursache:** Permanente 240-px-Musik-Sidebar und Desktop-Player laufen innerhalb der globalen Mobile-Shell weiter.
+
+**Empfehlung:** Sidebar als Drawer/Sheet, Player als mobile Bottom-Bar und Tabellen als Listenvariante rendern.
+
+**Akzeptanzkriterium:** Alle Musikviews sind bei 375 px ohne horizontales Scrollen oder Überlappungen vollständig bedienbar.
+
+**Aufwand/Abhängigkeiten:** L · keine
+
+---
+
+### JELM-002 · Deep-Audit erzeugt 463 HTTP-404-Bildanfragen
+
+**Priorität:** P1
+**Kategorie:** Jellyfin Music / Images
+**Evidenzstatus:** BOTH
+**Evidenz:** `jellyfin-deep-atlas.json`, Library/Genres/Künstler-Captures
+
+**Auswirkung:** Netzwerkrauschen und instabile Cover-/Grid-Zustände auf fast allen Musikseiten.
+
+**Diagnose/Ursache:** URLs entstehen ohne gültiges ImageTag; Genre-Namen werden wie Item-IDs an den Proxy gesendet.
+
+**Empfehlung:** ImageTags vorab prüfen, Genres bewusst farblich rendern, negative Antworten cachen und Default-ID-Drift schließen.
+
+**Akzeptanzkriterium:** Der komplette 62-State-Atlas erzeugt keine vermeidbaren Bild-404s.
+
+**Aufwand/Abhängigkeiten:** M · JELV-002
+
+---
+
+### JELM-003 · Cover-abgeleiteter Now-Playing-Hintergrund bricht den Textkontrast
+
+**Priorität:** P1
+**Kategorie:** Jellyfin Music / Accessibility
+**Evidenzstatus:** BOTH
+**Evidenz:** `music-nowplaying-now-playing__1440x1000.png`; Pixelmessung Ø RGB 171/160/164
+
+**Auswirkung:** Weiß erreicht nur ca. 2,53:1; graue Metadaten ca. 1,01:1.
+
+**Diagnose/Ursache:** Die Coverfarbe wird ohne Luminanzgrenze als Panelgrund verwendet, während helle Dark-Mode-Texttokens bleiben.
+
+**Empfehlung:** Hintergrund luminanzbegrenzt abdunkeln oder den Vordergrund kontrastadaptiv berechnen.
+
+**Akzeptanzkriterium:** Jede getestete Coverfarbe erreicht 4,5:1 für Normaltext und 3:1 für große Texte/UI.
+
+**Aufwand/Abhängigkeiten:** M · keine
+
+---
+
+### JELM-004 · Track-Mapper speichert Künstlername statt Jellyfin-Künstler-ID
+
+**Priorität:** P1
+**Kategorie:** Jellyfin Music / Data Contract
+**Evidenzstatus:** CODE_CONFIRMED
+**Evidenz:** `music-api.ts:13-31,162-174`; `SongRow.tsx:100-104`
+
+**Auswirkung:** Kontextnavigation kann `/artist/Queen` statt eine reale UUID öffnen und leere/falsche Details laden.
+
+**Diagnose/Ursache:** `ArtistItems` fehlt im Typ; `artistId` nutzt `Artists[0]` (Anzeigename).
+
+**Empfehlung:** `ArtistItems` typisieren und ID/Name-Paare vollständig übernehmen.
+
+**Akzeptanzkriterium:** Track-Kontextaktionen öffnen für Einzel- und Mehrfachkünstler die reale UUID-basierte Detailseite.
+
+**Aufwand/Abhängigkeiten:** S · keine
+
+---
+
+### JELV-002 · Video-Routen hardcoden serverId=default trotz realem Server
+
+**Priorität:** P1
+**Kategorie:** Jellyfin Video / Server Contract
+**Evidenzstatus:** CODE_CONFIRMED
+**Evidenz:** `browse/page.tsx:32`, `watch/[id]/page.tsx:22`, `search/page.tsx:21`, `collections/page.tsx:30`
+
+**Auswirkung:** Bilder, Suche, Details und Streams können über falsche Fallback-/Ownerdaten laufen.
+
+**Diagnose/Ursache:** Alte Default-Konstante koexistiert mit `activeServer`/`useJellyfinServer`.
+
+**Empfehlung:** Alle Video-Routen über einen ownergebundenen aktiven Server-Context führen.
+
+**Akzeptanzkriterium:** Jede API-/Bild-/Stream-Anfrage nutzt die reale Server-ID; Wechsel und Fehlen besitzen getestete States.
+
+**Aufwand/Abhängigkeiten:** M · keine
+
+---
+
+### JELV-003 · Videoansichten erzeugen Bild-404s und leere Poster
+
+**Priorität:** P1
+**Kategorie:** Jellyfin Video / Images
+**Evidenzstatus:** BOTH
+**Evidenz:** `jellyfin-deep-atlas.json`; Series-State mit 7 Bild-404s; sichtbare Placeholder im Hub
+
+**Auswirkung:** Reihen wirken inkonsistent und erzeugen unnötige Requests.
+
+**Diagnose/Ursache:** Default-ID-Drift und unbedingte Image-URL-Erzeugung ignorieren Artwork-Verfügbarkeit.
+
+**Empfehlung:** Reale Server-ID verwenden, ImageTags prüfen und typisierte Fallbacks ohne Request rendern.
+
+**Akzeptanzkriterium:** Home, Browse, Movies, Series, Details und Watchlists erzeugen 0 vermeidbare Poster-404s.
+
+**Aufwand/Abhängigkeiten:** M · JELV-002
+
+---
+
+### JELM-005 · Globale Playerbar zeigt vor Wiedergabe einen vollwertigen Nullzustand
+
+**Priorität:** P2
+**Kategorie:** Jellyfin Music / UX
+**Evidenzstatus:** LIVE_CONFIRMED
+**Evidenz:** `music-home__1440x1000.png`, `music-library-songs__1440x1000.png`
+
+**Auswirkung:** „Kein Titel“, 0:00 und scheinbar aktive Queue-/Lyrics-/Playback-Controls erzeugen falsche Affordanzen.
+
+**Diagnose/Ursache:** Der vollständige Desktopplayer rendert unabhängig von `currentTrack`.
+
+**Empfehlung:** Vor erster Wiedergabe eine kompakte deaktivierte Leiste oder einen erklärenden Empty State zeigen.
+
+**Akzeptanzkriterium:** Ohne Track existieren keine scheinbar aktiven Aktionen; nach Auswahl erscheint die vollständige Playerbar.
+
+**Aufwand/Abhängigkeiten:** S · keine
+
+---
+
+### JELM-006 · Queue-Reorder ist technisch vorhanden, aber visuell nicht erkennbar
+
+**Priorität:** P2
+**Kategorie:** Jellyfin Music / Queue
+**Evidenzstatus:** BOTH
+**Evidenz:** `music-nowplaying-queue__1440x1000.png`; `NowPlayingView.tsx:617-634`
+
+**Auswirkung:** Nutzer erkennen nicht, dass Tracks verschiebbar sind.
+
+**Diagnose/Ursache:** `useSortable` hängt an der ganzen Zeile ohne sichtbaren/fokussierbaren Handle.
+
+**Empfehlung:** Grip-Handle, Tastatur-DnD und klare Drop-Vorschau ergänzen.
+
+**Akzeptanzkriterium:** Reorder ist mit Maus, Touch und Tastatur auffindbar; Position wird per Screenreader angekündigt und bleibt erhalten.
+
+**Aufwand/Abhängigkeiten:** M · keine
+
+---
+
+### JELM-007 · Songlisten enthalten nicht abspielbare Metadatenzeilen mit 0:00
+
+**Priorität:** P2
+**Kategorie:** Jellyfin Music / Data Hygiene
+**Evidenzstatus:** LIVE_CONFIRMED
+**Evidenz:** `music-tracks__1440x1000.png`, `music-nowplaying-queue__1440x1000.png`
+
+**Auswirkung:** „1975 / Unbekannt / 0:00“-Items blähen Trackliste und 99+-Queue auf.
+
+**Diagnose/Ursache:** Endpoint/UI filtert nicht strikt auf abspielbare Audioitems mit positiver Laufzeit.
+
+**Empfehlung:** API normalisieren und 0-Tick-/nicht abspielbare Items vor Track-/Queuebildung ausschließen.
+
+**Akzeptanzkriterium:** Jeder Track besitzt Audio-Type, stabile ID, Titel, positive Dauer und ladbaren Stream.
+
+**Aufwand/Abhängigkeiten:** M · keine
+
+---
+
+### JELV-004 · Playerfehler nennt weder Ursache noch Diagnosekontext
+
+**Priorität:** P2
+**Kategorie:** Jellyfin Video / Error Recovery
+**Evidenzstatus:** BOTH
+**Evidenz:** `watch/[id]/page.tsx:174-196`, `video-player__1440x1000.png`
+
+**Auswirkung:** Nutzer kann Codec-, Netzwerk- und Serverfehler weder unterscheiden noch sinnvoll melden.
+
+**Diagnose/Ursache:** `onError` reduziert HLS-/HTTP-/ORB-Ursachen auf einen generischen String.
+
+**Empfehlung:** Verständliche Fehlerkategorien, Correlation-ID, Details und instrumentierten Retry anbieten.
+
+**Akzeptanzkriterium:** Fehlerstate zeigt Kategorie, nächste Aktion und kopierbare Diagnose-ID; Retry ist telemetriert.
+
+**Aufwand/Abhängigkeiten:** S · JELV-001
+
+---
+
+## 18. Grenzen und Wahrheitsstandard
 
 - Docker-Imagebuild/Container-Smoke auf dieser VM war blockiert, weil Docker Desktop nicht lief; Compose-Config, Dockerfiles und CI wurden vollständig statisch geprüft.
-- Dynamische Routen wurden mit ungültiger ID auf ihren Fehlerzustand geprüft; reale IDs wurden für Pages und Browser verwendet, nicht für jede Jellyfin-/Recipe-Detailroute.
-- Von 1.983 Controls wurden 365 Pages-/Browser-Kernpfade live vertieft; übrige Controls sind source-inventoried und Route-rendered, nicht fälschlich als einzeln bestanden markiert.
-- Acht Subagenten scheiterten vor Dateizugriff an Provider-401; keine ihrer Aussagen wurde verwendet.
+- Dynamische Jellyfin-Routen wurden mit realen IDs für Film, Serie, Player, Album, Künstler, Genre und Playlist geprüft; destructive Media-CRUD blieb unangetastet.
+- Von 1.983 Controls wurden 365 Pages-/Browser-Kernpfade und 62 Jellyfin-Zustände live vertieft; übrige Controls sind source-inventoried und route-rendered, nicht fälschlich als einzeln bestanden markiert.
+- Alle 15 dispatchten Subagenten scheiterten vor Dateizugriff an Provider-401; keine ihrer Aussagen wurde verwendet.
 - Produktcode, Deployment und bestehende fremde Änderungen blieben unangetastet.

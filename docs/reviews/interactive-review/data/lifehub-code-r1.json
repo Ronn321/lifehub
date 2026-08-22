@@ -1,0 +1,2741 @@
+{
+  "schemaVersion": 2,
+  "reportId": "lifehub-code-review-2026-08-22",
+  "storageKey": "lifehub-interactive-review:lifehub-code-review-2026-08-22",
+  "version": 1,
+  "date": "2026-08-22",
+  "title": "LifeHub Code-/Funktionsreview · Interaktiv",
+  "subtitle": "Live · Pages/Notion · Browser · Jellyfin · Security · Performance · Docker",
+  "intro": "Der Bericht verbindet Live-Evidenz und Quellcode. Jeder Fix kann übernommen, abgelehnt oder kommentiert werden; abgeschlossene Änderungsanforderungen werden als v1/v2 mit Delta exportiert.",
+  "sourceCommit": "0fb76aa",
+  "generatedAt": "2026-08-22T10:10:31.949929+00:00",
+  "areas": [
+    {
+      "id": "routing",
+      "tab": "Live & Routing",
+      "vorbild": "Fail-closed Routing/API Contracts",
+      "score": "4 / 10",
+      "general": "56 Routen wurden inventarisiert; Deep-Link-Hydration und Contract-Drift blockieren mehrere Bereiche.",
+      "images": [
+        {
+          "id": "route-travel",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/travel__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/travel__1440x1000__dark__default.png",
+          "cap": "Travel-Deep-Link landet im Dashboard",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/travel__1440x1000__dark__default.png"
+        },
+        {
+          "id": "route-search",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/search__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/search__1440x1000__dark__default.png",
+          "cap": "Search-Deep-Link landet im Dashboard",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/search__1440x1000__dark__default.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-ROUTING-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Zentralen AuthBoundary und generierten API-Client einführen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Live & Routing sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "FUNC-001",
+          "severity": "P1",
+          "category": "Routing/Auth",
+          "title": "Acht Deep Links verlieren ihr Ziel durch Auth-Hydration-Race",
+          "detail": "Auswirkung: Direkte URLs führen über Login zum Dashboard; Route wirkt defekt\n\nUrsache: Effect prüft initial null accessToken vor Zustand-Rehydration",
+          "impact": "Direkte URLs führen über Login zum Dashboard; Route wirkt defekt",
+          "rootCause": "Effect prüft initial null accessToken vor Zustand-Rehydration",
+          "ref": "routes.csv FAIL_REDIRECT_DASHBOARD; documents:70, insurance:88, IT:240, projects:645, search:69, travel:514, vault:60",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "route-travel",
+            "route-search"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/Auth",
+          "suggestions": [
+            {
+              "id": "FUNC-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Zentraler AuthBoundary mit hydration state und returnUrl",
+              "acceptanceCriteria": "Direktaufruf jeder geschützten Route bleibt nach Rehydration erhalten",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "FUNC-006",
+          "severity": "P2",
+          "category": "Error Contracts",
+          "title": "Ungültige Jellyfin-IDs führen häufig zu 500 statt 404",
+          "detail": "Auswirkung: Schlechte Deep-Link-Resilienz und unnötige Alarmierung\n\nUrsache: Provider-/Service-Fehler werden unnormalisiert als 500 geworfen",
+          "impact": "Schlechte Deep-Link-Resilienz und unnötige Alarmierung",
+          "rootCause": "Provider-/Service-Fehler werden unnormalisiert als 500 geworfen",
+          "ref": "Atlas: detail/children/playlist endpoints mit invalid ID 500",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Jellyfin Backend",
+          "suggestions": [
+            {
+              "id": "FUNC-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Not-found auf 404 mappen, Providerfehler RFC7807",
+              "acceptanceCriteria": "Invalid IDs ergeben verständlichen 404-State",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "FUNC-007",
+          "severity": "P1",
+          "category": "API Contracts",
+          "title": "Travel besitzt acht bestätigte Frontend/Controller-Mismatches",
+          "detail": "Auswirkung: Jeder Travel CRUD-Aufruf trifft falsche Route\n\nUrsache: Manuelle Stringpfade ohne OpenAPI-Client",
+          "impact": "Jeder Travel CRUD-Aufruf trifft falsche Route",
+          "rootCause": "Manuelle Stringpfade ohne OpenAPI-Client",
+          "ref": "api-contracts.csv CONFIRMED_MISMATCH=8",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "FUNC-002"
+          ],
+          "owner": "Platform/API",
+          "suggestions": [
+            {
+              "id": "FUNC-007-F1",
+              "title": "Empfohlener Fix",
+              "note": "OpenAPI/typed Client generieren und CI-Contract-Gate",
+              "acceptanceCriteria": "0 CONFIRMED_MISMATCH; E2E pro Mutation",
+              "effort": "M",
+              "dependencies": "FUNC-002"
+            }
+          ]
+        },
+        {
+          "id": "FUNC-008",
+          "severity": "P2",
+          "category": "Dead Code",
+          "title": "Alte Media-MusicLibrary ruft drei nicht existente Endpunkte",
+          "detail": "Auswirkung: Wartungs- und Verwechslungsrisiko\n\nUrsache: Abgelöste Komponente blieb im Quellbaum",
+          "impact": "Wartungs- und Verwechslungsrisiko",
+          "rootCause": "Abgelöste Komponente blieb im Quellbaum",
+          "ref": "MusicLibrary.tsx unimported; /media/music/* ohne Controller",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Media/Frontend",
+          "suggestions": [
+            {
+              "id": "FUNC-008-F1",
+              "title": "Empfohlener Fix",
+              "note": "Löschen oder an aktuelle Jellyfin-Musik-API anbinden",
+              "acceptanceCriteria": "Kein unerreichbarer API-Clientcode",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domains",
+      "tab": "Domains & Integrationen",
+      "vorbild": "Vertikale, funktionsfähige Domain-Slices",
+      "score": "3,5 / 10",
+      "general": "Einige Domains sind visuell vorhanden, liefern live aber 500 oder falsche Empty States.",
+      "images": [
+        {
+          "id": "domain-finance",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/finance__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/finance__1440x1000__dark__default.png",
+          "cap": "Finance · Silent Failure",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/finance__1440x1000__dark__default.png"
+        },
+        {
+          "id": "domain-shopping",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/shopping__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/shopping__1440x1000__dark__default.png",
+          "cap": "Shopping · Silent Failure",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/shopping__1440x1000__dark__default.png"
+        },
+        {
+          "id": "domain-email",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/email__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/email__1440x1000__dark__default.png",
+          "cap": "E-Mail · Silent Failure",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/email__1440x1000__dark__default.png"
+        },
+        {
+          "id": "domain-recipes",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png",
+          "cap": "Recipes · Bildzustände",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-DOMAINS-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Finance, Travel, Shopping und E-Mail als vollständige Recovery-Welle reparieren und E2E absichern.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Domains & Integrationen sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "FUNC-002",
+          "severity": "P0",
+          "category": "Travel",
+          "title": "Travel-Frontend und Backend haben unvereinbare API-Pfade",
+          "detail": "Auswirkung: Reisen-Domain ist praktisch unbenutzbar\n\nUrsache: API-Vertrag driftete ohne Contract-Test",
+          "impact": "Reisen-Domain ist praktisch unbenutzbar",
+          "rootCause": "API-Vertrag driftete ohne Contract-Test",
+          "ref": "Frontend /travel/trips; TravelController @Controller(trips); live 404 vs /trips 500",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Travel Fullstack",
+          "suggestions": [
+            {
+              "id": "FUNC-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Ein kanonischer Prefix und Contract-Test; 500-Ursache beheben",
+              "acceptanceCriteria": "GET/CRUD Travel liefert 2xx und Seite rendert Daten/Empty korrekt",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "FUNC-003",
+          "severity": "P0",
+          "category": "Finance",
+          "title": "Alle sechs Finance-Kernendpunkte liefern live HTTP 500",
+          "detail": "Auswirkung: Gesamte Finanzdomain zeigt falsche Empty States\n\nUrsache: Wahrscheinlich Deployment-/Schema-Drift; Startscript toleriert Migrationfehler",
+          "impact": "Gesamte Finanzdomain zeigt falsche Empty States",
+          "rootCause": "Wahrscheinlich Deployment-/Schema-Drift; Startscript toleriert Migrationfehler",
+          "ref": "net-worth, budgets, assets, accounts, transactions, savings-goals je 500",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "domain-finance"
+          ],
+          "effort": "L",
+          "dependencies": [
+            "DOCKER-004"
+          ],
+          "owner": "Finance/DB",
+          "suggestions": [
+            {
+              "id": "FUNC-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Logs+Migration prüfen, Schema reparieren, Error UI",
+              "acceptanceCriteria": "Alle Endpunkte 2xx; Migration aus leerer und bestehender DB getestet",
+              "effort": "L",
+              "dependencies": "DOCKER-004"
+            }
+          ]
+        },
+        {
+          "id": "FUNC-004",
+          "severity": "P1",
+          "category": "Shopping",
+          "title": "Shopping-Liste liefert live HTTP 500",
+          "detail": "Auswirkung: Einkaufslisten sind nicht verlässlich nutzbar\n\nUrsache: Backend/DB-Fehler wird als Empty State verschluckt",
+          "impact": "Einkaufslisten sind nicht verlässlich nutzbar",
+          "rootCause": "Backend/DB-Fehler wird als Empty State verschluckt",
+          "ref": "/api/v1/shopping-lists 500; Shopping-Screenshot zeigt 0 Listen",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "domain-shopping"
+          ],
+          "effort": "M",
+          "dependencies": [
+            "DOCKER-004"
+          ],
+          "owner": "Shopping Fullstack",
+          "suggestions": [
+            {
+              "id": "FUNC-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Endpoint/Schema reparieren und UI-Fehlerstatus",
+              "acceptanceCriteria": "GET 200; Create/Update/Delete E2E grün",
+              "effort": "M",
+              "dependencies": "DOCKER-004"
+            }
+          ]
+        },
+        {
+          "id": "FUNC-005",
+          "severity": "P1",
+          "category": "Email",
+          "title": "E-Mail-Status liefert live HTTP 500",
+          "detail": "Auswirkung: UI zeigt „Keine E-Mails“ statt Integrationsfehler\n\nUrsache: Fehlerpfad wird nicht getrennt von leerem Postfach",
+          "impact": "UI zeigt „Keine E-Mails“ statt Integrationsfehler",
+          "rootCause": "Fehlerpfad wird nicht getrennt von leerem Postfach",
+          "ref": "/api/v1/email/status 500; Email-Screenshot",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "domain-email"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Email/Integrations",
+          "suggestions": [
+            {
+              "id": "FUNC-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "Status-Service reparieren; Connection/Error CTA",
+              "acceptanceCriteria": "Connected/disconnected/error/empty eindeutig getestet",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pages-notion",
+      "tab": "Pages / Notion",
+      "vorbild": "Notion Block- und Datenbanksystem",
+      "score": "3,5 / 10",
+      "general": "Block-CRUD und Versionierung bilden ein Fundament; Notion-Parität und Block-Security fehlen.",
+      "images": [
+        {
+          "id": "code-pages-editor",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-test__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-test__1440x1000__dark.png",
+          "cap": "Pages/Notion · Editor",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-test__1440x1000__dark.png"
+        },
+        {
+          "id": "code-pages-menu",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-qa-block-menu__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-qa-block-menu__1440x1000__dark.png",
+          "cap": "Pages · Blockaktionen",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-qa-block-menu__1440x1000__dark.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-PAGES-NOTION-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "IDOR zuerst, danach kanonische Registry, Editor-Toolbar, Toggle/TOC und Datenbank-Vertical-Slice.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Pages / Notion sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "PAGE-001",
+          "severity": "P1",
+          "category": "Pages UX",
+          "title": "Blocklöschen funktioniert technisch, ist aber versteckt/unzugänglich",
+          "detail": "Auswirkung: Nutzer erlebt Löschen als nicht vorhanden\n\nUrsache: Delete liegt hinter unsichtbarem Hover-Plus-Menü",
+          "impact": "Nutzer erlebt Löschen als nicht vorhanden",
+          "rootCause": "Delete liegt hinter unsichtbarem Hover-Plus-Menü",
+          "ref": "BlockHandle wrapper opacity 0; live UI Delete 204 + Read-back absent",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "code-pages-menu"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Pages Frontend",
+          "suggestions": [
+            {
+              "id": "PAGE-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Persistenter Handle bei Fokus/Touch, Delete-Shortcut, Undo",
+              "acceptanceCriteria": "QA: Maus/Touch/Tastatur löschen + Undo; API Read-back",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PAGE-002",
+          "severity": "P1",
+          "category": "Pages UX",
+          "title": "BlockHandle-Suchfeld filtert nichts",
+          "detail": "Auswirkung: Täuschendes Control und langsame Blockwahl\n\nUrsache: Nur visuelles Input-Skelett implementiert",
+          "impact": "Täuschendes Control und langsame Blockwahl",
+          "rootCause": "Nur visuelles Input-Skelett implementiert",
+          "ref": "BlockHandle.tsx:87-95 ohne value/onChange; Optionen ungefiltert",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "code-pages-menu"
+          ],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Pages Frontend",
+          "suggestions": [
+            {
+              "id": "PAGE-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Query-State, Filter und Keyboard-Navigation",
+              "acceptanceCriteria": "Eingabe reduziert Liste und Enter wählt Treffer",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PAGE-003",
+          "severity": "P1",
+          "category": "Pages Architecture",
+          "title": "Vier widersprüchliche Blocklisten driften",
+          "detail": "Auswirkung: Unsupported Widgets werden angeboten oder fehlen; Änderungen vervielfacht\n\nUrsache: Keine einzige ausführbare Registry als Source of Truth",
+          "impact": "Unsupported Widgets werden angeboten oder fehlen; Änderungen vervielfacht",
+          "rootCause": "Keine einzige ausführbare Registry als Source of Truth",
+          "ref": "page.tsx union/defaults/rendering; BlockHandle 15; registry 28; DTO/entity",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Pages Architecture",
+          "suggestions": [
+            {
+              "id": "PAGE-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Registry besitzt Schema, Renderer, Default, Commands, Supportstatus",
+              "acceptanceCriteria": "Jeder Typ einmal registriert; CI prüft Frontend/Backend-Parität",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PAGE-004",
+          "severity": "P1",
+          "category": "Pages Editor",
+          "title": "Slash-Menü konvertiert aktuellen Block statt neuen einzufügen",
+          "detail": "Auswirkung: Bestehender Text kann unerwartet umgewandelt/verloren werden\n\nUrsache: onSelect ist an onBlockTypeChange gekoppelt",
+          "impact": "Bestehender Text kann unerwartet umgewandelt/verloren werden",
+          "rootCause": "onSelect ist an onBlockTypeChange gekoppelt",
+          "ref": "page.tsx:255-257,560-565; SlashMenu.tsx:112-117",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "code-pages-editor"
+          ],
+          "effort": "M",
+          "dependencies": [
+            "PAGE-003"
+          ],
+          "owner": "Pages Frontend",
+          "suggestions": [
+            {
+              "id": "PAGE-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Insert-at-caret API und stabile Cursorposition",
+              "acceptanceCriteria": "Slash erzeugt neuen Block unter Cursor ohne Inhaltsverlust",
+              "effort": "M",
+              "dependencies": "PAGE-003"
+            }
+          ]
+        },
+        {
+          "id": "PAGE-005",
+          "severity": "P1",
+          "category": "Pages Editor",
+          "title": "Rich-Text-Formatierung ist nicht auffindbar",
+          "detail": "Auswirkung: Bold/Italic/Strike/Link nur über unbekannte Shortcuts oder gar nicht\n\nUrsache: Keine Bubble-/Floating-Toolbar und keine Shortcut-Hilfe",
+          "impact": "Bold/Italic/Strike/Link nur über unbekannte Shortcuts oder gar nicht",
+          "rootCause": "Keine Bubble-/Floating-Toolbar und keine Shortcut-Hilfe",
+          "ref": "StarterKit vorhanden; live formatControls=[]",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "code-pages-editor"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Pages Frontend",
+          "suggestions": [
+            {
+              "id": "PAGE-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "Accessible BubbleMenu mit Marks/Link/Code/Highlight",
+              "acceptanceCriteria": "Selection zeigt Toolbar; Keyboard+Screenreader getestet",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PAGE-006",
+          "severity": "P1",
+          "category": "Pages Editor",
+          "title": "Toggle ist nur Label plus Plain-Textarea",
+          "detail": "Auswirkung: Keine echten Child-Blocks, Rich Text oder DnD\n\nUrsache: Content-Schema speichert String statt Blockhierarchie",
+          "impact": "Keine echten Child-Blocks, Rich Text oder DnD",
+          "rootCause": "Content-Schema speichert String statt Blockhierarchie",
+          "ref": "ToggleBlock.tsx:13-37",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [
+            "PAGE-009"
+          ],
+          "owner": "Pages Architecture",
+          "suggestions": [
+            {
+              "id": "PAGE-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Nested block model für Toggle-Children",
+              "acceptanceCriteria": "Kinder beliebiger Typen anlegen/reordern/persistieren",
+              "effort": "L",
+              "dependencies": "PAGE-009"
+            }
+          ]
+        },
+        {
+          "id": "PAGE-007",
+          "severity": "P1",
+          "category": "Pages Editor",
+          "title": "Einklappbare H1/H2/H3 fehlen vollständig",
+          "detail": "Auswirkung: Explizite Nutzeranforderung und Notion-Kernmuster fehlen\n\nUrsache: Toggle und Heading sind getrennte flache Typen",
+          "impact": "Explizite Nutzeranforderung und Notion-Kernmuster fehlen",
+          "rootCause": "Toggle und Heading sind getrennte flache Typen",
+          "ref": "Keine toggle_heading-Komponente/Registry/DTO",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "PAGE-006"
+          ],
+          "owner": "Pages Frontend",
+          "suggestions": [
+            {
+              "id": "PAGE-007-F1",
+              "title": "Empfohlener Fix",
+              "note": "Toggle-Heading-Varianten mit Child-Blocks",
+              "acceptanceCriteria": "H1/H2/H3 einklappbar, TOC/Keyboard kompatibel",
+              "effort": "M",
+              "dependencies": "PAGE-006"
+            }
+          ]
+        },
+        {
+          "id": "PAGE-008",
+          "severity": "P1",
+          "category": "Pages Editor",
+          "title": "Inhaltsverzeichnis aus Überschriften fehlt",
+          "detail": "Auswirkung: Lange Seiten sind schlecht navigierbar\n\nUrsache: Keine stabilen Heading-Anker oder abgeleitete Outline",
+          "impact": "Lange Seiten sind schlecht navigierbar",
+          "rootCause": "Keine stabilen Heading-Anker oder abgeleitete Outline",
+          "ref": "0 TableOfContents/TOC-Implementierungen",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "PAGE-007"
+          ],
+          "owner": "Pages Frontend",
+          "suggestions": [
+            {
+              "id": "PAGE-008-F1",
+              "title": "Empfohlener Fix",
+              "note": "Derived TOC-Block/Sidebar aus Heading-Index",
+              "acceptanceCriteria": "Live aktualisiert, anklickbar, Deep-Link-fähig",
+              "effort": "M",
+              "dependencies": "PAGE-007"
+            }
+          ]
+        },
+        {
+          "id": "PAGE-009",
+          "severity": "P1",
+          "category": "Pages Architecture",
+          "title": "Multi-Select, Nested Blocks und page-weites Undo fehlen",
+          "detail": "Auswirkung: Keine Bulk-Aktionen, Einrückung oder sichere Strukturänderungen\n\nUrsache: Editor-State modelliert nur einzelne Blöcke",
+          "impact": "Keine Bulk-Aktionen, Einrückung oder sichere Strukturänderungen",
+          "rootCause": "Editor-State modelliert nur einzelne Blöcke",
+          "ref": "Keine selectedBlocks/BlockRange; flache sortOrder-Liste",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "XL",
+          "dependencies": [
+            "PAGE-003"
+          ],
+          "owner": "Pages Architecture",
+          "suggestions": [
+            {
+              "id": "PAGE-009-F1",
+              "title": "Empfohlener Fix",
+              "note": "Selection/parentBlockId/command history spezifizieren",
+              "acceptanceCriteria": "Shift/Ctrl-Auswahl, Bulk move/delete/copy, Undo/Redo E2E",
+              "effort": "XL",
+              "dependencies": "PAGE-003"
+            }
+          ]
+        },
+        {
+          "id": "PAGE-010",
+          "severity": "P1",
+          "category": "Pages Databases",
+          "title": "Everything-is-a-database existiert nur als ungenutzte Tabelle",
+          "detail": "Auswirkung: Notion-Datenbankkonzept faktisch nicht vorhanden\n\nUrsache: Schema-Stub ohne Repository/Service/API/UI",
+          "impact": "Notion-Datenbankkonzept faktisch nicht vorhanden",
+          "rootCause": "Schema-Stub ohne Repository/Service/API/UI",
+          "ref": "database_pages public.ts:973-981; keine weitere Nutzung",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "XL",
+          "dependencies": [],
+          "owner": "Pages/DB",
+          "suggestions": [
+            {
+              "id": "PAGE-010-F1",
+              "title": "Empfohlener Fix",
+              "note": "Vollständigen Vertical Slice planen oder Stub entfernen",
+              "acceptanceCriteria": "DB-Seite, Row-as-Page und Property CRUD E2E",
+              "effort": "XL",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PAGE-011",
+          "severity": "P1",
+          "category": "Pages Databases",
+          "title": "Views, Properties, Filter, Relations, Formeln und Rollups fehlen",
+          "detail": "Auswirkung: Wesentlicher Notion-Funktionsumfang fehlt\n\nUrsache: Kein Datenbank-View-/Property-Engine",
+          "impact": "Wesentlicher Notion-Funktionsumfang fehlt",
+          "rootCause": "Kein Datenbank-View-/Property-Engine",
+          "ref": "Keine Pages-Implementierung; pages_databases_concept.md nur Spec",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "XL",
+          "dependencies": [
+            "PAGE-010"
+          ],
+          "owner": "Pages Fullstack",
+          "suggestions": [
+            {
+              "id": "PAGE-011-F1",
+              "title": "Empfohlener Fix",
+              "note": "Phasen: typed properties → table/list → filter/sort → board/calendar → formulas",
+              "acceptanceCriteria": "Jede Phase mit API-Schema, Migration und UI-E2E",
+              "effort": "XL",
+              "dependencies": "PAGE-010"
+            }
+          ]
+        },
+        {
+          "id": "PAGE-012",
+          "severity": "P1",
+          "category": "Pages Reliability",
+          "title": "Debounced Textupdate kann beim Unmount verloren gehen",
+          "detail": "Auswirkung: Schnelles Navigieren kann letzte 800ms Text verlieren\n\nUrsache: Pending Update wird beim Cleanup verworfen",
+          "impact": "Schnelles Navigieren kann letzte 800ms Text verlieren",
+          "rootCause": "Pending Update wird beim Cleanup verworfen",
+          "ref": "page.tsx:225-253 cleanup clearTimeout ohne flush",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Pages Frontend",
+          "suggestions": [
+            {
+              "id": "PAGE-012-F1",
+              "title": "Empfohlener Fix",
+              "note": "Flush on blur/unmount + Save-State/Retry",
+              "acceptanceCriteria": "Navigation <800ms erhält letzten Text nach Reload",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PAGE-013",
+          "severity": "P0",
+          "category": "Pages Security",
+          "title": "Block-Operationen validieren Blockzugehörigkeit zur Seite nicht",
+          "detail": "Auswirkung: IDOR: eigener pageId plus fremde blockId kann Update/Delete/Reorder/Versionzugriff auslösen\n\nUrsache: Nur Page-Owner wird geprüft; Block wird global per ID geladen/geändert",
+          "impact": "IDOR: eigener pageId plus fremde blockId kann Update/Delete/Reorder/Versionzugriff auslösen",
+          "rootCause": "Nur Page-Owner wird geprüft; Block wird global per ID geladen/geändert",
+          "ref": "pages.service.ts:186-225,228-258",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Pages Backend/Security",
+          "suggestions": [
+            {
+              "id": "PAGE-013-F1",
+              "title": "Empfohlener Fix",
+              "note": "Repositorymethoden nach blockId+pageId+ownerId scopen",
+              "acceptanceCriteria": "Cross-owner/page Tests ergeben 404; legitime Operationen grün",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PAGE-014",
+          "severity": "P1",
+          "category": "Pages Data Integrity",
+          "title": "Reorder ist nicht atomar und akzeptiert beliebige Block-IDs",
+          "detail": "Auswirkung: Teilweise Sortierung/Race und fremde Blocks möglich\n\nUrsache: Einzelupdates ohne Transaktion/Membership-Check",
+          "impact": "Teilweise Sortierung/Race und fremde Blocks möglich",
+          "rootCause": "Einzelupdates ohne Transaktion/Membership-Check",
+          "ref": "pages.service.ts:220-225 Schleife ohne Transaction",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "PAGE-013"
+          ],
+          "owner": "Pages Backend",
+          "suggestions": [
+            {
+              "id": "PAGE-014-F1",
+              "title": "Empfohlener Fix",
+              "note": "Transaction + unique positions + page-scoped IDs",
+              "acceptanceCriteria": "Concurrent reorder bleibt konsistent; Rollback bei Fehler",
+              "effort": "M",
+              "dependencies": "PAGE-013"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "browser",
+      "tab": "BrowserBlock",
+      "vorbild": "Persistenter, isolierter Remote-Browser",
+      "score": "2,5 / 10",
+      "general": "Session/API/UI existieren; Cold Start, WebRTC, SSRF, Sandbox und Kapazitätsgrenzen sind kritisch.",
+      "images": [
+        {
+          "id": "browser-start",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-active__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-active__1440x1000__dark.png",
+          "cap": "Browser · Cold Start",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-active__1440x1000__dark.png"
+        },
+        {
+          "id": "browser-black",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-after-remount__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-after-remount__1440x1000__dark.png",
+          "cap": "Browser · schwarzer Reconnect-Viewport",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-after-remount__1440x1000__dark.png"
+        },
+        {
+          "id": "browser-before",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-before__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-before__1440x1000__dark.png",
+          "cap": "Browser · Research-Workspace davor",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-before__1440x1000__dark.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-BROWSER-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Browser bis zu Egress-Policy, Sandbox, Retry-State-Machine und Quotas als experimentell kennzeichnen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich BrowserBlock sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "BROW-001",
+          "severity": "P0",
+          "category": "Browser Reliability",
+          "title": "Browser Cold Start bleibt nach erstem Fehler im Endlos-Spinner",
+          "detail": "Auswirkung: Kernfunktion wirkt vollständig tot trotz gesundem Renderer\n\nUrsache: startStream onError setzt nur status; Effect hängt nur an sessionId",
+          "impact": "Kernfunktion wirkt vollständig tot trotz gesundem Renderer",
+          "rootCause": "startStream onError setzt nur status; Effect hängt nur an sessionId",
+          "ref": "Live „Browser nicht erreichbar“; API später 201; Remount nötig; BrowserBlock:145-154",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "browser-start"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Browser Fullstack",
+          "suggestions": [
+            {
+              "id": "BROW-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Bounded Retry/Backoff + manueller Retry + Startzustandsmaschine",
+              "acceptanceCriteria": "Container-Coldstart heilt ohne Tabwechsel in Zielzeit",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "BROW-002",
+          "severity": "P0",
+          "category": "Browser WebRTC",
+          "title": "Live Browser zeigt schwarzen Viewport und Reconnect-Schleife",
+          "detail": "Auswirkung: Browser ist nicht benutzbar\n\nUrsache: Reconnect reused MediaStream und räumt ended tracks nicht; Handshake instabil",
+          "impact": "Browser ist nicht benutzbar",
+          "rootCause": "Reconnect reused MediaStream und räumt ended tracks nicht; Handshake instabil",
+          "ref": "browser-after-remount screenshot; 4 ended video tracks, status reconnecting",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "browser-black"
+          ],
+          "effort": "L",
+          "dependencies": [
+            "BROW-001"
+          ],
+          "owner": "Browser/WebRTC",
+          "suggestions": [
+            {
+              "id": "BROW-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Tracks/srcObject pro Reconnect sauber ersetzen; E2E-Diagnostik",
+              "acceptanceCriteria": "10-min Stream stabil, currentTime steigt, keine ended-track-Akkumulation",
+              "effort": "L",
+              "dependencies": "BROW-001"
+            }
+          ]
+        },
+        {
+          "id": "BROW-003",
+          "severity": "P1",
+          "category": "Browser Auth",
+          "title": "Stream-Ticket gilt 24h und WebSocket prüft keinen Origin",
+          "detail": "Auswirkung: Leakbares Queryticket kann lange von fremdem Origin wiederverwendet werden\n\nUrsache: Lange HMAC-TTL, keine Origin-/Single-use-Bindung",
+          "impact": "Leakbares Queryticket kann lange von fremdem Origin wiederverwendet werden",
+          "rootCause": "Lange HMAC-TTL, keine Origin-/Single-use-Bindung",
+          "ref": "browser-renderer.service.ts:79; server.js:845-855",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Browser/Security",
+          "suggestions": [
+            {
+              "id": "BROW-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "5-Min Single-use Ticket, Origin-Allowlist, Rotation",
+              "acceptanceCriteria": "Replay/foreign-origin Tests werden abgelehnt",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "BROW-004",
+          "severity": "P0",
+          "category": "Browser SSRF",
+          "title": "Redirect-, DNS-Rebinding- und Subresource-SSRF bleiben offen",
+          "detail": "Auswirkung: Bösartige Seite kann Docker-/LAN-Ziele ansteuern\n\nUrsache: Keine Request-Interception oder egress policy",
+          "impact": "Bösartige Seite kann Docker-/LAN-Ziele ansteuern",
+          "rootCause": "Keine Request-Interception oder egress policy",
+          "ref": "server.js:92-108 prüft nur initial URL; page.goto folgt danach frei",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "browser-black"
+          ],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Browser/Security",
+          "suggestions": [
+            {
+              "id": "BROW-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Renderer-Egress-Proxy/Firewall + jede Request-IP prüfen",
+              "acceptanceCriteria": "Redirect/Subresource/DNS-rebind private Ziele geblockt",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "BROW-005",
+          "severity": "P0",
+          "category": "Browser Sandbox",
+          "title": "Chromium läuft weiterhin mit --no-sandbox",
+          "detail": "Auswirkung: Browser-Exploit erhält direkten Containerprozess; hohes Escape-Risiko\n\nUrsache: Sandbox explizit deaktiviert",
+          "impact": "Browser-Exploit erhält direkten Containerprozess; hohes Escape-Risiko",
+          "rootCause": "Sandbox explizit deaktiviert",
+          "ref": "server.js:285-303",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "browser-black"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Browser/DevOps",
+          "suggestions": [
+            {
+              "id": "BROW-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "Chromium-Sandbox unter non-root korrekt aktivieren",
+              "acceptanceCriteria": "Start ohne --no-sandbox; Security smoke test; cap_drop all",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "BROW-006",
+          "severity": "P0",
+          "category": "Browser Capacity",
+          "title": "Unbegrenzte Sessions starten je einen Chromium",
+          "detail": "Auswirkung: Ein Nutzer kann NAS-RAM/CPU erschöpfen\n\nUrsache: Keine globale/per-user Quota, Queue oder Containerlimit",
+          "impact": "Ein Nutzer kann NAS-RAM/CPU erschöpfen",
+          "rootCause": "Keine globale/per-user Quota, Queue oder Containerlimit",
+          "ref": "server.js BrowserSessionManager 730-765; keine Limits",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Browser/Performance",
+          "suggestions": [
+            {
+              "id": "BROW-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Sessionpool, Quotas, Queue, TTL und Memory/CPU-Limits",
+              "acceptanceCriteria": "1/2/5/über-Limit Lasttest; kontrollierte 429",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "BROW-007",
+          "severity": "P1",
+          "category": "Browser Legacy",
+          "title": "Legacy-Proxy-Vertrag und POST sind weiterhin kaputt",
+          "detail": "Auswirkung: Gespeicherte Legacy-Blöcke rendern JSON/GET statt Seite/Form\n\nUrsache: Widersprüchliche alte Proxyarchitektur",
+          "impact": "Gespeicherte Legacy-Blöcke rendern JSON/GET statt Seite/Form",
+          "rootCause": "Widersprüchliche alte Proxyarchitektur",
+          "ref": "Renderer /content => {html}; Controller behandelt response.text als HTML; method/postData ignoriert",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Browser Fullstack",
+          "suggestions": [
+            {
+              "id": "BROW-007-F1",
+              "title": "Empfohlener Fix",
+              "note": "Legacy entfernen/migrieren oder Vertrag vollständig testen",
+              "acceptanceCriteria": "Migration abgeschlossen; kein /proxy oder E2E GET+POST grün",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "BROW-008",
+          "severity": "P1",
+          "category": "Browser Isolation",
+          "title": "Legacy-Renderer teilt Session „legacy“ zwischen Nutzern",
+          "detail": "Auswirkung: Cookies/History können Cross-user leaken\n\nUrsache: Konstanter Profil-/Sessionname",
+          "impact": "Cookies/History können Cross-user leaken",
+          "rootCause": "Konstanter Profil-/Sessionname",
+          "ref": "server.js:783-787,833",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "BROW-007"
+          ],
+          "owner": "Browser/Security",
+          "suggestions": [
+            {
+              "id": "BROW-008-F1",
+              "title": "Empfohlener Fix",
+              "note": "Legacy entfernen oder pro Owner/Request isolieren",
+              "acceptanceCriteria": "Zwei Nutzer teilen keinerlei Storage/Cookies",
+              "effort": "M",
+              "dependencies": "BROW-007"
+            }
+          ]
+        },
+        {
+          "id": "BROW-009",
+          "severity": "P1",
+          "category": "Browser Deployment",
+          "title": "Renderer-Port 3111 ist in Dev und Prod extern exponiert",
+          "detail": "Auswirkung: Traefik/Auth/Rate-Limit werden umgangen; Angriffsfläche steigt\n\nUrsache: Browser WS wird direkt statt über kontrollierten Reverse Proxy genutzt",
+          "impact": "Traefik/Auth/Rate-Limit werden umgangen; Angriffsfläche steigt",
+          "rootCause": "Browser WS wird direkt statt über kontrollierten Reverse Proxy genutzt",
+          "ref": "Compose ports; live /health 200",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "DOCKER-006"
+          ],
+          "owner": "DevOps/Security",
+          "suggestions": [
+            {
+              "id": "BROW-009-F1",
+              "title": "Empfohlener Fix",
+              "note": "Interne-only Service-Netze; WS via Origin-geschützten Proxy",
+              "acceptanceCriteria": "Hostport geschlossen; Browser funktioniert via HTTPS/WSS",
+              "effort": "M",
+              "dependencies": "DOCKER-006"
+            }
+          ]
+        },
+        {
+          "id": "BROW-010",
+          "severity": "P1",
+          "category": "Browser Persistence",
+          "title": "Tab-Synchronisierung verschluckt alle API-Fehler",
+          "detail": "Auswirkung: Tabs können nach Reload fehlen/duplizieren ohne Hinweis\n\nUrsache: Renderer und DB sind konkurrierende Sources of Truth",
+          "impact": "Tabs können nach Reload fehlen/duplizieren ohne Hinweis",
+          "rootCause": "Renderer und DB sind konkurrierende Sources of Truth",
+          "ref": "BrowserBlock.tsx:205-235 .catch(()=>undefined)",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Browser Fullstack",
+          "suggestions": [
+            {
+              "id": "BROW-010-F1",
+              "title": "Empfohlener Fix",
+              "note": "Server-authoritative Mapping und sichtbarer Sync-State",
+              "acceptanceCriteria": "Fehler wird angezeigt/retrybar; keine Duplikate",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "BROW-011",
+          "severity": "P1",
+          "category": "Browser Performance",
+          "title": "Screenshot→Sharp→JS-I420 ist CPU-intensiver Video-Pfad",
+          "detail": "Auswirkung: Mehrere Sessions skalieren schlecht auf NAS\n\nUrsache: Jeder Frame wird voll dekodiert und per JS Pixel für Pixel konvertiert",
+          "impact": "Mehrere Sessions skalieren schlecht auf NAS",
+          "rootCause": "Jeder Frame wird voll dekodiert und per JS Pixel für Pixel konvertiert",
+          "ref": "server.js:180-203, captureFrame, 15 FPS",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "XL",
+          "dependencies": [
+            "BROW-006"
+          ],
+          "owner": "Browser/Performance",
+          "suggestions": [
+            {
+              "id": "BROW-011-F1",
+              "title": "Empfohlener Fix",
+              "note": "CDP screencast/native encoder evaluieren; FPS/Quality adaptiv messen",
+              "acceptanceCriteria": "CPU je aktiver Session unter definiertem Ziel",
+              "effort": "XL",
+              "dependencies": "BROW-006"
+            }
+          ]
+        },
+        {
+          "id": "BROW-012",
+          "severity": "P1",
+          "category": "Browser Testing",
+          "title": "Browser besitzt keine UI/WebRTC/Cold-start-E2E-Suite",
+          "detail": "Auswirkung: Kritische Selbstheilungsinvarianten regressieren unbemerkt\n\nUrsache: Tests decken nur Token/URL-Policy",
+          "impact": "Kritische Selbstheilungsinvarianten regressieren unbemerkt",
+          "rootCause": "Tests decken nur Token/URL-Policy",
+          "ref": "Nur 2 Auth-Tests + URL policy; Live Regression",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "QA/Browser",
+          "suggestions": [
+            {
+              "id": "BROW-012-F1",
+              "title": "Empfohlener Fix",
+              "note": "Containerisierte E2E-Matrix für Stream/Input/Reconnect/Isolation",
+              "acceptanceCriteria": "CI reproduziert Coldstart, Black frame, tab CRUD, SSRF",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jellyfin-music",
+      "tab": "Jellyfin · Musik",
+      "vorbild": "Spotify",
+      "score": "5,2 / 10",
+      "general": "Desktop-Routen, echte Wiedergabe sowie Now Playing/Lyrics/Queue funktionieren; Mobile, Artwork, Kontrast und Artist-ID-Vertrag sind kritisch.",
+      "images": [
+        {
+          "id": "jellyfin-music-mobile-album-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-album-detail__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-album-detail__375x812.png",
+          "cap": "mobile · album · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-album-detail__375x812.png"
+        },
+        {
+          "id": "jellyfin-music-mobile-music-home",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-music-home__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-music-home__375x812.png",
+          "cap": "mobile · music · home",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-music-home__375x812.png"
+        },
+        {
+          "id": "jellyfin-music-mobile-music-library",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-music-library__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-music-library__375x812.png",
+          "cap": "mobile · music · library",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-music-library__375x812.png"
+        },
+        {
+          "id": "jellyfin-music-mobile-nowplaying",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-nowplaying__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-nowplaying__375x812.png",
+          "cap": "mobile · nowplaying",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-nowplaying__375x812.png"
+        },
+        {
+          "id": "jellyfin-music-music-after-play",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-play__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-play__1440x1000.png",
+          "cap": "music · after · play",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-play__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-after-real-double-click",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-real-double-click__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-real-double-click__1440x1000.png",
+          "cap": "music · after · real · double · click",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-real-double-click__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-after-trusted-double-click",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-trusted-double-click__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-trusted-double-click__1440x1000.png",
+          "cap": "music · after · trusted · double · click",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-trusted-double-click__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-after-trusted-play",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-trusted-play__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-trusted-play__1440x1000.png",
+          "cap": "music · after · trusted · play",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-after-trusted-play__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-album-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-album-detail__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-album-detail__1440x1000.png",
+          "cap": "music · album · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-album-detail__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-albums",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-albums__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-albums__1440x1000.png",
+          "cap": "music · albums",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-albums__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-artist-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-artist-detail__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-artist-detail__1440x1000.png",
+          "cap": "music · artist · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-artist-detail__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-artists",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-artists__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-artists__1440x1000.png",
+          "cap": "music · artists",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-artists__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-favorites-alben",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-alben__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-alben__1440x1000.png",
+          "cap": "music · favorites · alben",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-alben__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-favorites-k-nstler",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-k_nstler__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-k_nstler__1440x1000.png",
+          "cap": "music · favorites · k · nstler",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-k_nstler__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-favorites-songs",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-songs__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-songs__1440x1000.png",
+          "cap": "music · favorites · songs",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-favorites-songs__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-genre-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-genre-detail__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-genre-detail__1440x1000.png",
+          "cap": "music · genre · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-genre-detail__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-genres",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-genres__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-genres__1440x1000.png",
+          "cap": "music · genres",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-genres__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-home",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-home__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-home__1440x1000.png",
+          "cap": "music · home",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-home__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-library-alben",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-alben__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-alben__1440x1000.png",
+          "cap": "music · library · alben",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-alben__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-library-favoriten",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-favoriten__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-favoriten__1440x1000.png",
+          "cap": "music · library · favoriten",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-favoriten__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-library-genres",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-genres__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-genres__1440x1000.png",
+          "cap": "music · library · genres",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-genres__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-library-k-nstler",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-k_nstler__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-k_nstler__1440x1000.png",
+          "cap": "music · library · k · nstler",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-k_nstler__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-library-songs",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-songs__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-songs__1440x1000.png",
+          "cap": "music · library · songs",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-library-songs__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-nowplaying-lyrics",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-lyrics__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-lyrics__1440x1000.png",
+          "cap": "music · nowplaying · lyrics",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-lyrics__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-nowplaying-now-playing",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-now-playing__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-now-playing__1440x1000.png",
+          "cap": "music · nowplaying · now · playing",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-now-playing__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-nowplaying-panel",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-panel__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-panel__1440x1000.png",
+          "cap": "music · nowplaying · panel",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-panel__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-nowplaying-queue",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-queue__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-queue__1440x1000.png",
+          "cap": "music · nowplaying · queue",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-nowplaying-queue__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-playlist-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-playlist-detail__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-playlist-detail__1440x1000.png",
+          "cap": "music · playlist · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-playlist-detail__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-playlists",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-playlists__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-playlists__1440x1000.png",
+          "cap": "music · playlists",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-playlists__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-recent",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-recent__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-recent__1440x1000.png",
+          "cap": "music · recent",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-recent__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-search-results-albums",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-albums__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-albums__1440x1000.png",
+          "cap": "music · search · results · albums",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-albums__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-search-results-all-return",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-all-return__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-all-return__1440x1000.png",
+          "cap": "music · search · results · all · return",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-all-return__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-search-results-all",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-all__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-all__1440x1000.png",
+          "cap": "music · search · results · all",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-all__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-search-results-artists",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-artists__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-artists__1440x1000.png",
+          "cap": "music · search · results · artists",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-artists__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-search-results-music",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-music__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-music__1440x1000.png",
+          "cap": "music · search · results · music",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search-results-music__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-search",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search__1440x1000.png",
+          "cap": "music · search",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-search__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-sidebar-alben",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-alben__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-alben__1440x1000.png",
+          "cap": "music · sidebar · alben",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-alben__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-sidebar-k-nstler",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-k_nstler__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-k_nstler__1440x1000.png",
+          "cap": "music · sidebar · k · nstler",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-k_nstler__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-sidebar-playlists",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-playlists__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-playlists__1440x1000.png",
+          "cap": "music · sidebar · playlists",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-sidebar-playlists__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-music-music-tracks",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-tracks__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-tracks__1440x1000.png",
+          "cap": "music · tracks",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/music-tracks__1440x1000.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-JELLYFIN-MUSIC-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Route-, Tab-, Player-, Queue- und Detailzustände mit echten IDs als Regression-Suite sichern.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Jellyfin · Musik sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "JELM-001",
+          "severity": "P1",
+          "category": "Jellyfin Music / Responsive",
+          "title": "Musik-Shell ist auf 375 px praktisch unbenutzbar",
+          "detail": "Auswirkung: Die permanente 240-px-Musik-Sidebar lässt nur etwa 135 px für Inhalt; Tabellen, Cards und Playerbar werden abgeschnitten und überlagert\n\nUrsache: Desktop-Mehrspalten-Shell wird ohne mobile Drawer-/Bottom-Nav-Variante auf schmale Viewports übertragen",
+          "impact": "Die permanente 240-px-Musik-Sidebar lässt nur etwa 135 px für Inhalt; Tabellen, Cards und Playerbar werden abgeschnitten und überlagert",
+          "rootCause": "Desktop-Mehrspalten-Shell wird ohne mobile Drawer-/Bottom-Nav-Variante auf schmale Viewports übertragen",
+          "ref": "screenshots/jellyfin-deep/mobile-music-home__375x812.png; mobile-music-library__375x812.png; MusicSidebar.tsx:67-70",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-music-mobile-music-home",
+            "jellyfin-music-mobile-music-library"
+          ],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Frontend/Music",
+          "suggestions": [
+            {
+              "id": "JELM-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Unter 768 px Musik-Sidebar als Drawer/Sheet und Player als mobile Bottom-Bar rendern; Tabellen in mobile Listen überführen",
+              "acceptanceCriteria": "Bei 375x812 sind Home, Library, Search, Detail, Now Playing und Queue ohne horizontales Scrollen/Überlappung vollständig bedienbar",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "JELM-002",
+          "severity": "P1",
+          "category": "Jellyfin Music / Images",
+          "title": "Deep-Audit erzeugt 463 HTTP-404-Bildanfragen",
+          "detail": "Auswirkung: Künstler-, Genre-, Track- und Playlist-Ansichten erzeugen Netzwerkrauschen; zahlreiche Cover werden nur über Fallbacks gerettet\n\nUrsache: Cover-URLs werden auch ohne gültiges ImageTag erzeugt; Genre-Namen werden wie Item-IDs an den Image-Proxy gesendet",
+          "impact": "Künstler-, Genre-, Track- und Playlist-Ansichten erzeugen Netzwerkrauschen; zahlreiche Cover werden nur über Fallbacks gerettet",
+          "rootCause": "Cover-URLs werden auch ohne gültiges ImageTag erzeugt; Genre-Namen werden wie Item-IDs an den Image-Proxy gesendet",
+          "ref": "jellyfin-deep-atlas.json: 463 captured 404 responses; music-library-genres; music-artist-detail",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-music-music-library-genres",
+            "jellyfin-music-music-artist-detail"
+          ],
+          "effort": "M",
+          "dependencies": [
+            "JELV-002"
+          ],
+          "owner": "Frontend+Backend/Media",
+          "suggestions": [
+            {
+              "id": "JELM-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "ImageTags vor URL-Erzeugung prüfen, Genres bewusst farblich rendern, 404 negativ cachen und Default-Server-ID vermeiden",
+              "acceptanceCriteria": "Kompletter 60-State Jellyfin-Atlas erzeugt 0 vermeidbare Bild-404s; fehlendes Artwork zeigt sofort einen stabilen Placeholder",
+              "effort": "M",
+              "dependencies": "JELV-002"
+            }
+          ]
+        },
+        {
+          "id": "JELM-003",
+          "severity": "P1",
+          "category": "Jellyfin Music / Accessibility",
+          "title": "Cover-abgeleiteter Now-Playing-Hintergrund bricht den Textkontrast",
+          "detail": "Auswirkung: Weiße Primärtexte erreichen auf der hellrosa Fläche nur ca. 2.53:1, graue Metadaten ca. 1.01:1\n\nUrsache: Dynamische Coverfarbe wird ohne Luminanz-/Kontrastgrenze als Panelhintergrund verwendet, Texttokens bleiben dark-mode-hell",
+          "impact": "Weiße Primärtexte erreichen auf der hellrosa Fläche nur ca. 2.53:1, graue Metadaten ca. 1.01:1",
+          "rootCause": "Dynamische Coverfarbe wird ohne Luminanz-/Kontrastgrenze als Panelhintergrund verwendet, Texttokens bleiben dark-mode-hell",
+          "ref": "music-nowplaying-now-playing__1440x1000.png; Pixelmessung Hintergrund Ø RGB 171/160/164",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-music-music-nowplaying-now-playing"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/Music+A11y",
+          "suggestions": [
+            {
+              "id": "JELM-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Hintergrundfarbe luminanzbegrenzt abdunkeln oder kontrastadaptiven Vordergrund berechnen; beide Wege automatisiert prüfen",
+              "acceptanceCriteria": "Alle dynamischen Coverfarben erreichen >=4.5:1 für Normaltext und >=3:1 für große Texte/UI in Light/Dark",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "JELM-004",
+          "severity": "P1",
+          "category": "Jellyfin Music / Data Contract",
+          "title": "Track-Mapper speichert Künstlername statt Jellyfin-Künstler-ID",
+          "detail": "Auswirkung: Kontextmenü und Player können /jellyfin/music/artist/Queen statt einer echten Item-ID öffnen; Detailqueries liefern falsche/leere Daten\n\nUrsache: JellyfinApiItem modelliert ArtistItems nicht und setzt artistId aus item.Artists[0] (Anzeigename)",
+          "impact": "Kontextmenü und Player können /jellyfin/music/artist/Queen statt einer echten Item-ID öffnen; Detailqueries liefern falsche/leere Daten",
+          "rootCause": "JellyfinApiItem modelliert ArtistItems nicht und setzt artistId aus item.Artists[0] (Anzeigename)",
+          "ref": "apps/frontend/src/lib/music-api.ts:13-31,162-174; API liefert ArtistItems[].Id; SongRow.tsx:100-104",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-music-music-artist-detail"
+          ],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Frontend/Music",
+          "suggestions": [
+            {
+              "id": "JELM-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "ArtistItems typisieren und artistId aus ArtistItems[0].Id übernehmen; Mehrfachkünstler als ID/Name-Paare erhalten",
+              "acceptanceCriteria": "Kontextaktion jedes getesteten Tracks öffnet die UUID-basierte reale Künstlerseite; Contract-Test deckt Mehrfachkünstler ab",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "JELM-005",
+          "severity": "P2",
+          "category": "Jellyfin Music / UX",
+          "title": "Globale Playerbar zeigt vor Wiedergabe einen vollwertigen Nullzustand",
+          "detail": "Auswirkung: Auf jeder Musikseite steht dauerhaft „Kein Titel“ mit 0:00/0:00 und zahlreichen wirkungslosen Controls\n\nUrsache: Desktop-Player wird unabhängig von currentTrack vollständig gerendert",
+          "impact": "Auf jeder Musikseite steht dauerhaft „Kein Titel“ mit 0:00/0:00 und zahlreichen wirkungslosen Controls",
+          "rootCause": "Desktop-Player wird unabhängig von currentTrack vollständig gerendert",
+          "ref": "music-home__1440x1000.png; music-library-songs__1440x1000.png",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-music-music-home"
+          ],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Frontend/Music",
+          "suggestions": [
+            {
+              "id": "JELM-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "Vor erster Wiedergabe kompakte, klar deaktivierte Playerleiste oder erklärenden Empty State zeigen; Controls disabled/hidden",
+              "acceptanceCriteria": "Ohne Track sind keine scheinbar aktiven Playback-/Queue-/Lyrics-Aktionen vorhanden; nach Auswahl erscheint die vollständige Bar",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "JELM-006",
+          "severity": "P2",
+          "category": "Jellyfin Music / Queue",
+          "title": "Queue-Reorder ist technisch vorhanden, aber visuell nicht erkennbar",
+          "detail": "Auswirkung: Nutzer erkennen nicht, dass die 99 nächsten Tracks verschiebbar sind; kein Grip/Drag-Hinweis ist sichtbar\n\nUrsache: useSortable hängt an der ganzen Zeile, ohne sichtbaren oder fokussierbaren Drag-Handle",
+          "impact": "Nutzer erkennen nicht, dass die 99 nächsten Tracks verschiebbar sind; kein Grip/Drag-Hinweis ist sichtbar",
+          "rootCause": "useSortable hängt an der ganzen Zeile, ohne sichtbaren oder fokussierbaren Drag-Handle",
+          "ref": "music-nowplaying-queue__1440x1000.png; NowPlayingView.tsx:617-634",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-music-music-nowplaying-queue"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/Music+A11y",
+          "suggestions": [
+            {
+              "id": "JELM-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Grip-Handle pro verschiebbarem Track ergänzen, DnD-Keyboardbedienung und klare Drop-Vorschau implementieren",
+              "acceptanceCriteria": "Reorder ist mit Maus, Touch und Tastatur auffindbar; Reihenfolge bleibt im Store erhalten; Screenreader kündigt Position an",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "JELM-007",
+          "severity": "P2",
+          "category": "Jellyfin Music / Data Hygiene",
+          "title": "Songlisten enthalten nicht abspielbare Metadatenzeilen mit 0:00",
+          "detail": "Auswirkung: Mehrere Einträge heißen nur „1975“, Künstler „Unbekannt“, Dauer 0:00 und blähen Queue/99+-Anzeige auf\n\nUrsache: Songs-Endpunkt/Frontend filtert nicht strikt auf abspielbare Audioitems mit gültiger Laufzeit/Streamquelle",
+          "impact": "Mehrere Einträge heißen nur „1975“, Künstler „Unbekannt“, Dauer 0:00 und blähen Queue/99+-Anzeige auf",
+          "rootCause": "Songs-Endpunkt/Frontend filtert nicht strikt auf abspielbare Audioitems mit gültiger Laufzeit/Streamquelle",
+          "ref": "music-tracks__1440x1000.png; music-nowplaying-queue__1440x1000.png",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-music-music-tracks",
+            "jellyfin-music-music-nowplaying-queue"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Backend+Frontend/Music",
+          "suggestions": [
+            {
+              "id": "JELM-007-F1",
+              "title": "Empfohlener Fix",
+              "note": "API-Antwort normalisieren und nicht abspielbare/0-Tick-Items aus Tracklisten und Queue ausschließen; Diagnosezahl separat ausgeben",
+              "acceptanceCriteria": "Alle gerenderten Queue-/Trackitems besitzen Audio-Type, stabile ID, Titel, positive Dauer und ladbaren Stream",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jellyfin-video",
+      "tab": "Jellyfin · Filme & Serien",
+      "vorbild": "Netflix",
+      "score": "4,1 / 10",
+      "general": "Home, Grid, Suche, Watchlists und reale Film-/Seriendetails sind umfangreich und visuell stark; der reale Filmplayer ist blockiert.",
+      "images": [
+        {
+          "id": "jellyfin-video-mobile-movie-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-movie-detail__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-movie-detail__375x812.png",
+          "cap": "mobile · movie · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-movie-detail__375x812.png"
+        },
+        {
+          "id": "jellyfin-video-mobile-player",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-player__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-player__375x812.png",
+          "cap": "mobile · player",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-player__375x812.png"
+        },
+        {
+          "id": "jellyfin-video-mobile-series-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-series-detail__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-series-detail__375x812.png",
+          "cap": "mobile · series · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-series-detail__375x812.png"
+        },
+        {
+          "id": "jellyfin-video-mobile-video-home",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-video-home__375x812.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-video-home__375x812.png",
+          "cap": "mobile · video · home",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/mobile-video-home__375x812.png"
+        },
+        {
+          "id": "jellyfin-video-video-browse",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-browse__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-browse__1440x1000.png",
+          "cap": "video · browse",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-browse__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-collections",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-collections__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-collections__1440x1000.png",
+          "cap": "video · collections",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-collections__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-favorites",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-favorites__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-favorites__1440x1000.png",
+          "cap": "video · favorites",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-favorites__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-grid-all-return",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-all-return__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-all-return__1440x1000.png",
+          "cap": "video · grid · all · return",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-all-return__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-grid-all",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-all__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-all__1440x1000.png",
+          "cap": "video · grid · all",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-all__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-grid-movies",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-movies__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-movies__1440x1000.png",
+          "cap": "video · grid · movies",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-movies__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-grid-series",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-series__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-series__1440x1000.png",
+          "cap": "video · grid · series",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-grid-series__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-home",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-home__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-home__1440x1000.png",
+          "cap": "video · home",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-home__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-movie-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-movie-detail__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-movie-detail__1440x1000.png",
+          "cap": "video · movie · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-movie-detail__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-movies",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-movies__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-movies__1440x1000.png",
+          "cap": "video · movies",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-movies__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-photos",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-photos__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-photos__1440x1000.png",
+          "cap": "video · photos",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-photos__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-player",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-player__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-player__1440x1000.png",
+          "cap": "video · player",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-player__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-search-results",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-search-results__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-search-results__1440x1000.png",
+          "cap": "video · search · results",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-search-results__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-search",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-search__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-search__1440x1000.png",
+          "cap": "video · search",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-search__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-series-detail",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-series-detail__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-series-detail__1440x1000.png",
+          "cap": "video · series · detail",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-series-detail__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-series",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-series__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-series__1440x1000.png",
+          "cap": "video · series",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-series__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-watchlist-robert-1",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-watchlist-robert-1__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-watchlist-robert-1__1440x1000.png",
+          "cap": "video · watchlist · robert · 1",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-watchlist-robert-1__1440x1000.png"
+        },
+        {
+          "id": "jellyfin-video-video-watchlists",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-watchlists__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-watchlists__1440x1000.png",
+          "cap": "video · watchlists",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/jellyfin-deep/video-watchlists__1440x1000.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-JELLYFIN-VIDEO-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Home, Browse, Detail, Staffel, Player, Watchlist und Search mit echten IDs und visuellen Snapshots absichern.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Jellyfin · Filme & Serien sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "JELV-001",
+          "severity": "P0",
+          "category": "Jellyfin Video / Playback",
+          "title": "Realer Filmplayer scheitert auf Desktop und Mobile",
+          "detail": "Auswirkung: Kernfunktion Filme abspielen ist blockiert; Nutzer sehen nur „Wiedergabefehler – Video konnte nicht geladen werden“\n\nUrsache: Stream-/HLS-Proxy liefert einen vom Browser als unzulässige opaque response bewerteten MIME/CORS/CORP-Vertrag",
+          "impact": "Kernfunktion Filme abspielen ist blockiert; Nutzer sehen nur „Wiedergabefehler – Video konnte nicht geladen werden“",
+          "rootCause": "Stream-/HLS-Proxy liefert einen vom Browser als unzulässige opaque response bewerteten MIME/CORS/CORP-Vertrag",
+          "ref": "video-player__1440x1000.png; mobile-player__375x812.png; CDP Network.loadingFailed net::ERR_BLOCKED_BY_ORB",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-video-video-player",
+            "jellyfin-video-mobile-player"
+          ],
+          "effort": "L",
+          "dependencies": [
+            "SEC-004"
+          ],
+          "owner": "Backend+Frontend/Video",
+          "suggestions": [
+            {
+              "id": "JELV-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Stream- und HLS-Responses auf Content-Type, Range, CORS, CORP und Playlist-Rewrite korrigieren; Browser-E2E mit echtem Medium",
+              "acceptanceCriteria": "Ein realer Film spielt Desktop+375px mindestens 60 s; Seek, Audio/Subtitel, Retry und Fortschrittsreporting funktionieren ohne ORB/Consolefehler",
+              "effort": "L",
+              "dependencies": "SEC-004"
+            }
+          ]
+        },
+        {
+          "id": "JELV-002",
+          "severity": "P1",
+          "category": "Jellyfin Video / Server Contract",
+          "title": "Video-Routen hardcoden serverId=\"default\" trotz realem verbundenen Server",
+          "detail": "Auswirkung: Search, Browse, Watch und Collections nutzen nicht den ausgewählten/ownergebundenen Server; Bilder/Streams können falsche Fallbackdaten verwenden\n\nUrsache: Alte Default-Server-Konstante koexistiert mit useJellyfinServer/activeServer",
+          "impact": "Search, Browse, Watch und Collections nutzen nicht den ausgewählten/ownergebundenen Server; Bilder/Streams können falsche Fallbackdaten verwenden",
+          "rootCause": "Alte Default-Server-Konstante koexistiert mit useJellyfinServer/activeServer",
+          "ref": "browse/page.tsx:32; watch/[id]/page.tsx:22; search/page.tsx:21; collections/page.tsx:30",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-video-video-home"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend+Backend/Video",
+          "suggestions": [
+            {
+              "id": "JELV-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Alle Video-Routen über einen zentralen aktiven Server-Context führen; default nur als explizit aufgelöster Alias im Backend",
+              "acceptanceCriteria": "Jede API-/Bild-/Stream-Anfrage nutzt die reale ownergebundene Server-ID; Wechsel/Fehlen des Servers hat getestete States",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "JELV-003",
+          "severity": "P1",
+          "category": "Jellyfin Video / Images",
+          "title": "Videoansichten erzeugen Bild-404s und leere Poster",
+          "detail": "Auswirkung: Serien- und Continue-Watching-Reihen zeigen Placeholder; Server/default-Anfragen schlagen wiederholt fehl\n\nUrsache: Default-ID-Drift und unbedingte Image-URL-Erzeugung ignorieren ImageTags/Artwork-Verfügbarkeit",
+          "impact": "Serien- und Continue-Watching-Reihen zeigen Placeholder; Server/default-Anfragen schlagen wiederholt fehl",
+          "rootCause": "Default-ID-Drift und unbedingte Image-URL-Erzeugung ignorieren ImageTags/Artwork-Verfügbarkeit",
+          "ref": "jellyfin-deep-atlas.json; video-series: 7 Bild-404s; video-home Placeholder sichtbar",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-video-video-series",
+            "jellyfin-video-video-home"
+          ],
+          "effort": "M",
+          "dependencies": [
+            "JELV-002"
+          ],
+          "owner": "Frontend+Backend/Video",
+          "suggestions": [
+            {
+              "id": "JELV-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "JELV-002 umsetzen, ImageTags prüfen und einheitlichen Film/Serie/Episode-Fallback ohne Request verwenden",
+              "acceptanceCriteria": "Home, Browse, Movies, Series, Details und Watchlists erzeugen 0 vermeidbare Poster-404s; Fallbacks sind typisiert",
+              "effort": "M",
+              "dependencies": "JELV-002"
+            }
+          ]
+        },
+        {
+          "id": "JELV-004",
+          "severity": "P2",
+          "category": "Jellyfin Video / Error Recovery",
+          "title": "Playerfehler nennt weder Ursache noch verwertbaren Diagnosekontext",
+          "detail": "Auswirkung: Retry wiederholt denselben Aufruf; Nutzer kann Codec/Netz/Serverproblem nicht unterscheiden oder melden\n\nUrsache: onError reduziert HLS/HTTP/ORB-Ursachen auf generischen String; Correlation-ID/Status fehlen",
+          "impact": "Retry wiederholt denselben Aufruf; Nutzer kann Codec/Netz/Serverproblem nicht unterscheiden oder melden",
+          "rootCause": "onError reduziert HLS/HTTP/ORB-Ursachen auf generischen String; Correlation-ID/Status fehlen",
+          "ref": "watch/[id]/page.tsx:174-196; video-player__1440x1000.png",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "jellyfin-video-video-player"
+          ],
+          "effort": "S",
+          "dependencies": [
+            "JELV-001"
+          ],
+          "owner": "Frontend+Backend/Video",
+          "suggestions": [
+            {
+              "id": "JELV-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Fehlercodes in verständliche deutsche Kategorien mappen, Correlation-ID und Rückweg/Details anbieten, Retry instrumentieren",
+              "acceptanceCriteria": "Fehlerstate zeigt Kategorie, nächste sinnvolle Aktion und kopierbare Diagnose-ID; Retry-Erfolg/Fehlschlag ist telemetriert",
+              "effort": "S",
+              "dependencies": "JELV-001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "tab": "Security",
+      "vorbild": "Zero Trust / Secrets by design",
+      "score": "2,1 / 10",
+      "general": "Mehrere P0-Funde betreffen Zugangsdaten, Vault, Tokens, CORS und Dependencies.",
+      "images": [
+        {
+          "id": "security-browser",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-after-remount__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-after-remount__1440x1000__dark.png",
+          "cap": "Browser-Security-Kontext",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/browser/browser-after-remount__1440x1000__dark.png"
+        },
+        {
+          "id": "security-settings",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/settings__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/settings__1440x1000__dark__default.png",
+          "cap": "System-/Account-Kontext",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/settings__1440x1000__dark__default.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-SECURITY-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Credentials, Throttling, Vault-Kryptografie und Tokenhygiene vor Feature-Polish abschließen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Security sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "SEC-001",
+          "severity": "P0",
+          "category": "Authentication",
+          "title": "Gültige Default-Admin-Zugangsdaten sind vorbefüllt und öffentlich angezeigt",
+          "detail": "Auswirkung: Jeder Netzwerkzugreifer erhält sofort Adminzugang\n\nUrsache: Testdefaults wurden in Produktions-UI und Seed-Zustand belassen",
+          "impact": "Jeder Netzwerkzugreifer erhält sofort Adminzugang",
+          "rootCause": "Testdefaults wurden in Produktions-UI und Seed-Zustand belassen",
+          "ref": "login/page.tsx:16-17,139-140; Live-Login erfolgreich",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Security/Auth",
+          "suggestions": [
+            {
+              "id": "SEC-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Keine Defaults; First-run Setup mit erzwungenem Secretwechsel",
+              "acceptanceCriteria": "Frische Instanz verlangt einmaliges Admin-Setup; UI enthält keine Credentials",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "SEC-002",
+          "severity": "P0",
+          "category": "Authentication",
+          "title": "@Throttle ist wirkungslos, weil ThrottlerGuard nicht registriert ist",
+          "detail": "Auswirkung: Unbegrenztes Brute Force gegen bekannten Adminaccount\n\nUrsache: Modul konfiguriert ohne Guard; Login-Dekorator suggeriert Schutz",
+          "impact": "Unbegrenztes Brute Force gegen bekannten Adminaccount",
+          "rootCause": "Modul konfiguriert ohne Guard; Login-Dekorator suggeriert Schutz",
+          "ref": "AppModule importiert ThrottlerModule, aber kein APP_GUARD/ThrottlerGuard",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [
+            "SEC-001"
+          ],
+          "owner": "Security/Auth",
+          "suggestions": [
+            {
+              "id": "SEC-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Globalen ThrottlerGuard registrieren; account+IP Limits",
+              "acceptanceCriteria": "6. Fehlversuch im Fenster =>429; verteilte/accountbasierte Tests",
+              "effort": "S",
+              "dependencies": "SEC-001"
+            }
+          ]
+        },
+        {
+          "id": "SEC-003",
+          "severity": "P0",
+          "category": "Vault",
+          "title": "Vault-Passwörter und TOTP-Secrets werden im Klartext transportiert/gespeichert/ausgegeben",
+          "detail": "Auswirkung: DB/API/XSS-Kompromiss legt alle Geheimnisse offen\n\nUrsache: Feld heißt encryptedPassword, aber es gibt keinerlei Encryption; Input type=text",
+          "impact": "DB/API/XSS-Kompromiss legt alle Geheimnisse offen",
+          "rootCause": "Feld heißt encryptedPassword, aber es gibt keinerlei Encryption; Input type=text",
+          "ref": "vault form:379-414; service:19-27; repo:41-46; detail:258-273,318-334",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "XL",
+          "dependencies": [],
+          "owner": "Vault/Security",
+          "suggestions": [
+            {
+              "id": "SEC-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Serverseitige Envelope Encryption/KMS; DTO plaintext nur transient; Secrets nie listen",
+              "acceptanceCriteria": "DB enthält nur AEAD-Ciphertext; key rotation; API redaction; Migration",
+              "effort": "XL",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "SEC-004",
+          "severity": "P1",
+          "category": "Token Security",
+          "title": "24h Access-/LocalStorage-Tokens werden zusätzlich in Bild-URLs gelegt",
+          "detail": "Auswirkung: XSS, Logs, Browser-History und Referrer können Vollzugriffstoken leaken\n\nUrsache: Bearer-Token dient zugleich als langlebiges Medien-Querytoken",
+          "impact": "XSS, Logs, Browser-History und Referrer können Vollzugriffstoken leaken",
+          "rootCause": "Bearer-Token dient zugleich als langlebiges Medien-Querytoken",
+          "ref": "jwt.ts:16; auth-store.ts; music-api.ts:127/382",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Security/Auth",
+          "suggestions": [
+            {
+              "id": "SEC-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Kurze Access-TTL, HttpOnly/BFF oder separate signierte Medientickets",
+              "acceptanceCriteria": "Keine JWTs in URLs; CSP/XSS-Test; Tokenrotation",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "SEC-005",
+          "severity": "P1",
+          "category": "CORS",
+          "title": "Live/Dev-Compose erlaubt CORS * mit credentials",
+          "detail": "Auswirkung: Beliebige Origins dürfen Browser-API-Antworten anfragen\n\nUrsache: Entwicklungsdefault wurde in Laufzeitkonfiguration übernommen",
+          "impact": "Beliebige Origins dürfen Browser-API-Antworten anfragen",
+          "rootCause": "Entwicklungsdefault wurde in Laufzeitkonfiguration übernommen",
+          "ref": "main.ts:18-25; docker-compose.yml CORS_ORIGINS=*",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Security/Platform",
+          "suggestions": [
+            {
+              "id": "SEC-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "Exakte Origin-Allowlist pro Umgebung",
+              "acceptanceCriteria": "Fremder Origin scheitert Preflight; LifeHub-Origin grün",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "SEC-006",
+          "severity": "P1",
+          "category": "Secrets",
+          "title": "Dev-Compose enthält feste DB/Redis/Meili-Secrets",
+          "detail": "Auswirkung: Repo-/Image-Leak kompromittiert alle Standardinstanzen\n\nUrsache: Convenience-Credentials sind nicht extern konfiguriert",
+          "impact": "Repo-/Image-Leak kompromittiert alle Standardinstanzen",
+          "rootCause": "Convenience-Credentials sind nicht extern konfiguriert",
+          "ref": "docker-compose.yml environment/commands",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "DevOps/Security",
+          "suggestions": [
+            {
+              "id": "SEC-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Alle Secrets über .env/secret files, Rotation und Beispielwerte",
+              "acceptanceCriteria": "Secret-Scan grün; frische Instanz generiert individuelle Werte",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "SEC-007",
+          "severity": "P1",
+          "category": "Dependencies",
+          "title": "Produktions-Audit meldet 49 Vulnerabilities, 22 hoch",
+          "detail": "Auswirkung: Bekannte Schwachstellen in Next/Nest/body-parser/ws u.a.\n\nUrsache: Abhängigkeiten wurden nicht regelmäßig aktualisiert/gated",
+          "impact": "Bekannte Schwachstellen in Next/Nest/body-parser/ws u.a.",
+          "rootCause": "Abhängigkeiten wurden nicht regelmäßig aktualisiert/gated",
+          "ref": "quality-summary.json; pnpm audit exit 1",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Platform/Security",
+          "suggestions": [
+            {
+              "id": "SEC-007-F1",
+              "title": "Empfohlener Fix",
+              "note": "Patchplan, Overrides nur befristet, Audit-Gate",
+              "acceptanceCriteria": "0 high oder dokumentierte akzeptierte Ausnahme mit Datum",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "SEC-008",
+          "severity": "P0",
+          "category": "Security",
+          "title": "Jellyfin-Service enthält einen hartcodierten Default-API-Key-Fallback",
+          "detail": "Auswirkung: Ein Repository-/Image-Leak oder fehlende Environment-Konfiguration legt den Jellyfin-Zugriff offen; Rotation wird umgangen\n\nUrsache: JELLYFIN_API_KEY fällt auf ein Quellcode-Literal und eine Default-Serverkonfiguration zurück",
+          "impact": "Ein Repository-/Image-Leak oder fehlende Environment-Konfiguration legt den Jellyfin-Zugriff offen; Rotation wird umgangen",
+          "rootCause": "JELLYFIN_API_KEY fällt auf ein Quellcode-Literal und eine Default-Serverkonfiguration zurück",
+          "ref": "domains/jellyfin/src/services/jellyfin.service.ts:13-31 (Wert redigiert)",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Backend/Security",
+          "suggestions": [
+            {
+              "id": "SEC-008-F1",
+              "title": "Empfohlener Fix",
+              "note": "Literal entfernen, kompromittierten Key rotieren und Start/Serververbindung ohne explizites Secret fail-closed machen",
+              "acceptanceCriteria": "Kein Jellyfin-Key-Literal im Repo; alter Key rotiert; Secret-Scan grün; fehlendes Secret führt zu verständlichem Start-/Verbindungsfehler",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "tab": "Performance",
+      "vorbild": "Messbare Budgets",
+      "score": "4,8 / 10",
+      "general": "LAN-Navigation ist schnell, aber Bundle-, Bild-, DOM- und Browser-Renderer-Kosten sind hoch.",
+      "images": [
+        {
+          "id": "perf-music",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/jellyfin__music__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/jellyfin__music__1440x1000__dark__default.png",
+          "cap": "Jellyfin Music · DOM/Bundle",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/jellyfin__music__1440x1000__dark__default.png"
+        },
+        {
+          "id": "perf-recipes",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png",
+          "cap": "Recipes · Bild-/Payload-Kosten",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-PERFORMANCE-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Budgets für Bundle, DOM, Bilder, Queries und Browser-Sessions in CI messen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Performance sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "PERF-001",
+          "severity": "P1",
+          "category": "Frontend Performance",
+          "title": "Build enthält 3.77 MB JS; größter Chunk 513 KB",
+          "detail": "Auswirkung: Schlechter Cold Load auf Mobile/NAS, unnötige Parsekosten\n\nUrsache: Große Libraries/Client Components werden breit gebündelt",
+          "impact": "Schlechter Cold Load auf Mobile/NAS, unnötige Parsekosten",
+          "rootCause": "Große Libraries/Client Components werden breit gebündelt",
+          "ref": "next-build-metrics.json: 110 JS chunks",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Frontend/Performance",
+          "suggestions": [
+            {
+              "id": "PERF-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Bundle-Analyzer, dynamische Imports und RSC-Grenzen",
+              "acceptanceCriteria": "Routebudgets: shared <150KB gzip, kein Chunk >250KB raw",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PERF-002",
+          "severity": "P1",
+          "category": "Frontend Performance",
+          "title": "Recipes lädt bis 1.16 MB encoded, Pages 866 KB",
+          "detail": "Auswirkung: Kernrouten überschreiten sinnvolle Payloadbudgets\n\nUrsache: Viele Bilder/Clientcode, fehlende Optimierung und große Editorabhängigkeiten",
+          "impact": "Kernrouten überschreiten sinnvolle Payloadbudgets",
+          "rootCause": "Viele Bilder/Clientcode, fehlende Optimierung und große Editorabhängigkeiten",
+          "ref": "live-performance-summary.json",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "perf-recipes"
+          ],
+          "effort": "L",
+          "dependencies": [
+            "PERF-001"
+          ],
+          "owner": "Frontend/Performance",
+          "suggestions": [
+            {
+              "id": "PERF-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Bild-/Route-Lazyload, Split Editor/Browser, Cache-Strategie",
+              "acceptanceCriteria": "LCP<2.5s; definierte KB-Budgets pro Route",
+              "effort": "L",
+              "dependencies": "PERF-001"
+            }
+          ]
+        },
+        {
+          "id": "PERF-003",
+          "severity": "P1",
+          "category": "Images",
+          "title": "Lint meldet 38 unoptimierte img-Verwendungen",
+          "detail": "Auswirkung: Bandbreite/LCP und Layoutqualität leiden\n\nUrsache: Direkte img-URLs ohne Optimizer/Fallback/Dimensionvertrag",
+          "impact": "Bandbreite/LCP und Layoutqualität leiden",
+          "rootCause": "Direkte img-URLs ohne Optimizer/Fallback/Dimensionvertrag",
+          "ref": "quality-summary.json; 404/blank recipe images",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [
+            "UI-015"
+          ],
+          "owner": "Frontend/Media",
+          "suggestions": [
+            {
+              "id": "PERF-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Image-Wrapper mit Thumbnail, sizes, lazy/eager policy und Fallback",
+              "acceptanceCriteria": "0 relevante no-img warnings; LCP/bytes gemessen",
+              "effort": "L",
+              "dependencies": "UI-015"
+            }
+          ]
+        },
+        {
+          "id": "PERF-004",
+          "severity": "P2",
+          "category": "DOM/A11y",
+          "title": "Jellyfin-Seiten rendern bis 862 Interactives",
+          "detail": "Auswirkung: Keyboard-/Screenreaderlast und DOM-Kosten steigen\n\nUrsache: Große Listen ohne konsequente Virtualisierung/Progressive Mount",
+          "impact": "Keyboard-/Screenreaderlast und DOM-Kosten steigen",
+          "rootCause": "Große Listen ohne konsequente Virtualisierung/Progressive Mount",
+          "ref": "live-atlas-summary.json",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "perf-music"
+          ],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Jellyfin Frontend",
+          "suggestions": [
+            {
+              "id": "PERF-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Virtualize/limit mounted rows and controls",
+              "acceptanceCriteria": "DOM/interactive Budget pro View; Tastaturnavigation stabil",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "PERF-005",
+          "severity": "P1",
+          "category": "Database",
+          "title": "Pages-Reorder führt N Einzelupdates sequenziell aus",
+          "detail": "Auswirkung: Latenz und Inkonsistenz steigen linear mit Blockzahl\n\nUrsache: Kein Batch/Transaction",
+          "impact": "Latenz und Inkonsistenz steigen linear mit Blockzahl",
+          "rootCause": "Kein Batch/Transaction",
+          "ref": "pages.service.ts:220-225",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "PAGE-014"
+          ],
+          "owner": "Pages Backend",
+          "suggestions": [
+            {
+              "id": "PERF-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "Ein statement/transaction mit Membership-Check",
+              "acceptanceCriteria": "100 Blöcke atomar innerhalb Zielzeit",
+              "effort": "M",
+              "dependencies": "PAGE-014"
+            }
+          ]
+        },
+        {
+          "id": "PERF-006",
+          "severity": "P2",
+          "category": "Database",
+          "title": "Userliste lädt Rollen in N+1-Schleife",
+          "detail": "Auswirkung: Adminliste erzeugt pro User zusätzliche Query\n\nUrsache: findRolesByUserId pro Row",
+          "impact": "Adminliste erzeugt pro User zusätzliche Query",
+          "rootCause": "findRolesByUserId pro Row",
+          "ref": "users.repository.ts:121-146",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Users Backend",
+          "suggestions": [
+            {
+              "id": "PERF-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Join/aggregate oder Batch-IN",
+              "acceptanceCriteria": "Querycount bleibt konstant bei 1/100 Usern",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "tab": "Tests & Wartbarkeit",
+      "vorbild": "Reproduzierbare Testpyramide",
+      "score": "2,8 / 10",
+      "general": "Typechecks/Builds sind grün; Backend-/Workspace-Tests vermitteln noch keine verlässliche Sicherheit.",
+      "images": [
+        {
+          "id": "tests-report",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/code-report-render.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/code-report-render.png",
+          "cap": "Gerenderter Auditbericht",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/code-report-render.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-TESTS-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "No-tests als Fehler behandeln, Package-Resolution reparieren und kritische E2E-Flows ergänzen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Tests & Wartbarkeit sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "FUNC-009",
+          "severity": "P1",
+          "category": "Testing",
+          "title": "Backend-Testscript besteht trotz null Testdateien",
+          "detail": "Auswirkung: CI vermittelt falsche Sicherheit; Security-/CRUD-Regressions unentdeckt\n\nUrsache: Backend-App filtert Domain-Tests aus und toleriert Leerlauf",
+          "impact": "CI vermittelt falsche Sicherheit; Security-/CRUD-Regressions unentdeckt",
+          "rootCause": "Backend-App filtert Domain-Tests aus und toleriert Leerlauf",
+          "ref": "backend test PASS: No test files found; --passWithNoTests; coverage FAIL",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "QA/Backend",
+          "suggestions": [
+            {
+              "id": "FUNC-009-F1",
+              "title": "Empfohlener Fix",
+              "note": "No-tests als Fehler; Domain-Suites zentral aggregieren",
+              "acceptanceCriteria": "Backend test führt reale Tests aus; Coverage-Schwelle enforced",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "MAINT-001",
+          "severity": "P1",
+          "category": "Maintainability",
+          "title": "Media 1.704 LOC und Pages 1.622 LOC sind Änderungshotspots",
+          "detail": "Auswirkung: Hohe Kopplung, schwierige Tests und Merge-Konflikte\n\nUrsache: Route, State, Dialoge, Datenzugriff und Renderer leben in Monolithdateien",
+          "impact": "Hohe Kopplung, schwierige Tests und Merge-Konflikte",
+          "rootCause": "Route, State, Dialoge, Datenzugriff und Renderer leben in Monolithdateien",
+          "ref": "code-metrics.json",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Frontend Architecture",
+          "suggestions": [
+            {
+              "id": "MAINT-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Feature-Slices/Hooks/Presenter schrittweise extrahieren",
+              "acceptanceCriteria": "Kein Route-Component >500 LOC; Verhaltenstests grün",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "MAINT-002",
+          "severity": "P2",
+          "category": "Maintainability",
+          "title": "73.317 LOC haben nur 22 Testdateien",
+          "detail": "Auswirkung: Viele Domains sind nur manuell abgesichert\n\nUrsache: Testpyramide/CI aggregiert Domain-Tests nicht konsequent",
+          "impact": "Viele Domains sind nur manuell abgesichert",
+          "rootCause": "Testpyramide/CI aggregiert Domain-Tests nicht konsequent",
+          "ref": "code-metrics.json; Backend 0 App-Tests",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "XL",
+          "dependencies": [
+            "FUNC-009"
+          ],
+          "owner": "QA/Architecture",
+          "suggestions": [
+            {
+              "id": "MAINT-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Contract-/Service-/Component-/E2E-Mindestmatrix",
+              "acceptanceCriteria": "Coverage je kritischer Domain mit Schwellen",
+              "effort": "XL",
+              "dependencies": "FUNC-009"
+            }
+          ]
+        },
+        {
+          "id": "MAINT-003",
+          "severity": "P2",
+          "category": "Quality",
+          "title": "Lint besteht trotz 76 Warnungen",
+          "detail": "Auswirkung: Bekannte React-/A11y-/Performanceprobleme werden normalisiert\n\nUrsache: CI nutzt Error-only Gate, keine Warning-Baseline",
+          "impact": "Bekannte React-/A11y-/Performanceprobleme werden normalisiert",
+          "rootCause": "CI nutzt Error-only Gate, keine Warning-Baseline",
+          "ref": "quality-summary.json: 38 img, 23 hooks, Alt-Warnungen",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/QA",
+          "suggestions": [
+            {
+              "id": "MAINT-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Warnbudget und baseline-aware no-new-warnings",
+              "acceptanceCriteria": "Neue Warnungen 0; Bestand priorisiert abgebaut",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "MAINT-004",
+          "severity": "P1",
+          "category": "Testing",
+          "title": "Rekursiver Workspace-Test scheitert an @lifehub/auth-Auflösung",
+          "detail": "Auswirkung: API-Controller-Suites laufen in CI nicht; pnpm stoppt beim ersten Domainfehler\n\nUrsache: Workspace-Package main/exports zeigt auf nicht vorhandene dist-Artefakte oder Vitest-Alias fehlt",
+          "impact": "API-Controller-Suites laufen in CI nicht; pnpm stoppt beim ersten Domainfehler",
+          "rootCause": "Workspace-Package main/exports zeigt auf nicht vorhandene dist-Artefakte oder Vitest-Alias fehlt",
+          "ref": "workspace-test.log: Contacts API suite FAIL, Dashboard API suite 0 tests; workspace typecheck PASS",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "DOCKER-002"
+          ],
+          "owner": "QA/Platform",
+          "suggestions": [
+            {
+              "id": "MAINT-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Test-Aliases/source exports zentral konfigurieren; Packages vor Tests reproduzierbar bauen",
+              "acceptanceCriteria": "pnpm -r run test läuft aus Clean Checkout vollständig grün und führt alle Controller-Suites aus",
+              "effort": "M",
+              "dependencies": "DOCKER-002"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "docker",
+      "tab": "Docker & Deployment",
+      "vorbild": "Hermetische, immutable NAS-Releases",
+      "score": "2,4 / 10",
+      "general": "Compose ist syntaktisch valide, Images hängen aber von Host-Artefakten und fehler-toleranten Migrationen ab.",
+      "images": [
+        {
+          "id": "docker-target",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/concepts/theme-directions__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/concepts/theme-directions__1440x1000.png",
+          "cap": "Review-Kontext · Zielarchitektur im Bericht",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/concepts/theme-directions__1440x1000.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-DOCKER-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Hermetische Multi-Stage-Builds, Fail-fast-Migration, non-root und immutable Releases umsetzen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Docker & Deployment sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "DOCKER-001",
+          "severity": "P0",
+          "category": "CI/CD",
+          "title": "Tag-Dockerjob kann Frontend/Backend aus Clean Checkout nicht bauen",
+          "detail": "Auswirkung: Release-Pipeline ist nicht reproduzierbar bzw. scheitert\n\nUrsache: Build-Artefakte aus vorherigem Job werden weder gebaut noch übertragen",
+          "impact": "Release-Pipeline ist nicht reproduzierbar bzw. scheitert",
+          "rootCause": "Build-Artefakte aus vorherigem Job werden weder gebaut noch übertragen",
+          "ref": "CI Dockerjob fresh checkout; tracked .next/dist jeweils 0; Dockerfiles COPY sie",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "DevOps/CI",
+          "suggestions": [
+            {
+              "id": "DOCKER-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Dockerfiles bauen selbst oder CI lädt signierte Artifacts",
+              "acceptanceCriteria": "Tag aus Clean Checkout baut/pusht alle Images und Smoke-Test startet sie",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "DOCKER-002",
+          "severity": "P0",
+          "category": "Docker",
+          "title": "Backend-Dockerfile überspringt alle Builds und übernimmt Host-dist",
+          "detail": "Auswirkung: Stale oder fehlende Binärdateien gelangen ins Image\n\nUrsache: Builder-Stage ist nur Attrappe wegen früherem WSL-Problem",
+          "impact": "Stale oder fehlende Binärdateien gelangen ins Image",
+          "rootCause": "Builder-Stage ist nur Attrappe wegen früherem WSL-Problem",
+          "ref": "backend Dockerfile:60-69; .dockerignore lässt dist absichtlich zu",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [
+            "DOCKER-001"
+          ],
+          "owner": "DevOps/Backend",
+          "suggestions": [
+            {
+              "id": "DOCKER-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Hermetischer Linux-Build mit Ressourcenfix; keine Host-dist-Abhängigkeit",
+              "acceptanceCriteria": "docker build aus git archive erfolgreich; SHA im Binary/Image",
+              "effort": "L",
+              "dependencies": "DOCKER-001"
+            }
+          ]
+        },
+        {
+          "id": "DOCKER-003",
+          "severity": "P0",
+          "category": "Docker",
+          "title": "Frontend-Image verlangt vorgebautes .next; API-Base ist eingefroren",
+          "detail": "Auswirkung: Runtime-Env in Compose ändert Client/Rewrites nicht; stale UI-Deploys\n\nUrsache: Prebuilt-Dockerfile und NEXT_PUBLIC Build-time-Konfiguration",
+          "impact": "Runtime-Env in Compose ändert Client/Rewrites nicht; stale UI-Deploys",
+          "rootCause": "Prebuilt-Dockerfile und NEXT_PUBLIC Build-time-Konfiguration",
+          "ref": "frontend Dockerfile:5-10; routes-manifest destination backend:3007",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "L",
+          "dependencies": [
+            "DOCKER-001"
+          ],
+          "owner": "DevOps/Frontend",
+          "suggestions": [
+            {
+              "id": "DOCKER-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Multi-stage Next build mit explizitem ARG oder same-origin BFF",
+              "acceptanceCriteria": "Image aus Clean Checkout; API-Ziel per dokumentiertem Build/Runtime-Vertrag",
+              "effort": "L",
+              "dependencies": "DOCKER-001"
+            }
+          ]
+        },
+        {
+          "id": "DOCKER-004",
+          "severity": "P0",
+          "category": "Migrations",
+          "title": "Backend startet trotz fehlgeschlagener Migration",
+          "detail": "Auswirkung: Teilweise Schema-Stände gehen als scheinbar healthy online\n\nUrsache: Migrationfehler wird verschluckt",
+          "impact": "Teilweise Schema-Stände gehen als scheinbar healthy online",
+          "rootCause": "Migrationfehler wird verschluckt",
+          "ref": "start.sh:29-32 „non-fatal“; Finance/Shopping live 500",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "DevOps/DB",
+          "suggestions": [
+            {
+              "id": "DOCKER-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Fail-fast Migration, readiness erst nach Schema-Version",
+              "acceptanceCriteria": "Kaputte Migration verhindert Start; Upgrade/Rollback getestet",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "DOCKER-005",
+          "severity": "P1",
+          "category": "Container Security",
+          "title": "Frontend und Backend laufen als root",
+          "detail": "Auswirkung: Container-Kompromiss hat unnötig hohe Rechte\n\nUrsache: Runner-User nicht definiert",
+          "impact": "Container-Kompromiss hat unnötig hohe Rechte",
+          "rootCause": "Runner-User nicht definiert",
+          "ref": "Dockerfiles ohne USER; Browser ist positiv non-root",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "DevOps/Security",
+          "suggestions": [
+            {
+              "id": "DOCKER-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "UID ohne Shell, chown, read-only FS wo möglich",
+              "acceptanceCriteria": "docker inspect zeigt non-root; Schreibpfade explizit",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "DOCKER-006",
+          "severity": "P1",
+          "category": "Network",
+          "title": "Prod exponiert Backend und Chrome trotz Traefik direkt",
+          "detail": "Auswirkung: TLS, Rate-Limit und Security-Headers können umgangen werden\n\nUrsache: Interne Services veröffentlichen Hostports",
+          "impact": "TLS, Rate-Limit und Security-Headers können umgangen werden",
+          "rootCause": "Interne Services veröffentlichen Hostports",
+          "ref": "docker-compose.prod.yml ports 3007 und 3111",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "BROW-009"
+          ],
+          "owner": "DevOps/Security",
+          "suggestions": [
+            {
+              "id": "DOCKER-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Nur Traefik extern; interne Netzsegmente",
+              "acceptanceCriteria": "Portscan Host zeigt nur 80/443 und explizite optionale Dienste",
+              "effort": "M",
+              "dependencies": "BROW-009"
+            }
+          ]
+        },
+        {
+          "id": "DOCKER-007",
+          "severity": "P1",
+          "category": "Reliability",
+          "title": "Keine CPU/RAM/PID-Limits für Browser und Kernservices",
+          "detail": "Auswirkung: Browser-/Query-Spikes können gesamten NAS destabilisieren\n\nUrsache: Ressourcenverträge fehlen",
+          "impact": "Browser-/Query-Spikes können gesamten NAS destabilisieren",
+          "rootCause": "Ressourcenverträge fehlen",
+          "ref": "Compose ohne deploy/resources/mem_limit/pids_limit",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [
+            "BROW-006"
+          ],
+          "owner": "DevOps/Performance",
+          "suggestions": [
+            {
+              "id": "DOCKER-007-F1",
+              "title": "Empfohlener Fix",
+              "note": "Service-Limits, reservations, ulimits und OOM-Policy",
+              "acceptanceCriteria": "5-Session-Test bleibt innerhalb Budget; Kern-DB verfügbar",
+              "effort": "M",
+              "dependencies": "BROW-006"
+            }
+          ]
+        },
+        {
+          "id": "DOCKER-008",
+          "severity": "P2",
+          "category": "Release",
+          "title": "Production nutzt mutable latest-Tags ohne Digest/Rollbackvertrag",
+          "detail": "Auswirkung: Nicht reproduzierbare Deploys und unsicheres Rollback\n\nUrsache: Versiontag wird nicht im Compose fixiert",
+          "impact": "Nicht reproduzierbare Deploys und unsicheres Rollback",
+          "rootCause": "Versiontag wird nicht im Compose fixiert",
+          "ref": "docker-compose.prod.yml ghcr ...:latest",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "DevOps/Release",
+          "suggestions": [
+            {
+              "id": "DOCKER-008-F1",
+              "title": "Empfohlener Fix",
+              "note": "Immutable Version/Digest + dokumentiertes Rollback",
+              "acceptanceCriteria": "Deployment manifestiert Build-ID/SHA und kann N-1 starten",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

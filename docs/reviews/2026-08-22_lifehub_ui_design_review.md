@@ -9,10 +9,10 @@
 | Repository-SHA | 333398d2a6665becf49eaa0df6c0b40e7a8c32ae |
 | Routen | 56 authentifiziert inventarisiert |
 | Controls | 1.983 Source-Evidenzen; 365 Pages/Browser-Kernpfade live vertieft |
-| Screenshots | 182 redigierte Captures |
-| Evidence-Dateien | 224 |
+| Screenshots | 249 redigierte Captures |
+| Evidence-Dateien | 298 |
 | Findings | 17 Findings — 0 P0, 10 P1, 7 P2 |
-| Subagenten | 8 dispatcht; Provider-401 vor Dateizugriff, daher nicht als Evidenz verwendet |
+| Subagenten | 15 dispatcht; Provider-401 jeweils vor Dateizugriff, daher nicht als Evidenz verwendet |
 
 ## 1. Executive Summary
 

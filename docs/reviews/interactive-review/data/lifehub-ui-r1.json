@@ -1,0 +1,751 @@
+{
+  "schemaVersion": 2,
+  "reportId": "lifehub-ui-review-2026-08-22",
+  "storageKey": "lifehub-interactive-review:lifehub-ui-review-2026-08-22",
+  "version": 1,
+  "date": "2026-08-22",
+  "title": "LifeHub UI-/UX-/Design-Review · Interaktiv",
+  "subtitle": "Designsystem · Responsive · Accessibility · Pages · kommentierbar und versioniert",
+  "intro": "Visuell besitzt LifeHub eine erkennbare Dark-Mode-Basis. Dieser interaktive Bericht ermöglicht Entscheidungen, Kommentare und präzise Bildmarkierungen zu jedem Befund.",
+  "sourceCommit": "0fb76aa",
+  "generatedAt": "2026-08-22T10:10:30.249624+00:00",
+  "areas": [
+    {
+      "id": "dashboard",
+      "tab": "Dashboard & Layout",
+      "vorbild": "Modulares LifeHub-Dashboard",
+      "score": "6,4 / 10",
+      "general": "Die Dark-Mode-Basis und Widget-Karten sind visuell stark; Desktop-Raster und CTA-Hierarchie brauchen mehr Systematik.",
+      "images": [
+        {
+          "id": "dashboard-desktop",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/dashboard__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/dashboard__1440x1000__dark__default.png",
+          "cap": "Dashboard · Desktop Dark",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/dashboard__1440x1000__dark__default.png"
+        },
+        {
+          "id": "dashboard-mobile",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/dashboard__375x812__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/dashboard__375x812__dark.png",
+          "cap": "Dashboard · Mobile 375px",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/dashboard__375x812__dark.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-DASHBOARD-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Raster, Widgetgrößen und primäre Aktionen als gemeinsamen Dashboard-Vertrag definieren.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Dashboard & Layout sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "UI-008",
+          "severity": "P2",
+          "category": "Layout",
+          "title": "Dashboard nutzt großen Desktopbereich nicht aus",
+          "detail": "Auswirkung: Schwache Hierarchie, viel tote Fläche, Widgets wirken zufällig\n\nUrsache: Grid packt große Medien-/Kalenderkarten links und schmale Widgets in eine Mini-Spalte",
+          "impact": "Schwache Hierarchie, viel tote Fläche, Widgets wirken zufällig",
+          "rootCause": "Grid packt große Medien-/Kalenderkarten links und schmale Widgets in eine Mini-Spalte",
+          "ref": "dashboard__1440x1000__dark__default.png",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "dashboard-desktop"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/UX",
+          "suggestions": [
+            {
+              "id": "UI-008-F1",
+              "title": "Empfohlener Fix",
+              "note": "Responsive 12-Spalten-Grid, klare Widget-Größen und Ausrichtung",
+              "acceptanceCriteria": "1440/1920px ohne unbegründete Leerräume; Resize-Grenzen stabil",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "responsive",
+      "tab": "Mobile & Responsive",
+      "vorbild": "Mobile-first Shell",
+      "score": "3,8 / 10",
+      "general": "Mobile Widgets stapeln grundsätzlich, aber Header, Tabs und Navigation brechen an mehreren Stellen.",
+      "images": [
+        {
+          "id": "mobile-pages",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/pages__375x812__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/pages__375x812__dark.png",
+          "cap": "Pages · Mobile – Headerüberlagerung",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/pages__375x812__dark.png"
+        },
+        {
+          "id": "mobile-settings",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/settings__375x812__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/settings__375x812__dark.png",
+          "cap": "Settings · Mobile – Tabs/Overflow",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/settings__375x812__dark.png"
+        },
+        {
+          "id": "mobile-email",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/email__375x812__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/email__375x812__dark.png",
+          "cap": "E-Mail · Mobile",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/email__375x812__dark.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-RESPONSIVE-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Bottom-Navigation, sichere Header-Inset-Zone und mobile Tab-/Sheet-Muster zentral umsetzen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Mobile & Responsive sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "UI-009",
+          "severity": "P1",
+          "category": "Responsive",
+          "title": "Mobile Shell entspricht nicht der Bottom-Tab-Spezifikation",
+          "detail": "Auswirkung: Mobile Navigation ist versteckt; Kernbereiche benötigen Zusatzschritt\n\nUrsache: Desktop-Sidebar wird nur zum Hamburger statt zu fünf Bottom-Tabs",
+          "impact": "Mobile Navigation ist versteckt; Kernbereiche benötigen Zusatzschritt",
+          "rootCause": "Desktop-Sidebar wird nur zum Hamburger statt zu fünf Bottom-Tabs",
+          "ref": "mobile/dashboard__375x812__dark.png; UI_UX.md:258-263",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/UX",
+          "suggestions": [
+            {
+              "id": "UI-009-F1",
+              "title": "Empfohlener Fix",
+              "note": "Mobile Bottom-Bar + Mehr-Sheet implementieren",
+              "acceptanceCriteria": "375px: fünf Kernziele sichtbar, keine Überlagerung",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "UI-010",
+          "severity": "P1",
+          "category": "Responsive",
+          "title": "Mobile Überschriften/Tabs werden abgeschnitten und horizontal überlaufen",
+          "detail": "Auswirkung: Seitenname beginnt als „iten“, Settings als „stem…“; Tabs/Pfade abgeschnitten\n\nUrsache: Hamburger liegt absolut über Content; Desktop-Tabreihen bleiben ungebrochen",
+          "impact": "Seitenname beginnt als „iten“, Settings als „stem…“; Tabs/Pfade abgeschnitten",
+          "rootCause": "Hamburger liegt absolut über Content; Desktop-Tabreihen bleiben ungebrochen",
+          "ref": "mobile/pages, mobile/settings, mobile/email Screenshots",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "mobile-pages",
+            "mobile-settings",
+            "mobile-email"
+          ],
+          "effort": "M",
+          "dependencies": [
+            "UI-009"
+          ],
+          "owner": "Frontend/UX",
+          "suggestions": [
+            {
+              "id": "UI-010-F1",
+              "title": "Empfohlener Fix",
+              "note": "Mobile Header-Inset, scrollbare/gestapelte Tabs und Sheet-Navigation",
+              "acceptanceCriteria": "320/375px ohne Textüberlagerung oder horizontale Page-Scrollbar",
+              "effort": "M",
+              "dependencies": "UI-009"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pages",
+      "tab": "Pages UX",
+      "vorbild": "Notion",
+      "score": "4,5 / 10",
+      "general": "Cover, Breadcrumbs und Versionierung sind gute Grundlagen; Interaktionen sind zu versteckt.",
+      "images": [
+        {
+          "id": "pages-overview",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/pages-overview__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/pages-overview__1440x1000__dark.png",
+          "cap": "Pages · Übersicht",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/pages-overview__1440x1000__dark.png"
+        },
+        {
+          "id": "pages-editor",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-test__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-test__1440x1000__dark.png",
+          "cap": "Pages · Editor",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-test__1440x1000__dark.png"
+        },
+        {
+          "id": "pages-block-menu",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-qa-block-menu__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-qa-block-menu__1440x1000__dark.png",
+          "cap": "Pages · verstecktes Blockmenü",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/page-qa-block-menu__1440x1000__dark.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-PAGES-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Sichtbare Block-Affordanzen, semantische Navigation und eine ruhige Dokumentfläche priorisieren.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Pages UX sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "UI-011",
+          "severity": "P1",
+          "category": "Interaction",
+          "title": "Zentrale Aktionen sind hover-only und auf Touch unsichtbar",
+          "detail": "Auswirkung: Delete/Edit/Remove sind auf Touch und Tastatur kaum erreichbar\n\nUrsache: opacity-0 group-hover wird als primäres Aktionsmodell genutzt",
+          "impact": "Delete/Edit/Remove sind auf Touch und Tastatur kaum erreichbar",
+          "rootCause": "opacity-0 group-hover wird als primäres Aktionsmodell genutzt",
+          "ref": "BlockHandle.tsx:74; PageHeader.tsx:128; mehrere Blockkomponenten",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "pages-editor"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/A11y",
+          "suggestions": [
+            {
+              "id": "UI-011-F1",
+              "title": "Empfohlener Fix",
+              "note": "focus-within, sichtbares Touch-Menü und persistente Handles ergänzen",
+              "acceptanceCriteria": "Alle Aktionen per Touch, Tastatur und Screenreader erreichbar",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "UI-013",
+          "severity": "P1",
+          "category": "Accessibility",
+          "title": "Pages-Einträge sind klickbare divs statt Links/Buttons",
+          "detail": "Auswirkung: Keine Tab-Navigation, keine Linksemantik, schlechter Deep-Link\n\nUrsache: onClick/cursor-pointer liegt auf div ohne role/tabIndex",
+          "impact": "Keine Tab-Navigation, keine Linksemantik, schlechter Deep-Link",
+          "rootCause": "onClick/cursor-pointer liegt auf div ohne role/tabIndex",
+          "ref": "page.tsx:352-385; live-pages.json listet Einträge nicht als Controls",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Pages/A11y",
+          "suggestions": [
+            {
+              "id": "UI-013-F1",
+              "title": "Empfohlener Fix",
+              "note": "Semantische Links/treeitems verwenden",
+              "acceptanceCriteria": "Alle Seiten per Tab/Enter erreichbar und URL kopierbar",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "UI-016",
+          "severity": "P2",
+          "category": "Pages UX",
+          "title": "Pages-Übersicht ist optisch flach und wenig klickbar",
+          "detail": "Auswirkung: Hierarchie und Ziel der Zeilen sind schwer erkennbar; viel tote Fläche\n\nUrsache: Eine große Card um alle Rows, kaum Hover/Chevron/Metadaten",
+          "impact": "Hierarchie und Ziel der Zeilen sind schwer erkennbar; viel tote Fläche",
+          "rootCause": "Eine große Card um alle Rows, kaum Hover/Chevron/Metadaten",
+          "ref": "pages-overview screenshot",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "pages-overview"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Pages/UX",
+          "suggestions": [
+            {
+              "id": "UI-016-F1",
+              "title": "Empfohlener Fix",
+              "note": "Tree/List mit klaren Row-Zuständen, Sortierung und Suchfeld",
+              "acceptanceCriteria": "Klickziel, Parent/Child und Aktionen sind sofort erkennbar",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "settings-errors",
+      "tab": "Settings & Fehlerzustände",
+      "vorbild": "System Settings / truthful states",
+      "score": "4,2 / 10",
+      "general": "Settings sind klar gegliedert; Fehler werden in mehreren Domains jedoch fälschlich als Empty State dargestellt.",
+      "images": [
+        {
+          "id": "settings-desktop",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/settings__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/settings__1440x1000__dark__default.png",
+          "cap": "System-Einstellungen",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/settings__1440x1000__dark__default.png"
+        },
+        {
+          "id": "finance-empty",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/finance__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/finance__1440x1000__dark__default.png",
+          "cap": "Finance · 500 als Empty State",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/finance__1440x1000__dark__default.png"
+        },
+        {
+          "id": "shopping-empty",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/shopping__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/shopping__1440x1000__dark__default.png",
+          "cap": "Shopping · 500 als Empty State",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/shopping__1440x1000__dark__default.png"
+        },
+        {
+          "id": "email-empty",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/email__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/email__1440x1000__dark__default.png",
+          "cap": "E-Mail · 500 als Empty State",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/email__1440x1000__dark__default.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-SETTINGS-ERRORS-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Error, Empty, Offline und Loading als eigene semantische Zustände standardisieren.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Settings & Fehlerzustände sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "UI-014",
+          "severity": "P1",
+          "category": "Error UX",
+          "title": "Backend-500 werden als leere Datenzustände verschleiert",
+          "detail": "Auswirkung: Nutzer glaubt, er habe keine Daten und kann falsche Aktionen ausführen\n\nUrsache: Queries behandeln error wie leere Arrays oder ignorieren Statusfehler",
+          "impact": "Nutzer glaubt, er habe keine Daten und kann falsche Aktionen ausführen",
+          "rootCause": "Queries behandeln error wie leere Arrays oder ignorieren Statusfehler",
+          "ref": "Finance/Shopping/Email Screenshots + live 500s",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "finance-empty",
+            "shopping-empty",
+            "email-empty"
+          ],
+          "effort": "M",
+          "dependencies": [
+            "FUNC-003",
+            "FUNC-004",
+            "FUNC-005"
+          ],
+          "owner": "Frontend/UX",
+          "suggestions": [
+            {
+              "id": "UI-014-F1",
+              "title": "Empfohlener Fix",
+              "note": "Explizite Error Boundary, Ursache, Retry und Offline-Status",
+              "acceptanceCriteria": "500 zeigt Fehler+Retry, niemals Empty State",
+              "effort": "M",
+              "dependencies": "FUNC-003,FUNC-004,FUNC-005"
+            }
+          ]
+        },
+        {
+          "id": "UI-017",
+          "severity": "P2",
+          "category": "Settings UX",
+          "title": "Settings-Tabs besitzen keine Tab-Semantik und brechen mobil",
+          "detail": "Auswirkung: Screenreader- und Mobile-Navigation unklar\n\nUrsache: Buttons ohne tablist/tab/aria-selected; feste horizontale Reihe",
+          "impact": "Screenreader- und Mobile-Navigation unklar",
+          "rootCause": "Buttons ohne tablist/tab/aria-selected; feste horizontale Reihe",
+          "ref": "settings/page.tsx:55-70; mobile/settings screenshot",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Settings/A11y",
+          "suggestions": [
+            {
+              "id": "UI-017-F1",
+              "title": "Empfohlener Fix",
+              "note": "Radix Tabs oder vollständige ARIA-Tabs plus mobile Scroll/Select",
+              "acceptanceCriteria": "Keyboard-Pfeile, aria-selected und 320px-Reflow funktionieren",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "media",
+      "tab": "Media & Rezepte",
+      "vorbild": "Google Photos / hochwertige Content Cards",
+      "score": "5,5 / 10",
+      "general": "Media-/Recipe-Grids sind brauchbar, benötigen aber verlässliche Bild-Fallbacks und Größenverträge.",
+      "images": [
+        {
+          "id": "recipes-grid",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png",
+          "cap": "Rezepte · fehlende Bild-Fallbacks",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/recipes__1440x1000__dark__default.png"
+        },
+        {
+          "id": "media-grid",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/media__1440x1000__dark__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/media__1440x1000__dark__default.png",
+          "cap": "Medien · Galerie",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-dark/media__1440x1000__dark__default.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-MEDIA-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Ein zentrales Thumbnail-/Fallback-System mit festen Seitenverhältnissen einführen.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Media & Rezepte sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "UI-015",
+          "severity": "P2",
+          "category": "Media UX",
+          "title": "Rezeptkarten zeigen riesige leere Bildflächen bei 404",
+          "detail": "Auswirkung: Unprofessionelle Karten, verschwendete Fläche, schlechter Scan\n\nUrsache: Image wird immer gerendert; Listen-/Detailansicht ohne onError-Fallback",
+          "impact": "Unprofessionelle Karten, verschwendete Fläche, schlechter Scan",
+          "rootCause": "Image wird immer gerendert; Listen-/Detailansicht ohne onError-Fallback",
+          "ref": "recipes screenshot; recipe pages always request /recipes/image/:id",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "recipes-grid"
+          ],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Recipes/Frontend",
+          "suggestions": [
+            {
+              "id": "UI-015-F1",
+              "title": "Empfohlener Fix",
+              "note": "Thumbnail-Verfügbarkeit im Modell + kompakter Fallback",
+              "acceptanceCriteria": "404 zeigt definierte Placeholder-Karte ohne Layoutloch",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "accessibility",
+      "tab": "Accessibility",
+      "vorbild": "WCAG 2.2 AA",
+      "score": "3,2 / 10",
+      "general": "Ein globaler Fokus-Ring existiert; Namen, Labels, Kontrast und Touchziele sind noch nicht ausreichend.",
+      "images": [
+        {
+          "id": "a11y-dashboard",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/dashboard__375x812__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/dashboard__375x812__dark.png",
+          "cap": "Mobile Touch-/Kontrastprüfung",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/mobile/dashboard__375x812__dark.png"
+        },
+        {
+          "id": "a11y-pages",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/pages-overview__1440x1000__dark.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/pages-overview__1440x1000__dark.png",
+          "cap": "Pages · semantische Klickziele",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/pages/pages-overview__1440x1000__dark.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-ACCESSIBILITY-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Accessible Names, Labels, 44px-Ziele und Kontrast als CI-Gates etablieren.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Accessibility sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "UI-002",
+          "severity": "P1",
+          "category": "Accessibility",
+          "title": "Weiße Schrift auf allen brand-500-Presets verfehlt WCAG AA",
+          "detail": "Auswirkung: Primäre CTAs sind für viele Nutzer nicht ausreichend lesbar\n\nUrsache: Ein universelles text-white wird auf zu hellen, frei wählbaren Akzenten verwendet",
+          "impact": "Primäre CTAs sind für viele Nutzer nicht ausreichend lesbar",
+          "rootCause": "Ein universelles text-white wird auf zu hellen, frei wählbaren Akzenten verwendet",
+          "ref": "Berechnet: Amber 3.19:1, Blau 3.68, Grün 2.28, Rosé 3.67, Violett 4.23; a11y-audit.json",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Frontend/A11y",
+          "suggestions": [
+            {
+              "id": "UI-002-F1",
+              "title": "Empfohlener Fix",
+              "note": "Kontrastadaptiven Button-Text oder dunklere CTA-Stufe verwenden",
+              "acceptanceCriteria": "Jedes Preset und Custom-Hex erreicht 4.5:1; automatisierter Kontrasttest",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "UI-003",
+          "severity": "P1",
+          "category": "Accessibility",
+          "title": "text-fg-subtle ist für normalen Text zu kontrastarm",
+          "detail": "Auswirkung: Hilfen, Zähler und Metadaten sind schwer lesbar\n\nUrsache: Subtle-Token wird für normalen 10–12px Text statt rein dekorative Inhalte verwendet",
+          "impact": "Hilfen, Zähler und Metadaten sind schwer lesbar",
+          "rootCause": "Subtle-Token wird für normalen 10–12px Text statt rein dekorative Inhalte verwendet",
+          "ref": "Light 2.56:1, Dark 4.12:1; live Hilfetexte/Badges",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Frontend/A11y",
+          "suggestions": [
+            {
+              "id": "UI-003-F1",
+              "title": "Empfohlener Fix",
+              "note": "Token heller/dunkler abstufen und Nutzung auf große/dekorative Inhalte begrenzen",
+              "acceptanceCriteria": "Normaltext >=4.5:1 in Light und Dark",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "UI-012",
+          "severity": "P1",
+          "category": "Accessibility",
+          "title": "A11y-Audit: leere Namen, unlabeled Felder und zu kleine Ziele",
+          "detail": "Auswirkung: Screenreader-/Touchbedienung deutlich eingeschränkt\n\nUrsache: Icon-Buttons und Inputs verlassen sich auf Optik/Placeholder; 24–40px Targets",
+          "impact": "Screenreader-/Touchbedienung deutlich eingeschränkt",
+          "rootCause": "Icon-Buttons und Inputs verlassen sich auf Optik/Placeholder; 24–40px Targets",
+          "ref": "12 Routen: 586 Controls, 4 leere Namen, 13 unlabeled Felder, 469 Ziele <44px",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "a11y-dashboard"
+          ],
+          "effort": "L",
+          "dependencies": [],
+          "owner": "Frontend/A11y",
+          "suggestions": [
+            {
+              "id": "UI-012-F1",
+              "title": "Empfohlener Fix",
+              "note": "Accessible Names/Labels und 44px Touchflächen als Komponentenvertrag",
+              "acceptanceCriteria": "0 leere Namen/unlabeled Felder; kritische Touchziele >=44px",
+              "effort": "L",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "theming",
+      "tab": "Theming & Glass",
+      "vorbild": "LifeHub Refined · Apple Glass gezielt",
+      "score": "4,9 / 10",
+      "general": "Semantische Tokens und Akzentwahl existieren, werden aber von vielen statischen Farben umgangen.",
+      "images": [
+        {
+          "id": "theme-directions",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/concepts/theme-directions__1440x1000.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/concepts/theme-directions__1440x1000.png",
+          "cap": "Vier Design-/Theme-Richtungen",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/concepts/theme-directions__1440x1000.png"
+        },
+        {
+          "id": "dashboard-light",
+          "src": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-light/dashboard__1440x1000__light__default.png",
+          "thumb": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-light/dashboard__1440x1000__light__default.png",
+          "cap": "Dashboard · Light Mode",
+          "sourcePath": "docs/reviews/evidence/2026-08-22-lifehub/screenshots/desktop-light/dashboard__1440x1000__light__default.png"
+        }
+      ],
+      "suggestions": [
+        {
+          "id": "AREA-THEMING-F1",
+          "title": "Bereich als gemeinsames Fixpaket behandeln",
+          "note": "Surface-Theme, Akzentpalette, Dichte und Transparenz getrennt modellieren; Glass nur für Overlays.",
+          "acceptanceCriteria": "Alle akzeptierten Findings im Bereich Theming & Glass sind umgesetzt und mit den jeweiligen Einzelkriterien verifiziert."
+        }
+      ],
+      "findings": [
+        {
+          "id": "UI-001",
+          "severity": "P1",
+          "category": "Design System",
+          "title": "1.799 statische Farbklassen umgehen semantische Tokens",
+          "detail": "Auswirkung: Light/Dark und Akzent-Packs driften; hohe Regressiongefahr\n\nUrsache: Seiten wurden lokal mit Zinc/Amber/Statusfarben statt Komponenten-/Semantik-Tokens gebaut",
+          "impact": "Light/Dark und Akzent-Packs driften; hohe Regressiongefahr",
+          "rootCause": "Seiten wurden lokal mit Zinc/Amber/Statusfarben statt Komponenten-/Semantik-Tokens gebaut",
+          "ref": "design-token-matrix.csv; Top: projects 195, travel 161, pages 130",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "theme-directions"
+          ],
+          "effort": "L",
+          "dependencies": [
+            "UI-004"
+          ],
+          "owner": "Frontend/Design System",
+          "suggestions": [
+            {
+              "id": "UI-001-F1",
+              "title": "Empfohlener Fix",
+              "note": "Semantische Surface/Text/Status-Tokens und Komponenten-Wrapper durchsetzen",
+              "acceptanceCriteria": "Verbotene Klassen im dual-mode UI = 0 oder begründete Ausnahme; visuelle Regression Light/Dark",
+              "effort": "L",
+              "dependencies": "UI-004"
+            }
+          ]
+        },
+        {
+          "id": "UI-004",
+          "severity": "P1",
+          "category": "Theming",
+          "title": "Nicht-Amber-Presets verwenden im Light Mode die Dark-first-Skala",
+          "detail": "Auswirkung: Blue/Green/Rose/Violet verhalten sich im Light Theme farblich inkonsistent\n\nUrsache: data-accent-Selektoren unterscheiden Light und Dark nicht",
+          "impact": "Blue/Green/Rose/Violet verhalten sich im Light Theme farblich inkonsistent",
+          "rootCause": "data-accent-Selektoren unterscheiden Light und Dark nicht",
+          "ref": "globals.css:43-108 vs. :root:not([data-accent]):not(.dark):110-123",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "dashboard-light"
+          ],
+          "effort": "M",
+          "dependencies": [],
+          "owner": "Design System",
+          "suggestions": [
+            {
+              "id": "UI-004-F1",
+              "title": "Empfohlener Fix",
+              "note": "Je Preset separate Light-/Dark-Tokens definieren",
+              "acceptanceCriteria": "Alle sechs Akzente bestehen Snapshot+Kontrasttests in beiden Modi",
+              "effort": "M",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "UI-005",
+          "severity": "P2",
+          "category": "Theming",
+          "title": "Custom-Akzent überschreibt nur 400/500/600 und mischt Rest mit Amber",
+          "detail": "Auswirkung: Custom-Theme wirkt in Komponenten mit 50–300/700–900 zweifarbig\n\nUrsache: Aus Custom-Hex wird keine vollständige Tonleiter erzeugt",
+          "impact": "Custom-Theme wirkt in Komponenten mit 50–300/700–900 zweifarbig",
+          "rootCause": "Aus Custom-Hex wird keine vollständige Tonleiter erzeugt",
+          "ref": "theme-store.ts:35-49",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "theme-directions"
+          ],
+          "effort": "M",
+          "dependencies": [
+            "UI-002"
+          ],
+          "owner": "Design System",
+          "suggestions": [
+            {
+              "id": "UI-005-F1",
+              "title": "Empfohlener Fix",
+              "note": "Vollständige OKLCH-Tonleiter generieren",
+              "acceptanceCriteria": "50–900 folgen Custom-Hue; Kontrasttests bestanden",
+              "effort": "M",
+              "dependencies": "UI-002"
+            }
+          ]
+        },
+        {
+          "id": "UI-006",
+          "severity": "P2",
+          "category": "Glass UI",
+          "title": "Bestehende glass-Utility ist hardcodiert dunkel",
+          "detail": "Auswirkung: Glass-Flächen funktionieren im Light Theme nicht konsistent\n\nUrsache: rgba(24,24,27,.7) und weiße Border sind nicht theme-aware",
+          "impact": "Glass-Flächen funktionieren im Light Theme nicht konsistent",
+          "rootCause": "rgba(24,24,27,.7) und weiße Border sind nicht theme-aware",
+          "ref": "globals.css:153-157",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [
+            "theme-directions"
+          ],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Design System",
+          "suggestions": [
+            {
+              "id": "UI-006-F1",
+              "title": "Empfohlener Fix",
+              "note": "Glass-Surface über semantische RGB/Alpha-Tokens plus Fallback definieren",
+              "acceptanceCriteria": "Light/Dark/Reduced Transparency visuell und per Kontrast geprüft",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        },
+        {
+          "id": "UI-007",
+          "severity": "P2",
+          "category": "Motion",
+          "title": "Animationssystem respektiert reduced motion nicht global",
+          "detail": "Auswirkung: Vestibuläre Barriere und Verstoß gegen UI_UX.md\n\nUrsache: Animationen sind unbedingte Utilities",
+          "impact": "Vestibuläre Barriere und Verstoß gegen UI_UX.md",
+          "rootCause": "Animationen sind unbedingte Utilities",
+          "ref": "globals.css:165-169; keine prefers-reduced-motion-Regel",
+          "status": "open",
+          "changedIn": null,
+          "imageIds": [],
+          "effort": "S",
+          "dependencies": [],
+          "owner": "Frontend/A11y",
+          "suggestions": [
+            {
+              "id": "UI-007-F1",
+              "title": "Empfohlener Fix",
+              "note": "Globale reduced-motion-Variante und component-level opt-out",
+              "acceptanceCriteria": "Bei prefers-reduced-motion keine nichtessenzielle Bewegung",
+              "effort": "S",
+              "dependencies": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

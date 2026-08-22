@@ -1,0 +1,148 @@
+
+> @lifehub/frontend@0.1.0 lint C:\Users\dasil\AppData\Local\Temp\lifehub-review-333398d2\apps\frontend
+> next lint
+
+
+./src/app/(dashboard)/jellyfin/watchlist/page.tsx
+299:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/components/lightbox/ImageSlide.tsx
+150:9  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/components/music/AlbumView.tsx
+47:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/components/music/MusicLibrary.tsx
+157:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/components/player/AudioPlayer.tsx
+150:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/components/source-browser/FolderGrid.tsx
+132:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+141:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/MapContent.tsx
+127:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/page.tsx
+72:41  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+457:23  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+479:15  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+587:34  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+681:11  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+704:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+1080:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+1303:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/pages/components/BlockHandle.tsx
+27:41  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/app/(dashboard)/pages/components/blocks/BookmarkBlock.tsx
+51:6  Warning: React Hook useEffect has missing dependencies: 'fetchPreview', 'loading', 'preview', and 'url'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+104:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/pages/components/PageHeader.tsx
+138:11  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+233:14  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+252:10  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+296:13  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+310:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+337:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+340:23  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/app/(dashboard)/pages/page.tsx
+96:10  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+111:10  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+114:8  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+120:20  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+313:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+316:21  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+359:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+575:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+592:13  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/app/(dashboard)/recipes/page.tsx
+212:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/recipes/[id]/cook/page.tsx
+47:6  Warning: React Hook useEffect has a missing dependency: 'fetchRecipe'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+242:9  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/recipes/[id]/page.tsx
+52:6  Warning: React Hook useEffect has a missing dependency: 'fetchRecipe'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+152:9  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/search/page.tsx
+93:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+236:27  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/travel/page.tsx
+201:13  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/components/dashboard/widget-content.tsx
+758:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/jellyfin/hooks/useVideoPlayer.ts
+214:26  Warning: The ref value 'videoRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'videoRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+224:6  Warning: React Hook useEffect has a missing dependency: 'startPositionTicks'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/jellyfin/media/DetailHeader.tsx
+47:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+83:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/jellyfin/media/EpisodeList.tsx
+61:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/jellyfin/media/HeroBanner.tsx
+61:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/jellyfin/media/MediaCard.tsx
+89:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/jellyfin/MusicPlayerBar.tsx
+85:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+214:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/music/nowplaying/NowPlayingView.tsx
+311:6  Warning: React Hook useEffect has a missing dependency: 'track'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/music/player/MiniPlayer.tsx
+62:6  Warning: React Hook useEffect has a missing dependency: 'storedPosition'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+155:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/music/player/MusicPlayerWrapper.tsx
+344:6  Warning: React Hook useEffect has missing dependencies: 'accessToken', 'audio', 'currentTrack', 'server', 'setError', 'setStatus', 'startPreloadingNext', 'status', and 'swapAudioRefs'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+366:6  Warning: React Hook useEffect has a missing dependency: 'currentTrack'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+380:6  Warning: React Hook useEffect has missing dependencies: 'audio' and 'preloadAudio'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+412:6  Warning: React Hook useEffect has missing dependencies: 'currentTrack', 'qc', 'reportPlaybackStart', 'reportPlaybackStop', and 'server'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+427:6  Warning: React Hook useEffect has missing dependencies: 'currentTrack', 'reportPlaybackProgress', and 'server'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+440:6  Warning: React Hook useEffect has missing dependencies: 'qc', 'reportPlaybackStop', and 'server'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+722:6  Warning: React Hook useEffect has missing dependencies: 'audio', 'preloadAudio', 'setDuration', 'setError', 'setPosition', 'setStatus', 'startPreloadingNext', and 'swapAudioRefs'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/music/player/PlayerLeft.tsx
+101:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/music/shared/MusicCard.tsx
+34:5  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/music/sidebar/MusicSidebar.tsx
+340:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+380:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/music/sidebar/SidebarPlaylistItem.tsx
+54:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/hooks/use-dashboard-layout.ts
+41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 148) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 163) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 185) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 200) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 214) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 234) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 255) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/hooks/use-grid-interaction.ts
+258:6  Warning: React Hook useEffect has an unnecessary dependency: 'dragInfo.current'. Either exclude it or remove the dependency array. Mutable values like 'dragInfo.current' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

@@ -1,0 +1,331 @@
+{
+  "url": "file:///C:/Users/dasil/Documents/LifeHub/docs/reviews/2026-08-22_lifehub_code_functionality_review.html",
+  "title": "LifeHub Code-/Funktionsreview",
+  "readyState": "complete",
+  "bodyText": "LifeHub Code-/Funktionsreview\n\nSecurity · Performance · Docker · 2026-08-22\n\n60\nFindings\n15\nP0\n38\nP1\n7\nP2\n56\nRouten\n182\nScreenshots\n1983\nControls\n224\nEvidence\nScorecard\nFunktionalität4.0/10\nReliability3.1/10\nSecurity2.1/10\nPerformance4.8/10\nWartbarkeit4.0/10\nTestbarkeit2.8/10\nDocker/Deployability2.4/10\nDokumentationskonsistenz5.2/10\nUrteil: Compilerstabil, aber Live-/Security-/Deployment-Reife kritisch. Die P0-Welle muss vor Feature-Polish abgeschlossen werden.\nLive Coverage\nStatus\tAnzahl\nPASS_RENDER\t17\nPARTIAL_NETWORK_ERRORS\t20\nFAIL_REDIRECT_DASHBOARD\t8\nPARTIAL_INVALID_ID_NO_CLEAR_STATE\t6\nPASS_INVALID_ID_STATE\t5\n\nRedirects: /documents, /insurance, /it-inventory, /projects, /recipes/dishes/[id], /search, /travel, /vault\n\nPages/Notion\n\nDelete funktioniert technisch, ist jedoch versteckt. Toggle Headings, TOC, Multi-Select/Nesting und echte Datenbanken fehlen. Zusätzlich besteht eine blockId/pageId-Owner-Lücke.\n\nBrowser\n\nCold Start hängt; Remount liefert einen schwarzen Viewport mit ended Tracks. SSRF-Redirect/Subresource, --no-sandbox und unbegrenzte Chromiums sind P0.\n\nSecurity\n\nGültige Default-Admin-Credentials in der Login-UI, kein aktiver ThrottlerGuard, Klartext-Vault, Pages-IDOR, langlebige Querytokens und 22 hohe Dependency-Advisories.\n\nBuild & Tests\n\nBuilds/Typechecks grün; Frontend 87 Tests. Backend App-Suite hat 0 Tests; rekursiver Testlauf scheitert an Package-Resolution. Coverage 0/fehlgeschlagen.\n\nDocker\nClean tag checkout\n ├─ frontend Dockerfile braucht unversioniertes .next\n └─ backend Dockerfile braucht unversionierte dist\n => CI überträgt keine Artifacts, Release nicht hermetisch\nPriorität\n\nCredentials/Throttle/Vault/IDOR/Browser-Sandbox+Egress, Domain-500s, Travel-Vertrag und hermetische Dockerbuilds zuerst.\n\nAlle Findings\nAlle Prioritäten\nP0\nP1\nP2\n60 Findings\nBROW-001 · Browser Cold Start bleibt nach erstem Fehler im Endlos-Spinner\nP0\nBrowser Reliability\nBOTH\nAuswirkung\nKernfunktion wirkt vollständig tot trotz gesundem Renderer\nEvidenz\nLive „Browser nicht erreichbar“; API später 201; Remount nötig; BrowserBlock:145-154\nUrsache\nstartStream onError setzt nur status; Effect hängt nur an sessionId\nEmpfehlung\nBounded Retry/Backoff + manueller Retry + Startzustandsmaschine\nAkzeptanz\nContainer-Coldstart heilt ohne Tabwechsel in Zielzeit\nAufwand\nM\nBROW-002 · Live Browser zeigt schwarzen Viewport und Reconnect-Schleife\nP0\nBrowser WebRTC\nBOTH\nAuswirkung\nBrowser ist nicht benutzbar\nEvidenz\nbrowser-after-remount screenshot; 4 ended video tracks, status reconnecting\nUrsache\nReconnect reused MediaStream und räumt ended tracks nicht; Handshake instabil\nEmpfehlung\nTracks/srcObject pro Reconnect sauber ersetzen; E2E-Diagnostik\nAkzeptanz\n10-min Stream stabil, currentTime steigt, keine ended-track-Akkumulation\nAufwand\nL\nBROW-004 · Redirect-, DNS-Rebinding- und Subresource-SSRF bleiben offen\nP0\nBrowser SSRF\nCODE_CONFIRMED\nAuswirkung\nBösartige Seite kann Docker-/LAN-Ziele ansteuern\nEvidenz\nserver.js:92-108 prüft nur initial URL; page.goto folgt danach frei\nUrsache\nKeine Request-Interception oder egress policy\nEmpfehlung\nRenderer-Egress-Proxy/Firewall + jede Request-IP prüfen\nAkzeptanz\nRedirect/Subresource/DNS-rebind private Ziele geblockt\nAufwand\nL\nBROW-005 · Chromium läuft weiterhin mit --no-sandbox\nP0\nBrowser Sandbox\nCODE_CONFIRMED\nAuswirkung\nBrowser-Exploit erhält direkten Containerprozess; hohes Escape-Risiko\nEvidenz\nserver.js:285-303\nUrsache\nSandbox explizit deaktiviert\nEmpfehlung\nChromium-Sandbox unter non-root korrekt aktivieren\nAkzeptanz\nStart ohne --no-sandbox; Security smoke test; cap_drop all\nAufwand\nM\nBROW-006 · Unbegrenzte Sessions starten je einen Chromium\nP0\nBrowser Capacity\nCODE_CONFIRMED\nAuswirkung\nEin Nutzer kann NAS-RAM/CPU erschöpfen\nEvidenz\nserver.js BrowserSessionManager 730-765; keine Limits\nUrsache\nKeine globale/per-user Quota, Queue oder Containerlimit\nEmpfehlung\nSessionpool, Quotas, Queue, TTL und Memory/CPU-Limits\nAkzeptanz\n1/2/5/über-Limit Lasttest; kontrollierte 429\nAufwand\nL\nDOCKER-001 · Tag-Dockerjob kann Frontend/Backend aus Clean Checkout nicht bauen\nP0\nCI/CD\nCODE_CONFIRMED\nAuswirkung\nRelease-Pipeline ist nicht reproduzierbar bzw. scheitert\nEvidenz\nCI Dockerjob fresh checkout; tracked .next/dist jeweils 0; Dockerfiles COPY sie\nUrsache\nBuild-Artefakte aus vorherigem Job werden weder gebaut noch übertragen\nEmpfehlung\nDockerfiles bauen selbst oder CI lädt signierte Artifacts\nAkzeptanz\nTag aus Clean Checkout baut/pusht alle Images und Smoke-Test startet sie\nAufwand\nL\nDOCKER-002 · Backend-Dockerfile überspringt alle Builds und übernimmt Host-dist\nP0\nDocker\nCODE_CONFIRMED\nAuswirkung\nStale oder fehlende Binärdateien gelangen ins Image\nEvidenz\nbackend Dockerfile:60-69; .dockerignore lässt dist absichtlich zu\nUrsache\nBuilder-Stage ist nur Attrappe wegen früherem WSL-Problem\nEmpfehlung\nHermetischer Linux-Build mit Ressourcenfix; keine Host-dist-Abhängigkeit\nAkzeptanz\ndocker build aus git archive erfolgreich; SHA im Binary/Image\nAufwand\nL\nDOCKER-003 · Frontend-Image verlangt vorgebautes .next; API-Base ist eingefroren\nP0\nDocker\nCODE_CONFIRMED\nAuswirkung\nRuntime-Env in Compose ändert Client/Rewrites nicht; stale UI-Deploys\nEvidenz\nfrontend Dockerfile:5-10; routes-manifest destination backend:3007\nUrsache\nPrebuilt-Dockerfile und NEXT_PUBLIC Build-time-Konfiguration\nEmpfehlung\nMulti-stage Next build mit explizitem ARG oder same-origin BFF\nAkzeptanz\nImage aus Clean Checkout; API-Ziel per dokumentiertem Build/Runtime-Vertrag\nAufwand\nL\nDOCKER-004 · Backend startet trotz fehlgeschlagener Migration\nP0\nMigrations\nCODE_CONFIRMED\nAuswirkung\nTeilweise Schema-Stände gehen als scheinbar healthy online\nEvidenz\nstart.sh:29-32 „non-fatal“; Finance/Shopping live 500\nUrsache\nMigrationfehler wird verschluckt\nEmpfehlung\nFail-fast Migration, readiness erst nach Schema-Version\nAkzeptanz\nKaputte Migration verhindert Start; Upgrade/Rollback getestet\nAufwand\nM\nFUNC-002 · Travel-Frontend und Backend haben unvereinbare API-Pfade\nP0\nTravel\nBOTH\nAuswirkung\nReisen-Domain ist praktisch unbenutzbar\nEvidenz\nFrontend /travel/trips; TravelController @Controller(trips); live 404 vs /trips 500\nUrsache\nAPI-Vertrag driftete ohne Contract-Test\nEmpfehlung\nEin kanonischer Prefix und Contract-Test; 500-Ursache beheben\nAkzeptanz\nGET/CRUD Travel liefert 2xx und Seite rendert Daten/Empty korrekt\nAufwand\nM\nFUNC-003 · Alle sechs Finance-Kernendpunkte liefern live HTTP 500\nP0\nFinance\nOBSERVED\nAuswirkung\nGesamte Finanzdomain zeigt falsche Empty States\nEvidenz\nnet-worth, budgets, assets, accounts, transactions, savings-goals je 500\nUrsache\nWahrscheinlich Deployment-/Schema-Drift; Startscript toleriert Migrationfehler\nEmpfehlung\nLogs+Migration prüfen, Schema reparieren, Error UI\nAkzeptanz\nAlle Endpunkte 2xx; Migration aus leerer und bestehender DB getestet\nAufwand\nL\nPAGE-013 · Block-Operationen validieren Blockzugehörigkeit zur Seite nicht\nP0\nPages Security\nCODE_CONFIRMED\nAuswirkung\nIDOR: eigener pageId plus fremde blockId kann Update/Delete/Reorder/Versionzugriff auslösen\nEvidenz\npages.service.ts:186-225,228-258\nUrsache\nNur Page-Owner wird geprüft; Block wird global per ID geladen/geändert\nEmpfehlung\nRepositorymethoden nach blockId+pageId+ownerId scopen\nAkzeptanz\nCross-owner/page Tests ergeben 404; legitime Operationen grün\nAufwand\nM\nSEC-001 · Gültige Default-Admin-Zugangsdaten sind vorbefüllt und öffentlich angezeigt\nP0\nAuthentication\nBOTH\nAuswirkung\nJeder Netzwerkzugreifer erhält sofort Adminzugang\nEvidenz\nlogin/page.tsx:16-17,139-140; Live-Login erfolgreich\nUrsache\nTestdefaults wurden in Produktions-UI und Seed-Zustand belassen\nEmpfehlung\nKeine Defaults; First-run Setup mit erzwungenem Secretwechsel\nAkzeptanz\nFrische Instanz verlangt einmaliges Admin-Setup; UI enthält keine Credentials\nAufwand\nM\nSEC-002 · @Throttle ist wirkungslos, weil ThrottlerGuard nicht registriert ist\nP0\nAuthentication\nCODE_CONFIRMED\nAuswirkung\nUnbegrenztes Brute Force gegen bekannten Adminaccount\nEvidenz\nAppModule importiert ThrottlerModule, aber kein APP_GUARD/ThrottlerGuard\nUrsache\nModul konfiguriert ohne Guard; Login-Dekorator suggeriert Schutz\nEmpfehlung\nGlobalen ThrottlerGuard registrieren; account+IP Limits\nAkzeptanz\n6. Fehlversuch im Fenster =>429; verteilte/accountbasierte Tests\nAufwand\nS\nSEC-003 · Vault-Passwörter und TOTP-Secrets werden im Klartext transportiert/gespeichert/ausgegeben\nP0\nVault\nCODE_CONFIRMED\nAuswirkung\nDB/API/XSS-Kompromiss legt alle Geheimnisse offen\nEvidenz\nvault form:379-414; service:19-27; repo:41-46; detail:258-273,318-334\nUrsache\nFeld heißt encryptedPassword, aber es gibt keinerlei Encryption; Input type=text\nEmpfehlung\nServerseitige Envelope Encryption/KMS; DTO plaintext nur transient; Secrets nie listen\nAkzeptanz\nDB enthält nur AEAD-Ciphertext; key rotation; API redaction; Migration\nAufwand\nXL\nBROW-003 · Stream-Ticket gilt 24h und WebSocket prüft keinen Origin\nP1\nBrowser Auth\nCODE_CONFIRMED\nAuswirkung\nLeakbares Queryticket kann lange von fremdem Origin wiederverwendet werden\nEvidenz\nbrowser-renderer.service.ts:79; server.js:845-855\nUrsache\nLange HMAC-TTL, keine Origin-/Single-use-Bindung\nEmpfehlung\n5-Min Single-use Ticket, Origin-Allowlist, Rotation\nAkzeptanz\nReplay/foreign-origin Tests werden abgelehnt\nAufwand\nM\nBROW-007 · Legacy-Proxy-Vertrag und POST sind weiterhin kaputt\nP1\nBrowser Legacy\nCODE_CONFIRMED\nAuswirkung\nGespeicherte Legacy-Blöcke rendern JSON/GET statt Seite/Form\nEvidenz\nRenderer /content => {html}; Controller behandelt response.text als HTML; method/postData ignoriert\nUrsache\nWidersprüchliche alte Proxyarchitektur\nEmpfehlung\nLegacy entfernen/migrieren oder Vertrag vollständig testen\nAkzeptanz\nMigration abgeschlossen; kein /proxy oder E2E GET+POST grün\nAufwand\nM\nBROW-008 · Legacy-Renderer teilt Session „legacy“ zwischen Nutzern\nP1\nBrowser Isolation\nCODE_CONFIRMED\nAuswirkung\nCookies/History können Cross-user leaken\nEvidenz\nserver.js:783-787,833\nUrsache\nKonstanter Profil-/Sessionname\nEmpfehlung\nLegacy entfernen oder pro Owner/Request isolieren\nAkzeptanz\nZwei Nutzer teilen keinerlei Storage/Cookies\nAufwand\nM\nBROW-009 · Renderer-Port 3111 ist in Dev und Prod extern exponiert\nP1\nBrowser Deployment\nBOTH\nAuswirkung\nTraefik/Auth/Rate-Limit werden umgangen; Angriffsfläche steigt\nEvidenz\nCompose ports; live /health 200\nUrsache\nBrowser WS wird direkt statt über kontrollierten Reverse Proxy genutzt\nEmpfehlung\nInterne-only Service-Netze; WS via Origin-geschützten Proxy\nAkzeptanz\nHostport geschlossen; Browser funktioniert via HTTPS/WSS\nAufwand\nM\nBROW-010 · Tab-Synchronisierung verschluckt alle API-Fehler\nP1\nBrowser Persistence\nCODE_CONFIRMED\nAuswirkung\nTabs können nach Reload fehlen/duplizieren ohne Hinweis\nEvidenz\nBrowserBlock.tsx:205-235 .catch(()=>undefined)\nUrsache\nRenderer und DB sind konkurrierende Sources of Truth\nEmpfehlung\nServer-authoritative Mapping und sichtbarer Sync-State\nAkzeptanz\nFehler wird angezeigt/retrybar; keine Duplikate\nAufwand\nL\nBROW-011 · Screenshot→Sharp→JS-I420 ist CPU-intensiver Video-Pfad\nP1\nBrowser Performance\nCODE_CONFIRMED\nAuswirkung\nMehrere Sessions skalieren schlecht auf NAS\nEvidenz\nserver.js:180-203, captureFrame, 15 FPS\nUrsache\nJeder Frame wird voll dekodiert und per JS Pixel für Pixel konvertiert\nEmpfehlung\nCDP screencast/native encoder evaluieren; FPS/Quality adaptiv messen\nAkzeptanz\nCPU je aktiver Session unter definiertem Ziel\nAufwand\nXL\nBROW-012 · Browser besitzt keine UI/WebRTC/Cold-start-E2E-Suite\nP1\nBrowser Testing\nBOTH\nAuswirkung\nKritische Selbstheilungsinvarianten regressieren unbemerkt\nEvidenz\nNur 2 Auth-Tests + URL policy; Live Regression\nUrsache\nTests decken nur Token/URL-Policy\nEmpfehlung\nContainerisierte E2E-Matrix für Stream/Input/Reconnect/Isolation\nAkzeptanz\nCI reproduziert Coldstart, Black frame, tab CRUD, SSRF\nAufwand\nL\nDOCKER-005 · Frontend und Backend laufen als root\nP1\nContainer Security\nCODE_CONFIRMED\nAuswirkung\nContainer-Kompromiss hat unnötig hohe Rechte\nEvidenz\nDockerfiles ohne USER; Browser ist positiv non-root\nUrsache\nRunner-User nicht definiert\nEmpfehlung\nUID ohne Shell, chown, read-only FS wo möglich\nAkzeptanz\ndocker inspect zeigt non-root; Schreibpfade explizit\nAufwand\nM\nDOCKER-006 · Prod exponiert Backend und Chrome trotz Traefik direkt\nP1\nNetwork\nCODE_CONFIRMED\nAuswirkung\nTLS, Rate-Limit und Security-Headers können umgangen werden\nEvidenz\ndocker-compose.prod.yml ports 3007 und 3111\nUrsache\nInterne Services veröffentlichen Hostports\nEmpfehlung\nNur Traefik extern; interne Netzsegmente\nAkzeptanz\nPortscan Host zeigt nur 80/443 und explizite optionale Dienste\nAufwand\nM\nDOCKER-007 · Keine CPU/RAM/PID-Limits für Browser und Kernservices\nP1\nReliability\nCODE_CONFIRMED\nAuswirkung\nBrowser-/Query-Spikes können gesamten NAS destabilisieren\nEvidenz\nCompose ohne deploy/resources/mem_limit/pids_limit\nUrsache\nRessourcenverträge fehlen\nEmpfehlung\nService-Limits, reservations, ulimits und OOM-Policy\nAkzeptanz\n5-Session-Test bleibt innerhalb Budget; Kern-DB verfügbar\nAufwand\nM\nFUNC-001 · Acht Deep Links verlieren ihr Ziel durch Auth-Hydration-Race\nP1\nRouting/Auth\nBOTH\nAuswirkung\nDirekte URLs führen über Login zum Dashboard; Route wirkt defekt\nEvidenz\nroutes.csv FAIL_REDIRECT_DASHBOARD; documents:70, insurance:88, IT:240, projects:645, search:69, travel:514, vault:60\nUrsache\nEffect prüft initial null accessToken vor Zustand-Rehydration\nEmpfehlung\nZentraler AuthBoundary mit hydration state und returnUrl\nAkzeptanz\nDirektaufruf jeder geschützten Route bleibt nach Rehydration erhalten\nAufwand\nM\nFUNC-004 · Shopping-Liste liefert live HTTP 500\nP1\nShopping\nOBSERVED\nAuswirkung\nEinkaufslisten sind nicht verlässlich nutzbar\nEvidenz\n/api/v1/shopping-lists 500; Shopping-Screenshot zeigt 0 Listen\nUrsache\nBackend/DB-Fehler wird als Empty State verschluckt\nEmpfehlung\nEndpoint/Schema reparieren und UI-Fehlerstatus\nAkzeptanz\nGET 200; Create/Update/Delete E2E grün\nAufwand\nM\nFUNC-005 · E-Mail-Status liefert live HTTP 500\nP1\nEmail\nOBSERVED\nAuswirkung\nUI zeigt „Keine E-Mails“ statt Integrationsfehler\nEvidenz\n/api/v1/email/status 500; Email-Screenshot\nUrsache\nFehlerpfad wird nicht getrennt von leerem Postfach\nEmpfehlung\nStatus-Service reparieren; Connection/Error CTA\nAkzeptanz\nConnected/disconnected/error/empty eindeutig getestet\nAufwand\nM\nFUNC-007 · Travel besitzt acht bestätigte Frontend/Controller-Mismatches\nP1\nAPI Contracts\nCODE_CONFIRMED\nAuswirkung\nJeder Travel CRUD-Aufruf trifft falsche Route\nEvidenz\napi-contracts.csv CONFIRMED_MISMATCH=8\nUrsache\nManuelle Stringpfade ohne OpenAPI-Client\nEmpfehlung\nOpenAPI/typed Client generieren und CI-Contract-Gate\nAkzeptanz\n0 CONFIRMED_MISMATCH; E2E pro Mutation\nAufwand\nM\nFUNC-009 · Backend-Testscript besteht trotz null Testdateien\nP1\nTesting\nBOTH\nAuswirkung\nCI vermittelt falsche Sicherheit; Security-/CRUD-Regressions unentdeckt\nEvidenz\nbackend test PASS: No test files found; --passWithNoTests; coverage FAIL\nUrsache\nBackend-App filtert Domain-Tests aus und toleriert Leerlauf\nEmpfehlung\nNo-tests als Fehler; Domain-Suites zentral aggregieren\nAkzeptanz\nBackend test führt reale Tests aus; Coverage-Schwelle enforced\nAufwand\nM\nMAINT-001 · Media 1.704 LOC und Pages 1.622 LOC sind Änderungshotspots\nP1\nMaintainability\nCODE_CONFIRMED\nAuswirkung\nHohe Kopplung, schwierige Tests und Merge-Konflikte\nEvidenz\ncode-metrics.json\nUrsache\nRoute, State, Dialoge, Datenzugriff und Renderer leben in Monolithdateien\nEmpfehlung\nFeature-Slices/Hooks/Presenter schrittweise extrahieren\nAkzeptanz\nKein Route-Component >500 LOC; Verhaltenstests grün\nAufwand\nL\nMAINT-004 · Rekursiver Workspace-Test scheitert an @lifehub/auth-Auflösung\nP1\nTesting\nBOTH\nAuswirkung\nAPI-Controller-Suites laufen in CI nicht; pnpm stoppt beim ersten Domainfehler\nEvidenz\nworkspace-test.log: Contacts API suite FAIL, Dashboard API suite 0 tests; workspace typecheck PASS\nUrsache\nWorkspace-Package main/exports zeigt auf nicht vorhandene dist-Artefakte oder Vitest-Alias fehlt\nEmpfehlung\nTest-Aliases/source exports zentral konfigurieren; Packages vor Tests reproduzierbar bauen\nAkzeptanz\npnpm -r run test läuft aus Clean Checkout vollständig grün und führt alle Controller-Suites aus\nAufwand\nM\nPAGE-001 · Blocklöschen funktioniert technisch, ist aber versteckt/unzugänglich\nP1\nPages UX\nBOTH\nAuswirkung\nNutzer erlebt Löschen als nicht vorhanden\nEvidenz\nBlockHandle wrapper opacity 0; live UI Delete 204 + Read-back absent\nUrsache\nDelete liegt hinter unsichtbarem Hover-Plus-Menü\nEmpfehlung\nPersistenter Handle bei Fokus/Touch, Delete-Shortcut, Undo\nAkzeptanz\nQA: Maus/Touch/Tastatur löschen + Undo; API Read-back\nAufwand\nM\nPAGE-002 · BlockHandle-Suchfeld filtert nichts\nP1\nPages UX\nCODE_CONFIRMED\nAuswirkung\nTäuschendes Control und langsame Blockwahl\nEvidenz\nBlockHandle.tsx:87-95 ohne value/onChange; Optionen ungefiltert\nUrsache\nNur visuelles Input-Skelett implementiert\nEmpfehlung\nQuery-State, Filter und Keyboard-Navigation\nAkzeptanz\nEingabe reduziert Liste und Enter wählt Treffer\nAufwand\nS\nPAGE-003 · Vier widersprüchliche Blocklisten driften\nP1\nPages Architecture\nCODE_CONFIRMED\nAuswirkung\nUnsupported Widgets werden angeboten oder fehlen; Änderungen vervielfacht\nEvidenz\npage.tsx union/defaults/rendering; BlockHandle 15; registry 28; DTO/entity\nUrsache\nKeine einzige ausführbare Registry als Source of Truth\nEmpfehlung\nRegistry besitzt Schema, Renderer, Default, Commands, Supportstatus\nAkzeptanz\nJeder Typ einmal registriert; CI prüft Frontend/Backend-Parität\nAufwand\nL\nPAGE-004 · Slash-Menü konvertiert aktuellen Block statt neuen einzufügen\nP1\nPages Editor\nCODE_CONFIRMED\nAuswirkung\nBestehender Text kann unerwartet umgewandelt/verloren werden\nEvidenz\npage.tsx:255-257,560-565; SlashMenu.tsx:112-117\nUrsache\nonSelect ist an onBlockTypeChange gekoppelt\nEmpfehlung\nInsert-at-caret API und stabile Cursorposition\nAkzeptanz\nSlash erzeugt neuen Block unter Cursor ohne Inhaltsverlust\nAufwand\nM\nPAGE-005 · Rich-Text-Formatierung ist nicht auffindbar\nP1\nPages Editor\nBOTH\nAuswirkung\nBold/Italic/Strike/Link nur über unbekannte Shortcuts oder gar nicht\nEvidenz\nStarterKit vorhanden; live formatControls=[]\nUrsache\nKeine Bubble-/Floating-Toolbar und keine Shortcut-Hilfe\nEmpfehlung\nAccessible BubbleMenu mit Marks/Link/Code/Highlight\nAkzeptanz\nSelection zeigt Toolbar; Keyboard+Screenreader getestet\nAufwand\nM\nPAGE-006 · Toggle ist nur Label plus Plain-Textarea\nP1\nPages Editor\nCODE_CONFIRMED\nAuswirkung\nKeine echten Child-Blocks, Rich Text oder DnD\nEvidenz\nToggleBlock.tsx:13-37\nUrsache\nContent-Schema speichert String statt Blockhierarchie\nEmpfehlung\nNested block model für Toggle-Children\nAkzeptanz\nKinder beliebiger Typen anlegen/reordern/persistieren\nAufwand\nL\nPAGE-007 · Einklappbare H1/H2/H3 fehlen vollständig\nP1\nPages Editor\nCODE_CONFIRMED\nAuswirkung\nExplizite Nutzeranforderung und Notion-Kernmuster fehlen\nEvidenz\nKeine toggle_heading-Komponente/Registry/DTO\nUrsache\nToggle und Heading sind getrennte flache Typen\nEmpfehlung\nToggle-Heading-Varianten mit Child-Blocks\nAkzeptanz\nH1/H2/H3 einklappbar, TOC/Keyboard kompatibel\nAufwand\nM\nPAGE-008 · Inhaltsverzeichnis aus Überschriften fehlt\nP1\nPages Editor\nCODE_CONFIRMED\nAuswirkung\nLange Seiten sind schlecht navigierbar\nEvidenz\n0 TableOfContents/TOC-Implementierungen\nUrsache\nKeine stabilen Heading-Anker oder abgeleitete Outline\nEmpfehlung\nDerived TOC-Block/Sidebar aus Heading-Index\nAkzeptanz\nLive aktualisiert, anklickbar, Deep-Link-fähig\nAufwand\nM\nPAGE-009 · Multi-Select, Nested Blocks und page-weites Undo fehlen\nP1\nPages Architecture\nCODE_CONFIRMED\nAuswirkung\nKeine Bulk-Aktionen, Einrückung oder sichere Strukturänderungen\nEvidenz\nKeine selectedBlocks/BlockRange; flache sortOrder-Liste\nUrsache\nEditor-State modelliert nur einzelne Blöcke\nEmpfehlung\nSelection/parentBlockId/command history spezifizieren\nAkzeptanz\nShift/Ctrl-Auswahl, Bulk move/delete/copy, Undo/Redo E2E\nAufwand\nXL\nPAGE-010 · Everything-is-a-database existiert nur als ungenutzte Tabelle\nP1\nPages Databases\nCODE_CONFIRMED\nAuswirkung\nNotion-Datenbankkonzept faktisch nicht vorhanden\nEvidenz\ndatabase_pages public.ts:973-981; keine weitere Nutzung\nUrsache\nSchema-Stub ohne Repository/Service/API/UI\nEmpfehlung\nVollständigen Vertical Slice planen oder Stub entfernen\nAkzeptanz\nDB",
+  "htmlLang": "de",
+  "htmlClass": "",
+  "localStorageKeys": [],
+  "interactiveCount": 2,
+  "interactives": [
+    {
+      "i": 0,
+      "tag": "SELECT",
+      "role": null,
+      "text": "Alle Prioritäten\nP0\nP1\nP2",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 146.5,
+        "y": 3562.8125,
+        "w": 129,
+        "h": 35
+      }
+    },
+    {
+      "i": 1,
+      "tag": "INPUT",
+      "role": null,
+      "text": "",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 283.5,
+        "y": 3562.8125,
+        "w": 191,
+        "h": 35
+      }
+    }
+  ],
+  "headings": [
+    {
+      "tag": "H1",
+      "text": "LifeHub Code-/Funktionsreview"
+    },
+    {
+      "tag": "H2",
+      "text": "Scorecard"
+    },
+    {
+      "tag": "H2",
+      "text": "Live Coverage"
+    },
+    {
+      "tag": "H2",
+      "text": "Pages/Notion"
+    },
+    {
+      "tag": "H2",
+      "text": "Browser"
+    },
+    {
+      "tag": "H2",
+      "text": "Security"
+    },
+    {
+      "tag": "H2",
+      "text": "Build & Tests"
+    },
+    {
+      "tag": "H2",
+      "text": "Docker"
+    },
+    {
+      "tag": "H2",
+      "text": "Priorität"
+    },
+    {
+      "tag": "H2",
+      "text": "Alle Findings"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-001 · Browser Cold Start bleibt nach erstem Fehler im Endlos-Spinner"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-002 · Live Browser zeigt schwarzen Viewport und Reconnect-Schleife"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-004 · Redirect-, DNS-Rebinding- und Subresource-SSRF bleiben offen"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-005 · Chromium läuft weiterhin mit --no-sandbox"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-006 · Unbegrenzte Sessions starten je einen Chromium"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-001 · Tag-Dockerjob kann Frontend/Backend aus Clean Checkout nicht bauen"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-002 · Backend-Dockerfile überspringt alle Builds und übernimmt Host-dist"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-003 · Frontend-Image verlangt vorgebautes .next; API-Base ist eingefroren"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-004 · Backend startet trotz fehlgeschlagener Migration"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-002 · Travel-Frontend und Backend haben unvereinbare API-Pfade"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-003 · Alle sechs Finance-Kernendpunkte liefern live HTTP 500"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-013 · Block-Operationen validieren Blockzugehörigkeit zur Seite nicht"
+    },
+    {
+      "tag": "H3",
+      "text": "SEC-001 · Gültige Default-Admin-Zugangsdaten sind vorbefüllt und öffentlich angezeigt"
+    },
+    {
+      "tag": "H3",
+      "text": "SEC-002 · @Throttle ist wirkungslos, weil ThrottlerGuard nicht registriert ist"
+    },
+    {
+      "tag": "H3",
+      "text": "SEC-003 · Vault-Passwörter und TOTP-Secrets werden im Klartext transportiert/gespeichert/ausgegeben"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-003 · Stream-Ticket gilt 24h und WebSocket prüft keinen Origin"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-007 · Legacy-Proxy-Vertrag und POST sind weiterhin kaputt"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-008 · Legacy-Renderer teilt Session „legacy“ zwischen Nutzern"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-009 · Renderer-Port 3111 ist in Dev und Prod extern exponiert"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-010 · Tab-Synchronisierung verschluckt alle API-Fehler"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-011 · Screenshot→Sharp→JS-I420 ist CPU-intensiver Video-Pfad"
+    },
+    {
+      "tag": "H3",
+      "text": "BROW-012 · Browser besitzt keine UI/WebRTC/Cold-start-E2E-Suite"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-005 · Frontend und Backend laufen als root"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-006 · Prod exponiert Backend und Chrome trotz Traefik direkt"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-007 · Keine CPU/RAM/PID-Limits für Browser und Kernservices"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-001 · Acht Deep Links verlieren ihr Ziel durch Auth-Hydration-Race"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-004 · Shopping-Liste liefert live HTTP 500"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-005 · E-Mail-Status liefert live HTTP 500"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-007 · Travel besitzt acht bestätigte Frontend/Controller-Mismatches"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-009 · Backend-Testscript besteht trotz null Testdateien"
+    },
+    {
+      "tag": "H3",
+      "text": "MAINT-001 · Media 1.704 LOC und Pages 1.622 LOC sind Änderungshotspots"
+    },
+    {
+      "tag": "H3",
+      "text": "MAINT-004 · Rekursiver Workspace-Test scheitert an @lifehub/auth-Auflösung"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-001 · Blocklöschen funktioniert technisch, ist aber versteckt/unzugänglich"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-002 · BlockHandle-Suchfeld filtert nichts"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-003 · Vier widersprüchliche Blocklisten driften"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-004 · Slash-Menü konvertiert aktuellen Block statt neuen einzufügen"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-005 · Rich-Text-Formatierung ist nicht auffindbar"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-006 · Toggle ist nur Label plus Plain-Textarea"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-007 · Einklappbare H1/H2/H3 fehlen vollständig"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-008 · Inhaltsverzeichnis aus Überschriften fehlt"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-009 · Multi-Select, Nested Blocks und page-weites Undo fehlen"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-010 · Everything-is-a-database existiert nur als ungenutzte Tabelle"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-011 · Views, Properties, Filter, Relations, Formeln und Rollups fehlen"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-012 · Debounced Textupdate kann beim Unmount verloren gehen"
+    },
+    {
+      "tag": "H3",
+      "text": "PAGE-014 · Reorder ist nicht atomar und akzeptiert beliebige Block-IDs"
+    },
+    {
+      "tag": "H3",
+      "text": "PERF-001 · Build enthält 3.77 MB JS; größter Chunk 513 KB"
+    },
+    {
+      "tag": "H3",
+      "text": "PERF-002 · Recipes lädt bis 1.16 MB encoded, Pages 866 KB"
+    },
+    {
+      "tag": "H3",
+      "text": "PERF-003 · Lint meldet 38 unoptimierte img-Verwendungen"
+    },
+    {
+      "tag": "H3",
+      "text": "PERF-005 · Pages-Reorder führt N Einzelupdates sequenziell aus"
+    },
+    {
+      "tag": "H3",
+      "text": "SEC-004 · 24h Access-/LocalStorage-Tokens werden zusätzlich in Bild-URLs gelegt"
+    },
+    {
+      "tag": "H3",
+      "text": "SEC-005 · Live/Dev-Compose erlaubt CORS * mit credentials"
+    },
+    {
+      "tag": "H3",
+      "text": "SEC-006 · Dev-Compose enthält feste DB/Redis/Meili-Secrets"
+    },
+    {
+      "tag": "H3",
+      "text": "SEC-007 · Produktions-Audit meldet 49 Vulnerabilities, 22 hoch"
+    },
+    {
+      "tag": "H3",
+      "text": "DOCKER-008 · Production nutzt mutable latest-Tags ohne Digest/Rollbackvertrag"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-006 · Ungültige Jellyfin-IDs führen häufig zu 500 statt 404"
+    },
+    {
+      "tag": "H3",
+      "text": "FUNC-008 · Alte Media-MusicLibrary ruft drei nicht existente Endpunkte"
+    },
+    {
+      "tag": "H3",
+      "text": "MAINT-002 · 73.317 LOC haben nur 22 Testdateien"
+    },
+    {
+      "tag": "H3",
+      "text": "MAINT-003 · Lint besteht trotz 76 Warnungen"
+    },
+    {
+      "tag": "H3",
+      "text": "PERF-004 · Jellyfin-Seiten rendern bis 862 Interactives"
+    },
+    {
+      "tag": "H3",
+      "text": "PERF-006 · Userliste lädt Rollen in N+1-Schleife"
+    }
+  ],
+  "errors": [],
+  "consoleEventCount": 0,
+  "networkFailureCount": 0,
+  "consoleEvents": [],
+  "networkFailures": []
+}

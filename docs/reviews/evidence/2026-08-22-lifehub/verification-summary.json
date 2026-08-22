@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "errors": [],
+  "findings": 77,
+  "severity": {
+    "P1": 48,
+    "P2": 14,
+    "P0": 15
+  },
+  "ui_findings": 17,
+  "code_findings": 60,
+  "routes": 56,
+  "route_statuses": {
+    "PASS_RENDER": 17,
+    "PARTIAL_NETWORK_ERRORS": 20,
+    "FAIL_REDIRECT_DASHBOARD": 8,
+    "PARTIAL_INVALID_ID_NO_CLEAR_STATE": 6,
+    "PASS_INVALID_ID_STATE": 5
+  },
+  "interactions": 1983,
+  "screenshots": 182,
+  "pages_matrix_rows": 38,
+  "browser_matrix_rows": 40,
+  "secret_hits": [],
+  "report_sizes": {
+    "ui_md": 21564,
+    "ui_html": 26985,
+    "code_md": 55758,
+    "code_html": 75802
+  }
+}

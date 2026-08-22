@@ -1,0 +1,2338 @@
+{
+  "routes": 12,
+  "total_controls": 586,
+  "total_empty_names": 4,
+  "total_unlabeled": 13,
+  "total_small_targets": 469,
+  "route_summaries": [
+    {
+      "route": "/dashboard",
+      "controls": 35,
+      "emptyNames": 2,
+      "emptyExamples": [
+        {
+          "tag": "BUTTON",
+          "role": null,
+          "html": "<button class=\"absolute left-1 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" s",
+          "rect": {
+            "x": 333,
+            "y": 322.5,
+            "width": 24,
+            "height": 24,
+            "top": 322.5,
+            "right": 357,
+            "bottom": 346.5,
+            "left": 333
+          }
+        },
+        {
+          "tag": "BUTTON",
+          "role": null,
+          "html": "<button class=\"absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" ",
+          "rect": {
+            "x": 787.5,
+            "y": 322.5,
+            "width": 24,
+            "height": 24,
+            "top": 322.5,
+            "right": 811.5,
+            "bottom": 346.5,
+            "left": 787.5
+          }
+        }
+      ],
+      "unlabeled": 0,
+      "unlabeledExamples": [],
+      "smallTargets": 35,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 100,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 8,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Widget hinzufügen",
+          "ratio": 3.19,
+          "fg": "rgb(255, 255, 255)",
+          "bg": "rgb(217, 119, 6)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "1/4",
+          "ratio": 3.67,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "route": "/settings",
+      "controls": 38,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 2,
+      "unlabeledExamples": [
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "placeholder": null,
+          "name": "",
+          "html": "<input class=\"input-field\" type=\"text\" value=\"LifeHub\">"
+        },
+        {
+          "tag": "SELECT",
+          "type": "select-one",
+          "placeholder": null,
+          "name": "",
+          "html": "<select class=\"input-field\"><option value=\"\">Automatisch (System)</option><option value=\"Europe/Berlin\">Europe/Berlin</option><option value=\"Europe/Vienna\">Europe/Vienna</option><option value=\"Europe/Zurich\">Europe/Zuric"
+        }
+      ],
+      "smallTargets": 37,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 13,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 6,
+      "contrastExamples": [
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "A",
+          "text": "Einstellungen",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Abmelden",
+          "ratio": 3.67,
+          "fg": "rgb(220, 38, 38)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "P",
+          "text": "„Automatisch (System)\" übernimmt die Zeitzone des Servers.",
+          "ratio": 3.67,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "route": "/media",
+      "controls": 43,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 4,
+      "unlabeledExamples": [
+        {
+          "tag": "SELECT",
+          "type": "select-one",
+          "placeholder": null,
+          "name": "",
+          "html": "<select class=\"rounded-md border border-border bg-bg-surface px-3 py-1.5 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-brand-500/50\"><option value=\"\">Alle Quellen</option><option value=\"ca3e4415-2693-4992-9d"
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "placeholder": "Dateiname suchen...",
+          "name": "",
+          "html": "<input placeholder=\"Dateiname suchen...\" class=\"bg-transparent text-sm text-fg outline-none w-36 placeholder:text-fg-subtle\" type=\"text\" value=\"\">"
+        },
+        {
+          "tag": "SELECT",
+          "type": "select-one",
+          "placeholder": null,
+          "name": "",
+          "html": "<select class=\"ml-auto rounded-md border border-border bg-bg-surface px-2 py-1.5 text-xs text-fg focus:outline-none focus:ring-2 focus:ring-brand-500/50\"><option value=\"50\">50 pro Seite</option><option value=\"100\">100 pr"
+        },
+        {
+          "tag": "SELECT",
+          "type": "select-one",
+          "placeholder": null,
+          "name": "",
+          "html": "<select class=\"ml-auto rounded-md border border-border bg-bg-surface px-2 py-1.5 text-xs text-fg focus:outline-none focus:ring-2 focus:ring-brand-500/50\"><option value=\"50\">50 pro Seite</option><option value=\"100\">100 pr"
+        }
+      ],
+      "smallTargets": 42,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 63,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 5,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Medien",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "50 Dateien",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "route": "/calendar",
+      "controls": 35,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 0,
+      "unlabeledExamples": [],
+      "smallTargets": 35,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 97,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 146,
+            "height": 20,
+            "top": 887,
+            "right": 216,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Hell",
+          "html": "<span>Hell</span>",
+          "rect": {
+            "x": 49,
+            "y": 911,
+            "width": 21.46875,
+            "height": 16,
+            "top": 911,
+            "right": 70.46875,
+            "bottom": 927,
+            "left": 49
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "html": "<span>Dunkel</span>",
+          "rect": {
+            "x": 110.46875,
+            "y": 911,
+            "width": 38.21875,
+            "height": 16,
+            "top": 911,
+            "right": 148.6875,
+            "bottom": 927,
+            "left": 110.46875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "System",
+          "html": "<span>System</span>",
+          "rect": {
+            "x": 188.6875,
+            "y": 911,
+            "width": 38.796875,
+            "height": 16,
+            "top": 911,
+            "right": 227.484375,
+            "bottom": 927,
+            "left": 188.6875
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "1",
+          "html": "<div class=\"h-full min-h-[100px] cursor-pointer border-l border-border first:border-l-0 p-1 align-top hover:bg-bg-raised/50 transition-colors overflow-hidden\"><div class=\"flex justify-center\"><span class=\"grid h-7 w-7 place-items-center rou",
+          "rect": {
+            "x": 1099,
+            "y": 198,
+            "width": 154,
+            "height": 127.328125,
+            "top": 198,
+            "right": 1253,
+            "bottom": 325.328125,
+            "left": 1099
+          }
+        },
+        {
+          "tag": "DIV",
+          "text": "1",
+          "html": "<div class=\"flex justify-center\"><span class=\"grid h-7 w-7 place-items-center rounded-full text-sm font-medium\">1</span></div>",
+          "rect": {
+            "x": 1104,
+            "y": 202,
+            "width": 145,
+            "height": 28,
+            "top": 202,
+            "right": 1249,
+            "bottom": 230,
+            "left": 1104
+          }
+        }
+      ],
+      "contrastCandidates": 4,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Kalender",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "P",
+          "text": "Keine Seiten vorhanden",
+          "ratio": 3.67,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "route": "/email",
+      "controls": 34,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 0,
+      "unlabeledExamples": [],
+      "smallTargets": 34,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 17,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 8,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "E-Mail",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Verfassen",
+          "ratio": 3.19,
+          "fg": "rgb(255, 255, 255)",
+          "bg": "rgb(217, 119, 6)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Posteingang",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        }
+      ]
+    },
+    {
+      "route": "/recipes",
+      "controls": 46,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 2,
+      "unlabeledExamples": [
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "placeholder": "Rezepte durchsuchen...",
+          "name": "",
+          "html": "<input placeholder=\"Rezepte durchsuchen...\" class=\"flex-1 px-4 py-2 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring\" type=\"text\" value=\"\">"
+        },
+        {
+          "tag": "SELECT",
+          "type": "select-one",
+          "placeholder": null,
+          "name": "",
+          "html": "<select class=\"px-4 py-2 bg-muted border border-border rounded-lg\"><option value=\"all\">Alle Quellen</option><option value=\"url\">url</option><option value=\"manual\">manual</option></select>"
+        }
+      ],
+      "smallTargets": 32,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 100,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 5,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Rezepte",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Import",
+          "ratio": 3.19,
+          "fg": "rgb(255, 255, 255)",
+          "bg": "rgb(217, 119, 6)"
+        }
+      ]
+    },
+    {
+      "route": "/shopping",
+      "controls": 30,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 0,
+      "unlabeledExamples": [],
+      "smallTargets": 30,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 13,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 5,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Einkauf",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Neue Liste",
+          "ratio": 3.19,
+          "fg": "rgb(255, 255, 255)",
+          "bg": "rgb(217, 119, 6)"
+        }
+      ]
+    },
+    {
+      "route": "/finance",
+      "controls": 37,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 0,
+      "unlabeledExamples": [],
+      "smallTargets": 37,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 13,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 5,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Finanzen",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Alle",
+          "ratio": 3.19,
+          "fg": "rgb(255, 255, 255)",
+          "bg": "rgb(217, 119, 6)"
+        }
+      ]
+    },
+    {
+      "route": "/jellyfin",
+      "controls": 50,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 0,
+      "unlabeledExamples": [],
+      "smallTargets": 35,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 100,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 19,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Jellyfin",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Film",
+          "ratio": 1.45,
+          "fg": "rgb(96, 165, 250)",
+          "bg": "rgba(59, 130, 246, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Film",
+          "ratio": 1.45,
+          "fg": "rgb(96, 165, 250)",
+          "bg": "rgba(59, 130, 246, 0.1)"
+        }
+      ]
+    },
+    {
+      "route": "/jellyfin/music",
+      "controls": 147,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 2,
+      "unlabeledExamples": [
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "placeholder": "Filtern...",
+          "name": "",
+          "html": "<input placeholder=\"Filtern...\" class=\"w-full rounded-md bg-[var(--music-bg-card)] py-1.5 pl-7 pr-3 text-xs text-[var(--music-text-primary)] placeholder-[var(--music-text-tertiary)] outline-none border-none\">"
+        },
+        {
+          "tag": "SELECT",
+          "type": "select-one",
+          "placeholder": null,
+          "name": "",
+          "html": "<select class=\"w-full rounded-md bg-[var(--music-bg-card)] py-1.5 px-2 text-xs text-[var(--music-text-secondary)] outline-none border-none\"><option value=\"Zuletzt\" selected=\"\">Zuletzt</option><option value=\"Alphabetisch\""
+        }
+      ],
+      "smallTargets": 63,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 100,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.609375,
+            "height": 20,
+            "top": 887,
+            "right": 192.609375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.609375,
+            "y": 890,
+            "width": 17.390625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.609375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 12,
+      "contrastExamples": [
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 2.56,
+          "fg": "rgb(161, 161, 170)",
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(221, 107, 32)",
+          "bg": "rgba(221, 107, 32, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(221, 107, 32)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Künstler",
+          "ratio": 4.32,
+          "fg": "rgb(110, 110, 110)",
+          "bg": "rgb(236, 236, 236)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Alben",
+          "ratio": 4.32,
+          "fg": "rgb(110, 110, 110)",
+          "bg": "rgb(236, 236, 236)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Playlist • 2 Songs",
+          "ratio": 2.54,
+          "fg": "rgb(156, 156, 156)",
+          "bg": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "route": "/pages",
+      "controls": 30,
+      "emptyNames": 0,
+      "emptyExamples": [],
+      "unlabeled": 0,
+      "unlabeledExamples": [],
+      "smallTargets": 30,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 23,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.4375,
+            "height": 20,
+            "top": 887,
+            "right": 192.4375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.4375,
+            "y": 890,
+            "width": 17.5625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.4375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 8,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Seiten\n2",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Neue Seite",
+          "ratio": 3.19,
+          "fg": "rgb(255, 255, 255)",
+          "bg": "rgb(217, 119, 6)"
+        }
+      ]
+    },
+    {
+      "route": "/pages?open=68d35c72-2407-4a81-8788-025de07787b0",
+      "controls": 61,
+      "emptyNames": 2,
+      "emptyExamples": [
+        {
+          "tag": "BUTTON",
+          "role": null,
+          "html": "<button disabled=\"\" class=\"px-2 py-1.5 rounded bg-amber-600 text-white text-sm disabled:opacity-50\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"",
+          "rect": {
+            "x": 1011,
+            "y": 624,
+            "width": 32,
+            "height": 34,
+            "top": 624,
+            "right": 1043,
+            "bottom": 658,
+            "left": 1011
+          }
+        },
+        {
+          "tag": "DIV",
+          "role": null,
+          "html": "<div contenteditable=\"true\" translate=\"no\" class=\"tiptap ProseMirror prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[1.2em]\" tabindex=\"0\"><p data-placeholder=\"Text eingeben...\" class=\"is-empty is-editor-empty\"><br class=\"ProseMi",
+          "rect": {
+            "x": 288,
+            "y": 767,
+            "width": 768,
+            "height": 24,
+            "top": 767,
+            "right": 1056,
+            "bottom": 791,
+            "left": 288
+          }
+        }
+      ],
+      "unlabeled": 3,
+      "unlabeledExamples": [
+        {
+          "tag": "SELECT",
+          "type": "select-one",
+          "placeholder": null,
+          "name": "",
+          "html": "<select class=\"flex-1 bg-transparent text-sm font-medium border-none outline-none\"><option value=\"e91f6b52-0326-4932-8025-3b2a83a499a6\">Test</option></select>"
+        },
+        {
+          "tag": "INPUT",
+          "type": "url",
+          "placeholder": "URL oder Suche (z.B. DuckDuckGo Lite)...",
+          "name": "",
+          "html": "<input placeholder=\"URL oder Suche (z.B. DuckDuckGo Lite)...\" class=\"flex-1 px-2 py-1.5 rounded border border-border bg-bg text-sm\" type=\"url\" value=\"\">"
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "placeholder": "Titel (optional)",
+          "name": "",
+          "html": "<input placeholder=\"Titel (optional)\" class=\"w-32 px-2 py-1.5 rounded border border-border bg-bg text-sm\" type=\"text\" value=\"\">"
+        }
+      ],
+      "smallTargets": 59,
+      "smallExamples": [
+        {
+          "tag": "BUTTON",
+          "name": "Sidebar einklappen",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "A",
+          "name": "Dashboard",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Kalender",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "E-Mail",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Medien",
+          "w": 216,
+          "h": 40
+        },
+        {
+          "tag": "A",
+          "name": "Reisen",
+          "w": 216,
+          "h": 40
+        }
+      ],
+      "clickDivs": 16,
+      "clickExamples": [
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "html": "<span class=\"flex-1 text-left\">Seiten</span>",
+          "rect": {
+            "x": 70,
+            "y": 887,
+            "width": 122.4375,
+            "height": 20,
+            "top": 887,
+            "right": 192.4375,
+            "bottom": 907,
+            "left": 70
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "html": "<span class=\"text-[10px] text-fg-subtle bg-bg rounded-full px-1.5 py-0.5 leading-none\">2</span>",
+          "rect": {
+            "x": 198.4375,
+            "y": 890,
+            "width": 17.5625,
+            "height": 14,
+            "top": 890,
+            "right": 216,
+            "bottom": 904,
+            "left": 198.4375
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 928,
+            "width": 14,
+            "height": 14,
+            "top": 928,
+            "right": 46,
+            "bottom": 942,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Test",
+          "html": "<span class=\"truncate\">Test</span>",
+          "rect": {
+            "x": 54,
+            "y": 927,
+            "width": 20.5625,
+            "height": 16,
+            "top": 927,
+            "right": 74.5625,
+            "bottom": 943,
+            "left": 54
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "",
+          "html": "<span class=\"shrink-0 text-xs leading-none\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l",
+          "rect": {
+            "x": 32,
+            "y": 958,
+            "width": 14,
+            "height": 14,
+            "top": 958,
+            "right": 46,
+            "bottom": 972,
+            "left": 32
+          }
+        },
+        {
+          "tag": "SPAN",
+          "text": "Spanien",
+          "html": "<span class=\"truncate\">Spanien</span>",
+          "rect": {
+            "x": 54,
+            "y": 957,
+            "width": 42.3125,
+            "height": 16,
+            "top": 957,
+            "right": 96.3125,
+            "bottom": 973,
+            "left": 54
+          }
+        }
+      ],
+      "contrastCandidates": 5,
+      "contrastExamples": [
+        {
+          "tag": "A",
+          "text": "Seiten\n2",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Seiten",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "2",
+          "ratio": 4.12,
+          "fg": "rgb(113, 113, 122)",
+          "bg": "rgb(9, 9, 11)"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(217, 119, 6, 0.1)"
+        },
+        {
+          "tag": "SPAN",
+          "text": "Dunkel",
+          "ratio": 1,
+          "fg": "rgb(217, 119, 6)",
+          "bg": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    }
+  ]
+}

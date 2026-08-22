@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-08-22T00:58:32.170657+00:00",
+  "repository": "C:\\Users\\dasil\\Documents\\LifeHub",
+  "live_url": "http://100.124.4.24:3100/dashboard",
+  "git_sha": "333398d2a6665becf49eaa0df6c0b40e7a8c32ae",
+  "branch": "main",
+  "git_status": [
+    "M apps/frontend/tsconfig.tsbuildinfo",
+    " M docker-compose.yml",
+    "?? .hermes/plans/2026-07-18_000000-recipe-import-fixes.md",
+    "?? .hermes/plans/2026-07-18_010000-recipe-section-support.md",
+    "?? .hermes/plans/2026-07-18_020000-recipe-detail-fixes.md",
+    "?? .hermes/plans/2026-07-18_030000-recipe-images-groups-settings.md",
+    "?? .hermes/plans/2026-07-22_170000-music-ux-review-iteration-3.md",
+    "?? .hermes/plans/2026-07-23_203000-jellyfin-netflix-ux-review.md",
+    "?? .hermes/plans/2026-08-09_141500-browser-block-perf-captcha-google.md",
+    "?? .hermes/plans/2026-08-09_213000-browser-block-selbstheilung.md",
+    "?? .hermes/plans/2026-08-13_203600-calendar-redesign.md",
+    "?? .hermes/plans/2026-08-13_213000-media-gallery-pagination-lazy-loading.md",
+    "?? .hermes/plans/2026-08-13_220000-jellyfin-filme-serien-ux-fixes.md",
+    "?? .hermes/plans/2026-08-13_224500-musik-jellyfin-folgefixes.md",
+    "?? .hermes/plans/2026-08-15_154342-browser-block-review-fixes.md",
+    "?? .hermes/plans/2026-08-15_173500-media-gallery-thumbnails.md",
+    "?? .hermes/plans/2026-08-16-app-ui-redesign-phase-2.6.md",
+    "?? .hermes/plans/2026-08-16_162804-win11-vm-repair-iso.md",
+    "?? .hermes/plans/2026-08-17_213500-media-gallery-revert-to-working-rendering.md",
+    "?? .hermes/plans/2026-08-19_151500-lifehub-hermes-migration-to-lur-nas-vm.md",
+    "?? .hermes/plans/2026-08-22_024321-lifehub-ui-code-review.md",
+    "?? designs/media_tabs_order.png",
+    "?? docs/reviews/evidence/"
+  ],
+  "route_count": 56,
+  "http_200_route_probes": 56,
+  "interaction_evidence_count": 1983,
+  "frontend_api_call_count": 248,
+  "controller_endpoint_count": 338,
+  "design_token_occurrences": 4139,
+  "static_color_occurrences": 1799,
+  "semantic_token_occurrences": 2340,
+  "viewports": [
+    "375x812",
+    "768x1024",
+    "1024x768",
+    "1440x1000",
+    "1920x1080"
+  ],
+  "themes": [
+    "light",
+    "dark",
+    "system"
+  ],
+  "accents": [
+    "amber",
+    "blue",
+    "green",
+    "rose",
+    "violet",
+    "custom"
+  ],
+  "truth_standard": [
+    "OBSERVED",
+    "CODE_CONFIRMED",
+    "BOTH",
+    "INFERRED",
+    "BLOCKED"
+  ],
+  "notes": [
+    "HTTP probes are unauthenticated SSR requests and do not prove client-side functionality.",
+    "Dynamic routes use an invalid placeholder and require later real-ID testing.",
+    "Original dirty files were not modified by this inventory script."
+  ],
+  "completed_at": "2026-08-22T01:45:32.050864+00:00",
+  "status": "COMPLETE_VERIFIED",
+  "findings_total": 77,
+  "findings_by_severity": {
+    "P1": 48,
+    "P2": 14,
+    "P0": 15
+  },
+  "routes_by_authenticated_status": {
+    "PASS_RENDER": 17,
+    "PARTIAL_NETWORK_ERRORS": 20,
+    "FAIL_REDIRECT_DASHBOARD": 8,
+    "PARTIAL_INVALID_ID_NO_CLEAR_STATE": 6,
+    "PASS_INVALID_ID_STATE": 5
+  },
+  "screenshots_total": 182,
+  "evidence_files_total": 229,
+  "pages_notion_matrix_rows": 38,
+  "browser_matrix_rows": 40,
+  "subagents": {
+    "dispatched": 8,
+    "usable_results": 0,
+    "blocker": "HTTP 401 Invalid API key before file access",
+    "fallback": "Lead completed live/source/spec triangulation directly"
+  },
+  "verification": "verification-summary.json: ok=true",
+  "secrets_redacted": true,
+  "qa_cleanup": {
+    "page_delete_status": 204,
+    "read_back_status": 404,
+    "verified": true
+  },
+  "temporary_worktree_removed": true,
+  "headless_profiles_removed": true
+}

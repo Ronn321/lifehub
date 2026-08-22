@@ -1,0 +1,353 @@
+{
+  "atlas_rows": 112,
+  "dark_routes": 56,
+  "light_routes": 56,
+  "screenshot_files_total": 121,
+  "desktop_dark_files": 56,
+  "desktop_light_files": 56,
+  "redirects": [
+    {
+      "route": "/calendar",
+      "probe": "/calendar",
+      "final": "/calendar?view=month",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nKalender\n\nDeine Termine und Ereignisse\n\nMonat\nWoche\nTag\nAgenda\nEinstellung"
+    },
+    {
+      "route": "/documents",
+      "probe": "/documents",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    },
+    {
+      "route": "/insurance",
+      "probe": "/insurance",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    },
+    {
+      "route": "/it-inventory",
+      "probe": "/it-inventory",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    },
+    {
+      "route": "/projects",
+      "probe": "/projects",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n\nKeine Seiten vorhanden\n\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden"
+    },
+    {
+      "route": "/recipes/dishes/[id]",
+      "probe": "/recipes/dishes/__review_invalid__",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    },
+    {
+      "route": "/search",
+      "probe": "/search",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    },
+    {
+      "route": "/travel",
+      "probe": "/travel",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    },
+    {
+      "route": "/vault",
+      "probe": "/vault",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    },
+    {
+      "route": "/login",
+      "probe": "/login",
+      "final": "/dashboard",
+      "body": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nHell\nDunkel\nSystem\nEinstellungen\nHallo, Admin\nWidget hinzufügen\nAbmelden\nLetzte Medien\n[Telefon redigiert]."
+    }
+  ],
+  "network_failure_count": 223,
+  "network_status_counts": {
+    "404": 182,
+    "500": 38,
+    "": 3
+  },
+  "network_top_urls": [
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/38a9b20c80b7e138d6fdf48dd1484069/image?w=64&h=64&token=[REDACTED]",
+      11
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/04299f5afa9c55f3763c602da8c4ce63/image?w=64&h=64&token=[REDACTED]",
+      11
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/97bcacef1fa2625023a5f7b42d711371/image?w=64&h=64&token=[REDACTED]",
+      11
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/media/albums/:id/media",
+      9
+    ],
+    [
+      "http://100.124.4.24:3100/api/v1/recipes/image/:id",
+      9
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/default/items/__review_invalid__/detail",
+      8
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/default/items/__review_invalid__/children",
+      4
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/__review_invalid__/image?w=400&h=400&token=[REDACTED]",
+      4
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/default/items/aa8f8ed157e4a5df9a0d44a40c2a97f8/image?w=300&h=450&token=[REDACTED]",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/1a09fc14f6e0f18a334ee46e47d9176d/image?w=80&h=80&token=[REDACTED]",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/c1adb00ced8d8e4ae696b8beb9ee03be/image?w=80&h=80&token=[REDACTED]",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/16c439c0dccbadec52b97f055e9feb04/image?w=80&h=80&token=[REDACTED]",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/06d43e5316ebaff3c78dd47f417a0ea6/image?w=80&h=80&token=[REDACTED]",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/fe4d7c7b9b8e3358abfd5d66de377f81/image?w=80&h=80&token=[REDACTED]",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/3baf64329f48184fa9dfdd3aa5bd8176/image?w=80&h=80&token=[REDACTED]",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/7a7fadcdff06761e1fefb3e93d4c3fa6/image?w=80&h=80&token=[REDACTED]",
+      3
+    ],
+    [
+      "",
+      3
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/finance/net-worth",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/finance/budgets",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/finance/assets",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/finance/accounts",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/finance/transactions",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/finance/savings-goals",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/albums/__review_invalid__/songs",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/items/__review_invalid__/detail",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/playlists/__review_invalid__",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/jellyfin/servers/:id/playlists/__review_invalid__/items",
+      2
+    ],
+    [
+      "http://100.124.4.24:3100/api/v1/recipes/__review_invalid__",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/shopping-lists",
+      2
+    ],
+    [
+      "http://100.124.4.24:3007/api/v1/documents",
+      1
+    ]
+  ],
+  "markers": {
+    "nicht gefunden": [
+      "/jellyfin/watch/[id]",
+      "/recipes/[id]/cook",
+      "/recipes/[id]"
+    ],
+    "bald verfügbar": [],
+    "Phase 2": [
+      "/dashboard",
+      "/documents",
+      "/insurance",
+      "/it-inventory",
+      "/recipes/dishes/[id]",
+      "/search",
+      "/travel",
+      "/vault",
+      "/login"
+    ],
+    "Phase 3": [],
+    "Fehler": [
+      "/jellyfin/movies/[id]",
+      "/jellyfin/series/[id]"
+    ],
+    "konnte nicht": [],
+    "Noch keine": [
+      "/finance",
+      "/jellyfin/music/album/[id]",
+      "/shopping"
+    ],
+    "Keine Daten": []
+  },
+  "interactive_min": [
+    [
+      2,
+      "/"
+    ],
+    [
+      26,
+      "/pages/[slug]"
+    ],
+    [
+      26,
+      "/plugins"
+    ],
+    [
+      27,
+      "/pages"
+    ],
+    [
+      27,
+      "/recipes/[id]/cook"
+    ],
+    [
+      28,
+      "/projects"
+    ],
+    [
+      33,
+      "/jellyfin/collections"
+    ],
+    [
+      33,
+      "/jellyfin/collections/[id]"
+    ],
+    [
+      33,
+      "/jellyfin/movies/[id]"
+    ],
+    [
+      33,
+      "/jellyfin/photos"
+    ],
+    [
+      33,
+      "/jellyfin/series/[id]"
+    ],
+    [
+      33,
+      "/jellyfin/watch/[id]"
+    ],
+    [
+      33,
+      "/recipes/[id]"
+    ],
+    [
+      34,
+      "/contacts"
+    ],
+    [
+      34,
+      "/jellyfin/search"
+    ]
+  ],
+  "interactive_max": [
+    [
+      862,
+      "/jellyfin/movies"
+    ],
+    [
+      637,
+      "/jellyfin/music/artist/[id]"
+    ],
+    [
+      395,
+      "/jellyfin/music/artists"
+    ],
+    [
+      272,
+      "/jellyfin/series"
+    ],
+    [
+      188,
+      "/jellyfin/music"
+    ],
+    [
+      184,
+      "/jellyfin/browse"
+    ],
+    [
+      116,
+      "/jellyfin/music/albums"
+    ],
+    [
+      98,
+      "/jellyfin/music/search"
+    ],
+    [
+      97,
+      "/jellyfin/music/genres"
+    ],
+    [
+      96,
+      "/media"
+    ],
+    [
+      84,
+      "/jellyfin/music/library"
+    ],
+    [
+      82,
+      "/jellyfin/music/album/[id]"
+    ],
+    [
+      80,
+      "/jellyfin/music/favorites"
+    ],
+    [
+      79,
+      "/jellyfin/music/tracks"
+    ],
+    [
+      77,
+      "/jellyfin/music/recent"
+    ]
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "url": "file:///C:/Users/dasil/Documents/LifeHub/docs/reviews/2026-08-22_lifehub_ui_design_review.html",
+  "title": "LifeHub UI-/UX-/Design-Review",
+  "readyState": "complete",
+  "bodyText": "LifeHub UI-/UX-/Design-Review\n\nLive + Source · 2026-08-22\n\n17\nFindings\n0\nP0\n10\nP1\n7\nP2\n56\nRouten\n182\nScreenshots\n1983\nControls\n224\nEvidence\nScorecard\nDesign-Konsistenz5.2/10\nVisuelle Attraktivität6.4/10\nIntuitivität4.8/10\nAccessibility3.2/10\nResponsive/Mobile3.8/10\nTheme-/Akzent-Reife4.9/10\nModernität6.0/10\nFeedback/States4.1/10\nUrteil: attraktive Dark-Mode-Basis, aber inkonsistente Tokens, unzureichender Kontrast, versteckte Aktionen und gebrochene Mobile-Reflows.\nAntworten\nKonsistent?\n\nShell und Ikonographie ja; Farben, Controls, States und Domain-Layouts nur teilweise.\n\nModerner?\n\nLifeHub Refined als Default; Frosted Glass nur für Sidebar/Topbar/Overlays; Notion-Patterns im Pages-Workspace; Hermes/OpenCode optional.\n\nIntuitiv?\n\nLesbare Hauptnavigation, aber Hover-only Aktionen, Fake-Empty-States und Mobile-Clipping verhindern ein durchgehend intuitives Erlebnis.\n\nEvidenz\nGlass-Regel\n\nGlas nur für überlagernde Shell-Flächen. Dokumente, Tabellen, Finance, Vault und Browser-Viewport bleiben opak. Solid-Fallback, Reduced Transparency und WCAG-Prüfung sind Pflicht.\n\nCoverage\n\n56 Routen × Dark/Light, 60 responsive Captures, 12-Routen-A11y-Pass und 1.983 Control-Evidenzen. Vollständige Matrizen liegen unter evidence/2026-08-22-lifehub/.\n\nAlle Findings\nAlle Prioritäten\nP0\nP1\nP2\n17 Findings\nUI-001 · 1.799 statische Farbklassen umgehen semantische Tokens\nP1\nDesign System\nCODE_CONFIRMED\nAuswirkung\nLight/Dark und Akzent-Packs driften; hohe Regressiongefahr\nEvidenz\ndesign-token-matrix.csv; Top: projects 195, travel 161, pages 130\nUrsache\nSeiten wurden lokal mit Zinc/Amber/Statusfarben statt Komponenten-/Semantik-Tokens gebaut\nEmpfehlung\nSemantische Surface/Text/Status-Tokens und Komponenten-Wrapper durchsetzen\nAkzeptanz\nVerbotene Klassen im dual-mode UI = 0 oder begründete Ausnahme; visuelle Regression Light/Dark\nAufwand\nL\nUI-002 · Weiße Schrift auf allen brand-500-Presets verfehlt WCAG AA\nP1\nAccessibility\nBOTH\nAuswirkung\nPrimäre CTAs sind für viele Nutzer nicht ausreichend lesbar\nEvidenz\nBerechnet: Amber 3.19:1, Blau 3.68, Grün 2.28, Rosé 3.67, Violett 4.23; a11y-audit.json\nUrsache\nEin universelles text-white wird auf zu hellen, frei wählbaren Akzenten verwendet\nEmpfehlung\nKontrastadaptiven Button-Text oder dunklere CTA-Stufe verwenden\nAkzeptanz\nJedes Preset und Custom-Hex erreicht 4.5:1; automatisierter Kontrasttest\nAufwand\nM\nUI-003 · text-fg-subtle ist für normalen Text zu kontrastarm\nP1\nAccessibility\nBOTH\nAuswirkung\nHilfen, Zähler und Metadaten sind schwer lesbar\nEvidenz\nLight 2.56:1, Dark 4.12:1; live Hilfetexte/Badges\nUrsache\nSubtle-Token wird für normalen 10–12px Text statt rein dekorative Inhalte verwendet\nEmpfehlung\nToken heller/dunkler abstufen und Nutzung auf große/dekorative Inhalte begrenzen\nAkzeptanz\nNormaltext >=4.5:1 in Light und Dark\nAufwand\nS\nUI-004 · Nicht-Amber-Presets verwenden im Light Mode die Dark-first-Skala\nP1\nTheming\nCODE_CONFIRMED\nAuswirkung\nBlue/Green/Rose/Violet verhalten sich im Light Theme farblich inkonsistent\nEvidenz\nglobals.css:43-108 vs. :root:not([data-accent]):not(.dark):110-123\nUrsache\ndata-accent-Selektoren unterscheiden Light und Dark nicht\nEmpfehlung\nJe Preset separate Light-/Dark-Tokens definieren\nAkzeptanz\nAlle sechs Akzente bestehen Snapshot+Kontrasttests in beiden Modi\nAufwand\nM\nUI-009 · Mobile Shell entspricht nicht der Bottom-Tab-Spezifikation\nP1\nResponsive\nOBSERVED\nAuswirkung\nMobile Navigation ist versteckt; Kernbereiche benötigen Zusatzschritt\nEvidenz\nmobile/dashboard__375x812__dark.png; UI_UX.md:258-263\nUrsache\nDesktop-Sidebar wird nur zum Hamburger statt zu fünf Bottom-Tabs\nEmpfehlung\nMobile Bottom-Bar + Mehr-Sheet implementieren\nAkzeptanz\n375px: fünf Kernziele sichtbar, keine Überlagerung\nAufwand\nM\nUI-010 · Mobile Überschriften/Tabs werden abgeschnitten und horizontal überlaufen\nP1\nResponsive\nOBSERVED\nAuswirkung\nSeitenname beginnt als „iten“, Settings als „stem…“; Tabs/Pfade abgeschnitten\nEvidenz\nmobile/pages, mobile/settings, mobile/email Screenshots\nUrsache\nHamburger liegt absolut über Content; Desktop-Tabreihen bleiben ungebrochen\nEmpfehlung\nMobile Header-Inset, scrollbare/gestapelte Tabs und Sheet-Navigation\nAkzeptanz\n320/375px ohne Textüberlagerung oder horizontale Page-Scrollbar\nAufwand\nM\nUI-011 · Zentrale Aktionen sind hover-only und auf Touch unsichtbar\nP1\nInteraction\nBOTH\nAuswirkung\nDelete/Edit/Remove sind auf Touch und Tastatur kaum erreichbar\nEvidenz\nBlockHandle.tsx:74; PageHeader.tsx:128; mehrere Blockkomponenten\nUrsache\nopacity-0 group-hover wird als primäres Aktionsmodell genutzt\nEmpfehlung\nfocus-within, sichtbares Touch-Menü und persistente Handles ergänzen\nAkzeptanz\nAlle Aktionen per Touch, Tastatur und Screenreader erreichbar\nAufwand\nM\nUI-012 · A11y-Audit: leere Namen, unlabeled Felder und zu kleine Ziele\nP1\nAccessibility\nBOTH\nAuswirkung\nScreenreader-/Touchbedienung deutlich eingeschränkt\nEvidenz\n12 Routen: 586 Controls, 4 leere Namen, 13 unlabeled Felder, 469 Ziele <44px\nUrsache\nIcon-Buttons und Inputs verlassen sich auf Optik/Placeholder; 24–40px Targets\nEmpfehlung\nAccessible Names/Labels und 44px Touchflächen als Komponentenvertrag\nAkzeptanz\n0 leere Namen/unlabeled Felder; kritische Touchziele >=44px\nAufwand\nL\nUI-013 · Pages-Einträge sind klickbare divs statt Links/Buttons\nP1\nAccessibility\nBOTH\nAuswirkung\nKeine Tab-Navigation, keine Linksemantik, schlechter Deep-Link\nEvidenz\npage.tsx:352-385; live-pages.json listet Einträge nicht als Controls\nUrsache\nonClick/cursor-pointer liegt auf div ohne role/tabIndex\nEmpfehlung\nSemantische Links/treeitems verwenden\nAkzeptanz\nAlle Seiten per Tab/Enter erreichbar und URL kopierbar\nAufwand\nS\nUI-014 · Backend-500 werden als leere Datenzustände verschleiert\nP1\nError UX\nOBSERVED\nAuswirkung\nNutzer glaubt, er habe keine Daten und kann falsche Aktionen ausführen\nEvidenz\nFinance/Shopping/Email Screenshots + live 500s\nUrsache\nQueries behandeln error wie leere Arrays oder ignorieren Statusfehler\nEmpfehlung\nExplizite Error Boundary, Ursache, Retry und Offline-Status\nAkzeptanz\n500 zeigt Fehler+Retry, niemals Empty State\nAufwand\nM\nUI-005 · Custom-Akzent überschreibt nur 400/500/600 und mischt Rest mit Amber\nP2\nTheming\nCODE_CONFIRMED\nAuswirkung\nCustom-Theme wirkt in Komponenten mit 50–300/700–900 zweifarbig\nEvidenz\ntheme-store.ts:35-49\nUrsache\nAus Custom-Hex wird keine vollständige Tonleiter erzeugt\nEmpfehlung\nVollständige OKLCH-Tonleiter generieren\nAkzeptanz\n50–900 folgen Custom-Hue; Kontrasttests bestanden\nAufwand\nM\nUI-006 · Bestehende glass-Utility ist hardcodiert dunkel\nP2\nGlass UI\nCODE_CONFIRMED\nAuswirkung\nGlass-Flächen funktionieren im Light Theme nicht konsistent\nEvidenz\nglobals.css:153-157\nUrsache\nrgba(24,24,27,.7) und weiße Border sind nicht theme-aware\nEmpfehlung\nGlass-Surface über semantische RGB/Alpha-Tokens plus Fallback definieren\nAkzeptanz\nLight/Dark/Reduced Transparency visuell und per Kontrast geprüft\nAufwand\nS\nUI-007 · Animationssystem respektiert reduced motion nicht global\nP2\nMotion\nCODE_CONFIRMED\nAuswirkung\nVestibuläre Barriere und Verstoß gegen UI_UX.md\nEvidenz\nglobals.css:165-169; keine prefers-reduced-motion-Regel\nUrsache\nAnimationen sind unbedingte Utilities\nEmpfehlung\nGlobale reduced-motion-Variante und component-level opt-out\nAkzeptanz\nBei prefers-reduced-motion keine nichtessenzielle Bewegung\nAufwand\nS\nUI-008 · Dashboard nutzt großen Desktopbereich nicht aus\nP2\nLayout\nOBSERVED\nAuswirkung\nSchwache Hierarchie, viel tote Fläche, Widgets wirken zufällig\nEvidenz\ndashboard__1440x1000__dark__default.png\nUrsache\nGrid packt große Medien-/Kalenderkarten links und schmale Widgets in eine Mini-Spalte\nEmpfehlung\nResponsive 12-Spalten-Grid, klare Widget-Größen und Ausrichtung\nAkzeptanz\n1440/1920px ohne unbegründete Leerräume; Resize-Grenzen stabil\nAufwand\nM\nUI-015 · Rezeptkarten zeigen riesige leere Bildflächen bei 404\nP2\nMedia UX\nBOTH\nAuswirkung\nUnprofessionelle Karten, verschwendete Fläche, schlechter Scan\nEvidenz\nrecipes screenshot; recipe pages always request /recipes/image/:id\nUrsache\nImage wird immer gerendert; Listen-/Detailansicht ohne onError-Fallback\nEmpfehlung\nThumbnail-Verfügbarkeit im Modell + kompakter Fallback\nAkzeptanz\n404 zeigt definierte Placeholder-Karte ohne Layoutloch\nAufwand\nS\nUI-016 · Pages-Übersicht ist optisch flach und wenig klickbar\nP2\nPages UX\nOBSERVED\nAuswirkung\nHierarchie und Ziel der Zeilen sind schwer erkennbar; viel tote Fläche\nEvidenz\npages-overview screenshot\nUrsache\nEine große Card um alle Rows, kaum Hover/Chevron/Metadaten\nEmpfehlung\nTree/List mit klaren Row-Zuständen, Sortierung und Suchfeld\nAkzeptanz\nKlickziel, Parent/Child und Aktionen sind sofort erkennbar\nAufwand\nM\nUI-017 · Settings-Tabs besitzen keine Tab-Semantik und brechen mobil\nP2\nSettings UX\nBOTH\nAuswirkung\nScreenreader- und Mobile-Navigation unklar\nEvidenz\nsettings/page.tsx:55-70; mobile/settings screenshot\nUrsache\nButtons ohne tablist/tab/aria-selected; feste horizontale Reihe\nEmpfehlung\nRadix Tabs oder vollständige ARIA-Tabs plus mobile Scroll/Select\nAkzeptanz\nKeyboard-Pfeile, aria-selected und 320px-Reflow funktionieren\nAufwand\nS",
+  "htmlLang": "de",
+  "htmlClass": "",
+  "localStorageKeys": [],
+  "interactiveCount": 2,
+  "interactives": [
+    {
+      "i": 0,
+      "tag": "SELECT",
+      "role": null,
+      "text": "Alle Prioritäten\nP0\nP1\nP2",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 146.5,
+        "y": 3932.234375,
+        "w": 129,
+        "h": 35
+      }
+    },
+    {
+      "i": 1,
+      "tag": "INPUT",
+      "role": null,
+      "text": "",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 283.5,
+        "y": 3932.234375,
+        "w": 191,
+        "h": 35
+      }
+    }
+  ],
+  "headings": [
+    {
+      "tag": "H1",
+      "text": "LifeHub UI-/UX-/Design-Review"
+    },
+    {
+      "tag": "H2",
+      "text": "Scorecard"
+    },
+    {
+      "tag": "H2",
+      "text": "Antworten"
+    },
+    {
+      "tag": "H3",
+      "text": "Konsistent?"
+    },
+    {
+      "tag": "H3",
+      "text": "Moderner?"
+    },
+    {
+      "tag": "H3",
+      "text": "Intuitiv?"
+    },
+    {
+      "tag": "H2",
+      "text": "Evidenz"
+    },
+    {
+      "tag": "H2",
+      "text": "Glass-Regel"
+    },
+    {
+      "tag": "H2",
+      "text": "Coverage"
+    },
+    {
+      "tag": "H2",
+      "text": "Alle Findings"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-001 · 1.799 statische Farbklassen umgehen semantische Tokens"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-002 · Weiße Schrift auf allen brand-500-Presets verfehlt WCAG AA"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-003 · text-fg-subtle ist für normalen Text zu kontrastarm"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-004 · Nicht-Amber-Presets verwenden im Light Mode die Dark-first-Skala"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-009 · Mobile Shell entspricht nicht der Bottom-Tab-Spezifikation"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-010 · Mobile Überschriften/Tabs werden abgeschnitten und horizontal überlaufen"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-011 · Zentrale Aktionen sind hover-only und auf Touch unsichtbar"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-012 · A11y-Audit: leere Namen, unlabeled Felder und zu kleine Ziele"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-013 · Pages-Einträge sind klickbare divs statt Links/Buttons"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-014 · Backend-500 werden als leere Datenzustände verschleiert"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-005 · Custom-Akzent überschreibt nur 400/500/600 und mischt Rest mit Amber"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-006 · Bestehende glass-Utility ist hardcodiert dunkel"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-007 · Animationssystem respektiert reduced motion nicht global"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-008 · Dashboard nutzt großen Desktopbereich nicht aus"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-015 · Rezeptkarten zeigen riesige leere Bildflächen bei 404"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-016 · Pages-Übersicht ist optisch flach und wenig klickbar"
+    },
+    {
+      "tag": "H3",
+      "text": "UI-017 · Settings-Tabs besitzen keine Tab-Semantik und brechen mobil"
+    }
+  ],
+  "errors": [],
+  "consoleEventCount": 0,
+  "networkFailureCount": 0,
+  "consoleEvents": [],
+  "networkFailures": []
+}

@@ -1,0 +1,53 @@
+Scope: 28 of 29 workspace projects
+apps/frontend typecheck$ tsc --noEmit
+shared/auth typecheck$ tsc --noEmit
+shared/audit typecheck$ tsc --noEmit
+shared/db typecheck$ tsc --noEmit
+shared/audit typecheck: Done
+shared/events typecheck$ tsc --noEmit
+shared/auth typecheck: Done
+shared/permissions typecheck$ tsc --noEmit
+shared/db typecheck: Done
+shared/storage typecheck$ tsc --noEmit
+shared/permissions typecheck: Done
+shared/events typecheck: Done
+apps/frontend typecheck: Done
+shared/storage typecheck: Done
+domains/finance typecheck$ tsc --noEmit
+domains/documents typecheck$ tsc --noEmit
+domains/dashboard typecheck$ tsc --noEmit
+domains/contacts typecheck$ tsc --noEmit
+domains/dashboard typecheck: Done
+domains/insurance typecheck$ tsc --noEmit
+domains/contacts typecheck: Done
+domains/integrations typecheck$ tsc --noEmit
+domains/documents typecheck: Done
+domains/it-inventory typecheck$ tsc --noEmit
+domains/finance typecheck: Done
+domains/jellyfin typecheck$ tsc --noEmit
+domains/insurance typecheck: Done
+domains/media typecheck$ tsc --noEmit
+domains/it-inventory typecheck: Done
+domains/pages typecheck$ tsc --noEmit
+domains/jellyfin typecheck: Done
+domains/projects typecheck$ tsc --noEmit
+domains/media typecheck: Done
+domains/recipes typecheck$ tsc --noEmit
+domains/projects typecheck: Done
+domains/search typecheck$ tsc --noEmit
+domains/pages typecheck: Done
+domains/shopping typecheck$ tsc --noEmit
+domains/integrations typecheck: Done
+domains/travel typecheck$ tsc --noEmit
+domains/recipes typecheck: Done
+domains/users typecheck$ tsc --noEmit
+domains/search typecheck: Done
+domains/vault typecheck$ tsc --noEmit
+domains/shopping typecheck: Done
+domains/travel typecheck: Done
+domains/vault typecheck: Done
+domains/users typecheck: Done
+domains/calendar typecheck$ tsc --noEmit
+domains/email typecheck$ tsc --noEmit
+domains/email typecheck: Done
+domains/calendar typecheck: Done

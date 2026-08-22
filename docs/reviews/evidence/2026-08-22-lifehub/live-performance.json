@@ -1,0 +1,742 @@
+[
+  {
+    "route": "/dashboard",
+    "url": "http://100.124.4.24:3100/dashboard",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 119.80000000074506,
+      "domContentLoaded": 94.40000000223517,
+      "loadEvent": 119.80000000074506,
+      "transferSize": 5927,
+      "encodedBodySize": 5627
+    },
+    "resources": {
+      "count": 83,
+      "transferSize": 7475,
+      "encodedBodySize": 578741,
+      "apiCount": 9,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3007/api/v1/media/files/e7ae6e9d-c7f0-42f8-b89e-358080e56196/stream?token=[REDACTED]",
+          "duration": 1481,
+          "transferSize": 0
+        },
+        {
+          "name": "https://api.open-meteo.com/v1/forecast?latitude=53.07582&longitude=8.80717&current_weather=true&timezone=auto",
+          "duration": 120,
+          "transferSize": 0
+        },
+        {
+          "name": "https://api.open-meteo.com/v1/forecast?latitude=53.07582&longitude=8.80717&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=5",
+          "duration": 120,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages",
+          "duration": 118,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages/pin/list",
+          "duration": 117,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/dashboard/layout",
+          "duration": 114,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/system/settings",
+          "duration": 66,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3100/login?_rsc=1hc9m",
+          "duration": 57,
+          "transferSize": 1775
+        }
+      ]
+    },
+    "dom": {
+      "elements": 577,
+      "scrollHeight": 1000,
+      "interactive": 52
+    },
+    "cdp": {
+      "Nodes": 2843,
+      "LayoutCount": 8,
+      "RecalcStyleCount": 21,
+      "ScriptDuration": 0.041927,
+      "TaskDuration": 0.184931,
+      "JSHeapUsedSize": 14381696,
+      "JSHeapTotalSize": 19660800
+    }
+  },
+  {
+    "route": "/settings",
+    "url": "http://100.124.4.24:3100/settings",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 58,
+      "domContentLoaded": 57.80000000074506,
+      "loadEvent": 58,
+      "transferSize": 5994,
+      "encodedBodySize": 5694
+    },
+    "resources": {
+      "count": 73,
+      "transferSize": 37957,
+      "encodedBodySize": 571402,
+      "apiCount": 3,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3100/projects?_rsc=1nvtu",
+          "duration": 104,
+          "transferSize": 1999
+        },
+        {
+          "name": "http://100.124.4.24:3100/recipes?_rsc=1nvtu",
+          "duration": 103,
+          "transferSize": 1978
+        },
+        {
+          "name": "http://100.124.4.24:3100/shopping?_rsc=1nvtu",
+          "duration": 102,
+          "transferSize": 1978
+        },
+        {
+          "name": "http://100.124.4.24:3100/contacts?_rsc=1nvtu",
+          "duration": 96,
+          "transferSize": 1980
+        },
+        {
+          "name": "http://100.124.4.24:3100/finance?_rsc=1nvtu",
+          "duration": 96,
+          "transferSize": 1975
+        },
+        {
+          "name": "http://100.124.4.24:3100/jellyfin?_rsc=1nvtu",
+          "duration": 77,
+          "transferSize": 2014
+        },
+        {
+          "name": "http://100.124.4.24:3100/insurance?_rsc=1nvtu",
+          "duration": 73,
+          "transferSize": 1998
+        },
+        {
+          "name": "http://100.124.4.24:3100/vault?_rsc=1nvtu",
+          "duration": 73,
+          "transferSize": 1993
+        }
+      ]
+    },
+    "dom": {
+      "elements": 304,
+      "scrollHeight": 1000,
+      "interactive": 43
+    },
+    "cdp": {
+      "Nodes": 1846,
+      "LayoutCount": 3,
+      "RecalcStyleCount": 6,
+      "ScriptDuration": 0.020425,
+      "TaskDuration": 0.089423,
+      "JSHeapUsedSize": 11298468,
+      "JSHeapTotalSize": 23068672
+    }
+  },
+  {
+    "route": "/media",
+    "url": "http://100.124.4.24:3100/media",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 74.10000000149012,
+      "domContentLoaded": 74,
+      "loadEvent": 74.10000000149012,
+      "transferSize": 5991,
+      "encodedBodySize": 5691
+    },
+    "resources": {
+      "count": 77,
+      "transferSize": 37962,
+      "encodedBodySize": 571407,
+      "apiCount": 7,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3007/api/v1/media/files/67d07116-5bbe-4dcc-9923-e9b9f6e78d73/stream?token=[REDACTED]&size=768",
+          "duration": 1618,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/media/files?limit=50&offset=50",
+          "duration": 317,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3100/search?_rsc=1hplz",
+          "duration": 86,
+          "transferSize": 1972
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/media/files?limit=50&offset=0",
+          "duration": 83,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3100/it-inventory?_rsc=1hplz",
+          "duration": 79,
+          "transferSize": 2001
+        },
+        {
+          "name": "http://100.124.4.24:3100/plugins?_rsc=1hplz",
+          "duration": 78,
+          "transferSize": 2002
+        },
+        {
+          "name": "http://100.124.4.24:3100/jellyfin?_rsc=1hplz",
+          "duration": 76,
+          "transferSize": 2014
+        },
+        {
+          "name": "http://100.124.4.24:3100/users?_rsc=1hplz",
+          "duration": 76,
+          "transferSize": 1997
+        }
+      ]
+    },
+    "dom": {
+      "elements": 714,
+      "scrollHeight": 1000,
+      "interactive": 98
+    },
+    "cdp": {
+      "Nodes": 3002,
+      "LayoutCount": 6,
+      "RecalcStyleCount": 8,
+      "ScriptDuration": 0.025342,
+      "TaskDuration": 0.095716,
+      "JSHeapUsedSize": 15050632,
+      "JSHeapTotalSize": 24379392
+    }
+  },
+  {
+    "route": "/calendar",
+    "url": "http://100.124.4.24:3100/calendar",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 46.5,
+      "domContentLoaded": 46.399999998509884,
+      "loadEvent": 46.5,
+      "transferSize": 6032,
+      "encodedBodySize": 5732
+    },
+    "resources": {
+      "count": 70,
+      "transferSize": 37964,
+      "encodedBodySize": 571409,
+      "apiCount": 0,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3100/travel?_rsc=1jsrg",
+          "duration": 81,
+          "transferSize": 1993
+        },
+        {
+          "name": "http://100.124.4.24:3100/media?_rsc=1jsrg",
+          "duration": 81,
+          "transferSize": 1996
+        },
+        {
+          "name": "http://100.124.4.24:3100/email?_rsc=1jsrg",
+          "duration": 79,
+          "transferSize": 1993
+        },
+        {
+          "name": "http://100.124.4.24:3100/dashboard?_rsc=1jsrg",
+          "duration": 79,
+          "transferSize": 2016
+        },
+        {
+          "name": "http://100.124.4.24:3100/projects?_rsc=1jsrg",
+          "duration": 79,
+          "transferSize": 1999
+        },
+        {
+          "name": "http://100.124.4.24:3100/finance?_rsc=1jsrg",
+          "duration": 69,
+          "transferSize": 1975
+        },
+        {
+          "name": "http://100.124.4.24:3100/recipes?_rsc=1jsrg",
+          "duration": 56,
+          "transferSize": 1978
+        },
+        {
+          "name": "http://100.124.4.24:3100/contacts?_rsc=1jsrg",
+          "duration": 54,
+          "transferSize": 1980
+        }
+      ]
+    },
+    "dom": {
+      "elements": 374,
+      "scrollHeight": 1000,
+      "interactive": 36
+    },
+    "cdp": {
+      "Nodes": 3414,
+      "LayoutCount": 2,
+      "RecalcStyleCount": 4,
+      "ScriptDuration": 0.026805,
+      "TaskDuration": 0.099462,
+      "JSHeapUsedSize": 17182036,
+      "JSHeapTotalSize": 26214400
+    }
+  },
+  {
+    "route": "/email",
+    "url": "http://100.124.4.24:3100/email",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 66,
+      "domContentLoaded": 65.90000000223517,
+      "loadEvent": 66,
+      "transferSize": 6679,
+      "encodedBodySize": 6379
+    },
+    "resources": {
+      "count": 70,
+      "transferSize": 37965,
+      "encodedBodySize": 571410,
+      "apiCount": 0,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3100/jellyfin?_rsc=tig25",
+          "duration": 89,
+          "transferSize": 2014
+        },
+        {
+          "name": "http://100.124.4.24:3100/search?_rsc=tig25",
+          "duration": 85,
+          "transferSize": 1972
+        },
+        {
+          "name": "http://100.124.4.24:3100/users?_rsc=tig25",
+          "duration": 74,
+          "transferSize": 1997
+        },
+        {
+          "name": "http://100.124.4.24:3100/pages?_rsc=tig25",
+          "duration": 71,
+          "transferSize": 2082
+        },
+        {
+          "name": "http://100.124.4.24:3100/plugins?_rsc=tig25",
+          "duration": 69,
+          "transferSize": 2002
+        },
+        {
+          "name": "http://100.124.4.24:3100/dashboard?_rsc=tig25",
+          "duration": 42,
+          "transferSize": 2016
+        },
+        {
+          "name": "http://100.124.4.24:3100/projects?_rsc=tig25",
+          "duration": 41,
+          "transferSize": 1999
+        },
+        {
+          "name": "http://100.124.4.24:3100/travel?_rsc=tig25",
+          "duration": 41,
+          "transferSize": 1993
+        }
+      ]
+    },
+    "dom": {
+      "elements": 218,
+      "scrollHeight": 1000,
+      "interactive": 31
+    },
+    "cdp": {
+      "Nodes": 3718,
+      "LayoutCount": 2,
+      "RecalcStyleCount": 2,
+      "ScriptDuration": 0.015066,
+      "TaskDuration": 0.050081,
+      "JSHeapUsedSize": 22109816,
+      "JSHeapTotalSize": 28573696
+    }
+  },
+  {
+    "route": "/recipes",
+    "url": "http://100.124.4.24:3100/recipes",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 28.400000002235174,
+      "domContentLoaded": 28.200000002980232,
+      "loadEvent": 28.400000002235174,
+      "transferSize": 5973,
+      "encodedBodySize": 5673
+    },
+    "resources": {
+      "count": 90,
+      "transferSize": 627870,
+      "encodedBodySize": 1155315,
+      "apiCount": 0,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3100/api/v1/recipes/image/4f09b26d-3821-4d93-9215-f31fcef2fcda",
+          "duration": 1663,
+          "transferSize": 154905
+        },
+        {
+          "name": "http://100.124.4.24:3100/api/v1/recipes/image/4dabde72-2f19-436b-9d3b-98ef1a6538dd",
+          "duration": 1654,
+          "transferSize": 116976
+        },
+        {
+          "name": "http://100.124.4.24:3100/api/v1/recipes/image/b14cacbb-2ca0-49de-a2db-2cf5c988a3f4",
+          "duration": 1654,
+          "transferSize": 154905
+        },
+        {
+          "name": "http://100.124.4.24:3100/api/v1/recipes/image/afdcc3f2-ddaf-4e44-9b8b-5a9ee6fcaba2",
+          "duration": 1648,
+          "transferSize": 154905
+        },
+        {
+          "name": "http://100.124.4.24:3100/api/v1/recipes/image/e95c80bd-2492-4529-9753-9520589ae00d",
+          "duration": 228,
+          "transferSize": 373
+        },
+        {
+          "name": "http://100.124.4.24:3100/api/v1/recipes/image/2f4e6021-a3bd-44fc-b3e0-c9b7679b6230",
+          "duration": 228,
+          "transferSize": 373
+        },
+        {
+          "name": "http://100.124.4.24:3100/api/v1/recipes/image/46515a87-bbe2-4583-8ff9-f5e31bfc5d80",
+          "duration": 228,
+          "transferSize": 373
+        },
+        {
+          "name": "http://100.124.4.24:3100/recipes/598cb0bd-eb80-488b-a64a-8b8899790418?_rsc=lvgn3",
+          "duration": 207,
+          "transferSize": 466
+        }
+      ]
+    },
+    "dom": {
+      "elements": 359,
+      "scrollHeight": 1000,
+      "interactive": 43
+    },
+    "cdp": {
+      "Nodes": 4466,
+      "LayoutCount": 10,
+      "RecalcStyleCount": 11,
+      "ScriptDuration": 0.017691,
+      "TaskDuration": 0.096853,
+      "JSHeapUsedSize": 22795740,
+      "JSHeapTotalSize": 33554432
+    }
+  },
+  {
+    "route": "/shopping",
+    "url": "http://100.124.4.24:3100/shopping",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 56.79999999701977,
+      "domContentLoaded": 55.099999997764826,
+      "loadEvent": 56.79999999701977,
+      "transferSize": 6156,
+      "encodedBodySize": 5856
+    },
+    "resources": {
+      "count": 70,
+      "transferSize": 37980,
+      "encodedBodySize": 571425,
+      "apiCount": 0,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3100/settings?_rsc=xy7sd",
+          "duration": 186,
+          "transferSize": 2001
+        },
+        {
+          "name": "http://100.124.4.24:3100/jellyfin?_rsc=xy7sd",
+          "duration": 117,
+          "transferSize": 2014
+        },
+        {
+          "name": "http://100.124.4.24:3100/search?_rsc=xy7sd",
+          "duration": 117,
+          "transferSize": 1972
+        },
+        {
+          "name": "http://100.124.4.24:3100/users?_rsc=xy7sd",
+          "duration": 116,
+          "transferSize": 1997
+        },
+        {
+          "name": "http://100.124.4.24:3100/plugins?_rsc=xy7sd",
+          "duration": 116,
+          "transferSize": 2002
+        },
+        {
+          "name": "http://100.124.4.24:3100/pages?_rsc=xy7sd",
+          "duration": 116,
+          "transferSize": 2082
+        },
+        {
+          "name": "http://100.124.4.24:3100/finance?_rsc=xy7sd",
+          "duration": 74,
+          "transferSize": 1975
+        },
+        {
+          "name": "http://100.124.4.24:3100/vault?_rsc=xy7sd",
+          "duration": 73,
+          "transferSize": 1993
+        }
+      ]
+    },
+    "dom": {
+      "elements": 201,
+      "scrollHeight": 1000,
+      "interactive": 27
+    },
+    "cdp": {
+      "Nodes": 4750,
+      "LayoutCount": 2,
+      "RecalcStyleCount": 8,
+      "ScriptDuration": 0.016363,
+      "TaskDuration": 0.061606,
+      "JSHeapUsedSize": 24943560,
+      "JSHeapTotalSize": 38797312
+    }
+  },
+  {
+    "route": "/jellyfin",
+    "url": "http://100.124.4.24:3100/jellyfin",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 23.300000000745058,
+      "domContentLoaded": 21.599999997764826,
+      "loadEvent": 23.300000000745058,
+      "transferSize": 6014,
+      "encodedBodySize": 5714
+    },
+    "resources": {
+      "count": 90,
+      "transferSize": 37944,
+      "encodedBodySize": 571389,
+      "apiCount": 20,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages",
+          "duration": 1441,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages/pin/list",
+          "duration": 1441,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/system/settings",
+          "duration": 1417,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/jellyfin/items",
+          "duration": 1102,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/jellyfin/servers/default/continue-watching?limit=12",
+          "duration": 1034,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/jellyfin/libraries",
+          "duration": 917,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/jellyfin/servers",
+          "duration": 885,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/jellyfin/artists?serverId=e4f05b99-9ba3-4f8a-9503-02c0030d4791&limit=0",
+          "duration": 520,
+          "transferSize": 0
+        }
+      ]
+    },
+    "dom": {
+      "elements": 544,
+      "scrollHeight": 1000,
+      "interactive": 56
+    },
+    "cdp": {
+      "Nodes": 5465,
+      "LayoutCount": 23,
+      "RecalcStyleCount": 43,
+      "ScriptDuration": 0.037523,
+      "TaskDuration": 0.162984,
+      "JSHeapUsedSize": 29529660,
+      "JSHeapTotalSize": 41943040
+    }
+  },
+  {
+    "route": "/jellyfin/music",
+    "url": "http://100.124.4.24:3100/jellyfin/music",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 121.80000000074506,
+      "domContentLoaded": 64.60000000149012,
+      "loadEvent": 121.80000000074506,
+      "transferSize": 10334,
+      "encodedBodySize": 10034
+    },
+    "resources": {
+      "count": 83,
+      "transferSize": 91584,
+      "encodedBodySize": 622329,
+      "apiCount": 4,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3007/api/v1/jellyfin/servers",
+          "duration": 1539,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages",
+          "duration": 1510,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages/pin/list",
+          "duration": 1510,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/system/settings",
+          "duration": 310,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3100/_next/static/chunks/2994-29e3986b08ac8e36.js",
+          "duration": 79,
+          "transferSize": 19460
+        },
+        {
+          "name": "http://100.124.4.24:3100/jellyfin/music/search?_rsc=xwmba",
+          "duration": 64,
+          "transferSize": 2135
+        },
+        {
+          "name": "http://100.124.4.24:3100/contacts?_rsc=xwmba",
+          "duration": 62,
+          "transferSize": 1980
+        },
+        {
+          "name": "http://100.124.4.24:3100/finance?_rsc=xwmba",
+          "duration": 54,
+          "transferSize": 1975
+        }
+      ]
+    },
+    "dom": {
+      "elements": 640,
+      "scrollHeight": 1000,
+      "interactive": 72
+    },
+    "cdp": {
+      "Nodes": 6836,
+      "LayoutCount": 5,
+      "RecalcStyleCount": 27,
+      "ScriptDuration": 0.042265,
+      "TaskDuration": 0.157154,
+      "JSHeapUsedSize": 37579596,
+      "JSHeapTotalSize": 47972352
+    }
+  },
+  {
+    "route": "/pages?open=68d35c72-2407-4a81-8788-025de07787b0",
+    "url": "http://100.124.4.24:3100/pages?open=68d35c72-2407-4a81-8788-025de07787b0",
+    "title": "LifeHub",
+    "nav": {
+      "duration": 136.10000000149012,
+      "domContentLoaded": 120,
+      "loadEvent": 136.10000000149012,
+      "transferSize": 300,
+      "encodedBodySize": 5826
+    },
+    "resources": {
+      "count": 79,
+      "transferSize": 6300,
+      "encodedBodySize": 866221,
+      "apiCount": 7,
+      "slowest": [
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages/68d35c72-2407-4a81-8788-025de07787b0",
+          "duration": 905,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages/pin/list",
+          "duration": 842,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/pages",
+          "duration": 834,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3007/api/v1/system/settings",
+          "duration": 832,
+          "transferSize": 0
+        },
+        {
+          "name": "http://100.124.4.24:3100/travel?_rsc=1pt0v",
+          "duration": 82,
+          "transferSize": 300
+        },
+        {
+          "name": "http://100.124.4.24:3100/email?_rsc=1pt0v",
+          "duration": 79,
+          "transferSize": 300
+        },
+        {
+          "name": "http://100.124.4.24:3100/media?_rsc=1pt0v",
+          "duration": 77,
+          "transferSize": 300
+        },
+        {
+          "name": "http://100.124.4.24:3100/calendar?_rsc=1pt0v",
+          "duration": 76,
+          "transferSize": 300
+        }
+      ]
+    },
+    "dom": {
+      "elements": 436,
+      "scrollHeight": 1000,
+      "interactive": 65
+    },
+    "cdp": {
+      "Nodes": 7686,
+      "LayoutCount": 8,
+      "RecalcStyleCount": 15,
+      "ScriptDuration": 0.049633,
+      "TaskDuration": 0.116638,
+      "JSHeapUsedSize": 38117536,
+      "JSHeapTotalSize": 55574528
+    }
+  }
+]

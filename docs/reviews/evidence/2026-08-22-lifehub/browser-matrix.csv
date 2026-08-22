@@ -1,0 +1,41 @@
+﻿Feature,Expected,CodeStatus,LiveStatus,Result,Priority,Evidence,Recommendation
+Session initialisieren,One session per browser block,Implemented via Pages API,Existing research session loaded,PASS foundation,P3,BrowserBlock.tsx:134-143; live session ID,Keep owner tests
+Cold start,First open recovers from renderer startup delay,startStream onError only sets status,Stuck on Browser nicht erreichbar + spinner,FAIL,P0,BrowserBlock.tsx:145-154; browser-active screenshot,Bounded retry/backoff and explicit retry action
+Remount recovery,UI self-recovers without tab remount,Effect only reruns when sessionId changes,Manual tab remount obtains stream token,FAIL resilience,P0,Live 201 after remount,Retry when stream remains null/error
+WebRTC video,Stable live video frames,Offer/answer and video transceiver exist,Black viewport; tracks ended; reconnect loop,FAIL observed,P0,RemoteBrowserViewport.tsx; browser-after-remount screenshot,E2E handshake diagnostics and track reset
+Reconnect track lifecycle,One active track after reconnect,Existing MediaStream reused,4 ended video tracks accumulated,FAIL,P1,RemoteBrowserViewport.tsx:128-137; live track dump,Clear srcObject/ended tracks on close before reconnect
+Tabs,Create/activate/close/persist,Toolbar and renderer state implemented,Google tab visible; input not fully testable due stream,PARTIAL,P1,BrowserBlock.tsx:278-310; screenshot,E2E tab CRUD after stream repair
+Address/search,URL normalization and search,normalizeInput implemented,Address shows Google; Go visible,PARTIAL/PASS UI,P2,"BrowserBlock.tsx:77-85,237-243",Add autocomplete and validation feedback
+Back/forward/reload,Standard navigation controls,Implemented and releases mouse,Not executable through black stream,BLOCKED live,P1,BrowserBlock.tsx:312-321; server.js:441-443,Verify once stream is stable
+Mouse input ordering,No stuck click,Per-peer Promise queue + stale move drop,Not live-verifiable due stream,PASS code,P2,"server.js:526,565-576,678-685",Add renderer unit/integration test
+Mouse release,Release on cancel/disconnect/navigation,Implemented frontend+renderer,Not live-verifiable due stream,PASS code,P2,"server.js:376,394,404,428,476; RemoteViewport:326-328",Automated lost-capture test
+Wheel isolation,Remote scroll does not scroll host page,Native non-passive listener exists,Blocked by black stream,PASS code/PARTIAL live,P2,RemoteBrowserViewport.tsx:247-274,E2E host scroll assertion
+Control takeover,Single controlling peer with takeover,Implemented auto-take and button,Not live-verifiable,PARTIAL,P2,server.js input control logic; BrowserBlock:380-389,Two-client E2E and clear ownership indicator
+Bookmarks,CRUD per session,API and UI implemented,List fetched; empty,PARTIAL,P2,"BrowserBlock.tsx:162-166,245-260; live request",CRUD E2E after stream repair
+Downloads,List/download/size limit/path validation,Implemented,"GET 200, empty list",PASS API/PARTIAL UX,P2,server.js:496-520; live downloads 200,Fixture download E2E
+Download traversal,Reject non-basename and NUL,Implemented,Not attacked against live,PASS code,P2,server.js:514-520,Unit tests for encoded traversal
+Normal/medium/fullscreen,Responsive embedded layouts,Custom events and buttons exist,Buttons visible; stream black,PARTIAL,P2,"BrowserBlock.tsx:111-132,407-438",Verify sidebar restore on every exit/error
+Stream token integrity,HMAC session-bound token,timingSafeEqual implemented,Token issued successfully,PASS cryptographic core,P2,browser-renderer.service.ts:79-95; live hasToken,Run Vitest in CI and bind origin/user where feasible
+Stream token TTL,Short-lived replay window,Default 86400 seconds,Live token expiry ~24h,FAIL hardening,P1,browser-renderer.service.ts:79; live expiresAt,"Reduce to 5 min, rotate on reconnect"
+WebSocket Origin,Only LifeHub origin may connect,No Origin validation,Any origin with leaked token can connect,FAIL,P1,server.js:845-855,Validate Origin + SameSite reverse-proxy policy
+Token transport,Avoid secret in URLs/logs,Token is query parameter,WebSocket URL includes token,RISK,P2,RemoteBrowserViewport.tsx:43-47,Use short-lived single-use ticket/subprotocol
+Initial URL SSRF,Reject private/loopback targets,Protocol/DNS/private ranges validated,Code confirmed,PASS initial check,P2,server.js:72-109; browser-url-policy.spec.ts,Retain tests
+Redirect SSRF,Revalidate every redirect/request,Only initial URL checked,Public URL may redirect Chrome to private target,FAIL,P0,"server.js:92-108,375-377; no request interceptor",Block private destinations in request interception and redirect chain
+Subresource SSRF,Remote pages cannot reach Docker/LAN services,No request-level egress guard,Loaded page JS/subresources can target internal network,FAIL,P0,server.js attachPage has no request policy,Network egress firewall + Puppeteer request interception
+DNS rebinding,Resolved IP pinned/checked at connection,Preflight lookup only,Chrome resolves independently later,FAIL,P1,server.js:106-108 then page.goto,Resolve+pin or egress proxy with policy
+Chrome sandbox,Chromium sandbox active,Launch passes --no-sandbox,Historical critical issue remains,FAIL,P0,server.js:285-303,Enable user namespace/setuid sandbox; verify without elevated caps
+Container user,Renderer not root,USER lifehub-browser,Compose no-new-privileges,PASS,P2,browser-renderer/Dockerfile:19-24; compose,Keep and add read-only rootfs/cap_drop
+Renderer exposure,Renderer internal-only,Ports 3111:3000 in dev and prod,Live health publicly reachable on Tailscale,FAIL hardening,P1,docker-compose.yml; docker-compose.prod.yml:137-139,Remove host port; proxy WS through authenticated origin
+Session concurrency,Bounded sessions/queue/memory,Unbounded manager.sessions; one Chromium per session,No live load test,FAIL code,P0,server.js:730-765; no max setting,"Global max, queue, per-user quota, resource limits"
+Session cleanup,Idle sessions released,15-min browser close implemented,Profiles/downloads persist indefinitely,PARTIAL,P1,"server.js:25,756-763; close does not rm profile",Retention/size quotas and cleanup policy
+Per-block isolation,Separate persistent userDataDir per session,Implemented by session ID,Code confirmed,PASS foundation,P2,server.js:275-289,Add cross-session cookie test
+Legacy content contract,Backend receives HTML,Renderer returns JSON {html}; controller uses response.text,Legacy proxy emits JSON string as text/html,FAIL,P1,server.js:823-827; browser.controller.ts:73-75,Align contract and test actual HTML
+Legacy POST,Submit forms through proxy,Backend sends method/postData,Renderer ignores method/postData and performs GET,FAIL,P1,browser.controller.ts:105-117; server.js:823-827,Implement POST or remove endpoint
+Legacy session isolation,No cross-user cookies/state,All legacy calls use session id legacy,Shared browser profile across users,FAIL privacy,P1,"server.js:783-787,833",Remove legacy path or isolate by owner/request
+Tab persistence sync,No silent loss/duplicates,Frontend catches and discards all sync errors,Failures invisible; URL matching ambiguous,FAIL reliability,P1,BrowserBlock.tsx:197-235,Server authoritative mapping and surfaced errors
+Adaptive FPS,"Fast active, low idle",66ms/500ms scheduler implemented,Code confirmed,PASS,P3,server.js:625-637,Measure CPU and dropped frames
+Capture CPU,Efficient video pipeline,Screenshot→Sharp RGB→JS I420 every frame,High CPU architecture; no hardware codec,RISK,P1,"server.js:180-203, captureFrame",Use CDP screencast/native encoder or WebRTC video source
+Audio,Opt-in and no surprise autoplay,BROWSER_AUDIO=1 only,Code confirmed,PASS,P3,"server.js:34,278,530",Expose user setting and resource metrics
+Heartbeat,Dead peer detection,Ping/pong timeout implemented,Code confirmed,PASS,P3,server.js:650-665,Add heartbeat test
+Renderer health,Liveness endpoint,Unauthenticated /health,Live 200 in 66ms,PASS liveness,P3,server.js:792; live curl,"Keep minimal, no sensitive details"
+Browser tests,Regression coverage,Only auth.js Vitest and URL policy spec,No WebRTC/UI E2E,FAIL,P1,auth.test.js; browser-url-policy.spec.ts,Containerized browser E2E incl cold start/reconnect

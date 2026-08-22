@@ -1,0 +1,45 @@
+
+> @lifehub/backend@0.1.0 test:cov C:\Users\dasil\AppData\Local\Temp\lifehub-review-333398d2\apps\backend
+> vitest run --coverage
+
+
+ RUN  v2.1.9 C:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/apps/backend
+      Coverage enabled with v8
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|----------|---------|---------|-------------------
+All files          |       0 |     5.55 |    5.55 |       0 |
+ backend           |       0 |        0 |       0 |       0 |
+  check.js         |       0 |        0 |       0 |       0 | 1-12
+  ...zle.config.ts |       0 |        0 |       0 |       0 | 1-13
+ backend/scripts   |       0 |        0 |       0 |       0 |
+  ...d-and-run.mjs |       0 |        0 |       0 |       0 | 1-69
+  ...ate-media.mjs |       0 |        0 |       0 |       0 | 1-74
+  migrate.cjs      |       0 |        0 |       0 |       0 | 1-77
+  start-dev.mjs    |       0 |        0 |       0 |       0 | 1-37
+ backend/src       |       0 |    33.33 |   33.33 |       0 |
+  app.module.ts    |       0 |        0 |       0 |       0 | 1-86
+  main.ts          |       0 |        0 |       0 |       0 | 1-47
+  worker.ts        |       0 |      100 |     100 |       0 | 4-9
+ backend/src/db    |       0 |        0 |       0 |       0 |
+  migrate.js       |       0 |        0 |       0 |       0 | 1-9
+  migrate.ts       |       0 |        0 |       0 |       0 | 1-65
+  reset.js         |       0 |        0 |       0 |       0 | 1-7
+  reset.ts         |       0 |        0 |       0 |       0 | 1-39
+  seed.ts          |       0 |        0 |       0 |       0 | 1-154
+ ...end/src/health |       0 |        0 |       0 |       0 |
+  ...controller.ts |       0 |        0 |       0 |       0 | 1-24
+ ...end/src/system |       0 |        0 |       0 |       0 |
+  ...controller.ts |       0 |        0 |       0 |       0 | 1-44
+  system.module.ts |       0 |        0 |       0 |       0 | 1-10
+  ...em.service.ts |       0 |        0 |       0 |       0 | 1-93
+-------------------|---------|----------|---------|---------|-------------------
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+
+No test files found, exiting with code 1
+C:\Users\dasil\AppData\Local\Temp\lifehub-review-333398d2\apps\backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @lifehub/backend@0.1.0 test:cov: `vitest run --coverage`
+Exit status 1

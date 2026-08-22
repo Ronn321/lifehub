@@ -1,0 +1,1166 @@
+{
+  "url": "http://100.124.4.24:3100/pages?open=68d35c72-2407-4a81-8788-025de07787b0",
+  "title": "LifeHub",
+  "readyState": "complete",
+  "bodyText": "LifeHub\nDashboard\nKalender\nE-Mail\nMedien\nReisen\nProjekte\nRezepte\nEinkauf\nKontakte\nFinanzen\nVersicherung\nTresor\nDokumente\nHaus-IT\nJellyfin\nSuche\nPlugins\nBenutzer\nSeiten\n2\nTest\nSpanien\nBarcelona\nQA-REVIEW-20260822-Pages\nHell\nDunkel\nSystem\nEinstellungen\nSeiten\nTest\nSeiten\nCover entfernen\n+\nTest\n\nTest Seite\n\nVersionen\nVolle Breite\nLoschen\nH1\nH2\nH3\nRecherche\n\nRechercheziel und Kontext\n\nTest\nQuellen\nSammlungen\nNotizen\nBrowser\n\nNoch keine Quellen\n\nH1\nH2\nH3\nNotizen\n\n\n\n\nBlock hinzufügen\nVerknüpfte Seiten\n+ Hinzufügen\n\nKeine Verknüpfungen",
+  "htmlLang": "de",
+  "htmlClass": "dark",
+  "localStorageKeys": [
+    "lifehub-auth",
+    "lifehub-sidebar-collapsed"
+  ],
+  "interactiveCount": 69,
+  "interactives": [
+    {
+      "i": 0,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0
+      }
+    },
+    {
+      "i": 1,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Sidebar einklappen",
+      "aria": null,
+      "title": "Sidebar einklappen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 203,
+        "y": 20,
+        "w": 28,
+        "h": 28
+      }
+    },
+    {
+      "i": 2,
+      "tag": "A",
+      "role": null,
+      "text": "Dashboard",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/dashboard",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 85,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 3,
+      "tag": "A",
+      "role": null,
+      "text": "Kalender",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/calendar",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 129,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 4,
+      "tag": "A",
+      "role": null,
+      "text": "E-Mail",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/email",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 173,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 5,
+      "tag": "A",
+      "role": null,
+      "text": "Medien",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/media",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 217,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 6,
+      "tag": "A",
+      "role": null,
+      "text": "Reisen",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/travel",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 261,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 7,
+      "tag": "A",
+      "role": null,
+      "text": "Projekte",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/projects",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 305,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 8,
+      "tag": "A",
+      "role": null,
+      "text": "Rezepte",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/recipes",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 349,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 9,
+      "tag": "A",
+      "role": null,
+      "text": "Einkauf",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/shopping",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 393,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 10,
+      "tag": "A",
+      "role": null,
+      "text": "Kontakte",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/contacts",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 437,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 11,
+      "tag": "A",
+      "role": null,
+      "text": "Finanzen",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/finance",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 481,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 12,
+      "tag": "A",
+      "role": null,
+      "text": "Versicherung",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/insurance",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 525,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 13,
+      "tag": "A",
+      "role": null,
+      "text": "Tresor",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/vault",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 569,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 14,
+      "tag": "A",
+      "role": null,
+      "text": "Dokumente",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/documents",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 613,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 15,
+      "tag": "A",
+      "role": null,
+      "text": "Haus-IT",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/it-inventory",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 657,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 16,
+      "tag": "A",
+      "role": null,
+      "text": "Jellyfin",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/jellyfin",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 701,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 17,
+      "tag": "A",
+      "role": null,
+      "text": "Suche",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/search",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 745,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 18,
+      "tag": "A",
+      "role": null,
+      "text": "Plugins",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/plugins",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 789,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 19,
+      "tag": "A",
+      "role": null,
+      "text": "Benutzer",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/users",
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 833,
+        "w": 216,
+        "h": 40
+      }
+    },
+    {
+      "i": 20,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Liste einklappen",
+      "aria": null,
+      "title": "Liste einklappen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 12,
+        "y": 877,
+        "w": 32,
+        "h": 40
+      }
+    },
+    {
+      "i": 21,
+      "tag": "A",
+      "role": null,
+      "text": "Seiten\n2",
+      "aria": null,
+      "title": "Zur Seiten-Übersicht",
+      "href": "http://100.124.4.24:3100/pages",
+      "disabled": false,
+      "rect": {
+        "x": 44,
+        "y": 877,
+        "w": 184,
+        "h": 40
+      }
+    },
+    {
+      "i": 22,
+      "tag": "A",
+      "role": null,
+      "text": "Test",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/pages/test",
+      "disabled": false,
+      "rect": {
+        "x": 20,
+        "y": 921,
+        "w": 188,
+        "h": 28
+      }
+    },
+    {
+      "i": 23,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Loslösen",
+      "aria": null,
+      "title": "Loslösen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 208,
+        "y": 925,
+        "w": 20,
+        "h": 20
+      }
+    },
+    {
+      "i": 24,
+      "tag": "A",
+      "role": null,
+      "text": "Spanien",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/pages/spanien",
+      "disabled": false,
+      "rect": {
+        "x": 20,
+        "y": 951,
+        "w": 188,
+        "h": 28
+      }
+    },
+    {
+      "i": 25,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Loslösen",
+      "aria": null,
+      "title": "Loslösen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 208,
+        "y": 955,
+        "w": 20,
+        "h": 20
+      }
+    },
+    {
+      "i": 26,
+      "tag": "A",
+      "role": null,
+      "text": "Barcelona",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/pages/barcelona",
+      "disabled": false,
+      "rect": {
+        "x": 29,
+        "y": 983,
+        "w": 179,
+        "h": 28
+      }
+    },
+    {
+      "i": 27,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Anheften",
+      "aria": null,
+      "title": "Anheften",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 208,
+        "y": 987,
+        "w": 20,
+        "h": 20
+      }
+    },
+    {
+      "i": 28,
+      "tag": "A",
+      "role": null,
+      "text": "QA-REVIEW-20260822-Pages",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/pages/qa-review-20260822-pages",
+      "disabled": false,
+      "rect": {
+        "x": 29,
+        "y": 1013,
+        "w": 179,
+        "h": 28
+      }
+    },
+    {
+      "i": 29,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Anheften",
+      "aria": null,
+      "title": "Anheften",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 208,
+        "y": 1017,
+        "w": 20,
+        "h": 20
+      }
+    },
+    {
+      "i": 30,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Hell",
+      "aria": "Hell",
+      "title": "Hell",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 21,
+        "y": 907,
+        "w": 57.46875,
+        "h": 24
+      }
+    },
+    {
+      "i": 31,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Dunkel",
+      "aria": "Dunkel",
+      "title": "Dunkel",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 82.46875,
+        "y": 907,
+        "w": 74.21875,
+        "h": 24
+      }
+    },
+    {
+      "i": 32,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "System",
+      "aria": "System",
+      "title": "System",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 160.6875,
+        "y": 907,
+        "w": 74.796875,
+        "h": 24
+      }
+    },
+    {
+      "i": 33,
+      "tag": "A",
+      "role": null,
+      "text": "Einstellungen",
+      "aria": null,
+      "title": null,
+      "href": "http://100.124.4.24:3100/settings",
+      "disabled": false,
+      "rect": {
+        "x": 16,
+        "y": 948,
+        "w": 223,
+        "h": 36
+      }
+    },
+    {
+      "i": 34,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Seiten",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 32,
+        "w": 56.140625,
+        "h": 20
+      }
+    },
+    {
+      "i": 35,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Test",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 366.140625,
+        "y": 32,
+        "w": 24.90625,
+        "h": 20
+      }
+    },
+    {
+      "i": 36,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Seiten",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 76,
+        "w": 56.140625,
+        "h": 20
+      }
+    },
+    {
+      "i": 37,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Cover entfernen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 946.859375,
+        "y": 120,
+        "w": 101.140625,
+        "h": 24
+      }
+    },
+    {
+      "i": 38,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "+",
+      "aria": null,
+      "title": "Icon andern",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 328,
+        "w": 32.640625,
+        "h": 57
+      }
+    },
+    {
+      "i": 39,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Versionen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 412,
+        "w": 106.703125,
+        "h": 34
+      }
+    },
+    {
+      "i": 40,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Volle Breite",
+      "aria": null,
+      "title": "Volle Breite ein/aus (wie Notion)",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 402.703125,
+        "y": 412,
+        "w": 115.625,
+        "h": 34
+      }
+    },
+    {
+      "i": 41,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Loschen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 959.625,
+        "y": 412,
+        "w": 96.375,
+        "h": 34
+      }
+    },
+    {
+      "i": 42,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Block hinzufügen",
+      "aria": null,
+      "title": "Block hinzufügen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 240,
+        "y": 474,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 43,
+      "tag": "BUTTON",
+      "role": "button",
+      "text": "Block verschieben",
+      "aria": null,
+      "title": "Block verschieben",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 266,
+        "y": 475,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 44,
+      "tag": "SELECT",
+      "role": null,
+      "text": "H1\nH2\nH3",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 474,
+        "w": 35,
+        "h": 18
+      }
+    },
+    {
+      "i": 45,
+      "tag": "DIV",
+      "role": null,
+      "text": "Recherche",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 327,
+        "y": 470,
+        "w": 729,
+        "h": 36
+      }
+    },
+    {
+      "i": 46,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Block hinzufügen",
+      "aria": null,
+      "title": "Block hinzufügen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 240,
+        "y": 514,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 47,
+      "tag": "BUTTON",
+      "role": "button",
+      "text": "Block verschieben",
+      "aria": null,
+      "title": "Block verschieben",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 266,
+        "y": 515,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 48,
+      "tag": "DIV",
+      "role": null,
+      "text": "Rechercheziel und Kontext",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 510,
+        "w": 768,
+        "h": 24
+      }
+    },
+    {
+      "i": 49,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Block hinzufügen",
+      "aria": null,
+      "title": "Block hinzufügen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 240,
+        "y": 542,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 50,
+      "tag": "BUTTON",
+      "role": "button",
+      "text": "Block verschieben",
+      "aria": null,
+      "title": "Block verschieben",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 266,
+        "y": 543,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 51,
+      "tag": "SELECT",
+      "role": null,
+      "text": "Test",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 301,
+        "y": 547,
+        "w": 718,
+        "h": 21
+      }
+    },
+    {
+      "i": 52,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Neue Session",
+      "aria": null,
+      "title": "Neue Session",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 1027,
+        "y": 549.5,
+        "w": 16,
+        "h": 16
+      }
+    },
+    {
+      "i": 53,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Quellen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 289,
+        "y": 577,
+        "w": 191.5,
+        "h": 34
+      }
+    },
+    {
+      "i": 54,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Sammlungen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 480.5,
+        "y": 577,
+        "w": 191.5,
+        "h": 34
+      }
+    },
+    {
+      "i": 55,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Notizen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 672,
+        "y": 577,
+        "w": 191.5,
+        "h": 34
+      }
+    },
+    {
+      "i": 56,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Browser",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 863.5,
+        "y": 577,
+        "w": 191.5,
+        "h": 34
+      }
+    },
+    {
+      "i": 57,
+      "tag": "INPUT",
+      "role": null,
+      "text": "",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 301,
+        "y": 624,
+        "w": 566,
+        "h": 34
+      }
+    },
+    {
+      "i": 58,
+      "tag": "INPUT",
+      "role": null,
+      "text": "",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 875,
+        "y": 624,
+        "w": 128,
+        "h": 34
+      }
+    },
+    {
+      "i": 59,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": true,
+      "rect": {
+        "x": 1011,
+        "y": 624,
+        "w": 32,
+        "h": 34
+      }
+    },
+    {
+      "i": 60,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Block hinzufügen",
+      "aria": null,
+      "title": "Block hinzufügen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 240,
+        "y": 735,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 61,
+      "tag": "BUTTON",
+      "role": "button",
+      "text": "Block verschieben",
+      "aria": null,
+      "title": "Block verschieben",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 266,
+        "y": 736,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 62,
+      "tag": "SELECT",
+      "role": null,
+      "text": "H1\nH2\nH3",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 735,
+        "w": 35,
+        "h": 18
+      }
+    },
+    {
+      "i": 63,
+      "tag": "DIV",
+      "role": null,
+      "text": "Notizen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 327,
+        "y": 731,
+        "w": 729,
+        "h": 32
+      }
+    },
+    {
+      "i": 64,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Block hinzufügen",
+      "aria": null,
+      "title": "Block hinzufügen",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 240,
+        "y": 771,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 65,
+      "tag": "BUTTON",
+      "role": "button",
+      "text": "Block verschieben",
+      "aria": null,
+      "title": "Block verschieben",
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 266,
+        "y": 772,
+        "w": 24,
+        "h": 24
+      }
+    },
+    {
+      "i": 66,
+      "tag": "DIV",
+      "role": null,
+      "text": "",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 767,
+        "w": 768,
+        "h": 24
+      }
+    },
+    {
+      "i": 67,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "Block hinzufügen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 288,
+        "y": 823,
+        "w": 768,
+        "h": 36
+      }
+    },
+    {
+      "i": 68,
+      "tag": "BUTTON",
+      "role": null,
+      "text": "+ Hinzufügen",
+      "aria": null,
+      "title": null,
+      "href": null,
+      "disabled": false,
+      "rect": {
+        "x": 983.390625,
+        "y": 910,
+        "w": 72.609375,
+        "h": 16
+      }
+    }
+  ],
+  "headings": [
+    {
+      "tag": "H1",
+      "text": "Test"
+    },
+    {
+      "tag": "H3",
+      "text": "Verknüpfte Seiten"
+    }
+  ],
+  "errors": [],
+  "consoleEventCount": 5,
+  "networkFailureCount": 5,
+  "consoleEvents": [
+    "{\"entry\":{\"source\":\"network\",\"level\":\"error\",\"text\":\"Failed to load resource: the server responded with a status of 401 (Unauthorized)\",\"timestamp\":1787361259436.806,\"url\":\"http://100.124.4.24:3007/api/v1/pages/pin/list\",\"networkRequestId\":\"19520.44\"}}",
+    "{\"entry\":{\"source\":\"network\",\"level\":\"error\",\"text\":\"Failed to load resource: the server responded with a status of 401 (Unauthorized)\",\"timestamp\":1787361259437.718,\"url\":\"http://100.124.4.24:3007/api/v1/pages\",\"networkRequestId\":\"19520.43\"}}",
+    "{\"entry\":{\"source\":\"network\",\"level\":\"error\",\"text\":\"Failed to load resource: the server responded with a status of 404 (Not Found)\",\"timestamp\":1787361259446.95,\"url\":\"http://100.124.4.24:3100/favicon.ico\",\"networkRequestId\":\"19520.45\"}}",
+    "{\"entry\":{\"source\":\"network\",\"level\":\"error\",\"text\":\"Failed to load resource: the server responded with a status of 404 (Not Found)\",\"timestamp\":1787361262369.391,\"url\":\"http://100.124.4.24:3007/api/v1/media/albums/fa4d0efe-a096-4b5b-92e5-12cf9ba9301d/media\",\"networkRequestId\":\"19520.105\"}}",
+    "{\"entry\":{\"source\":\"network\",\"level\":\"error\",\"text\":\"Failed to load resource: the server responded with a status of 404 (Not Found)\",\"timestamp\":1787361265649.978,\"url\":\"http://100.124.4.24:3007/api/v1/media/builtin:photo-lake\",\"networkRequestId\":\"19520.177\"}}"
+  ],
+  "networkFailures": [
+    {
+      "url": "http://100.124.4.24:3007/api/v1/pages/pin/list",
+      "status": 401,
+      "error": ""
+    },
+    {
+      "url": "http://100.124.4.24:3007/api/v1/pages",
+      "status": 401,
+      "error": ""
+    },
+    {
+      "url": "http://100.124.4.24:3100/favicon.ico",
+      "status": 404,
+      "error": ""
+    },
+    {
+      "url": "http://100.124.4.24:3007/api/v1/media/albums/fa4d0efe-a096-4b5b-92e5-12cf9ba9301d/media",
+      "status": 404,
+      "error": ""
+    },
+    {
+      "url": "http://100.124.4.24:3007/api/v1/media/builtin:photo-lake",
+      "status": 404,
+      "error": ""
+    }
+  ]
+}

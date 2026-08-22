@@ -1,0 +1,155 @@
+[
+  {
+    "name": "frontend-typecheck",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/frontend typecheck",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 15.0,
+    "log": "frontend-typecheck.log",
+    "output_tail": "\n> @lifehub/frontend@0.1.0 typecheck C:\\Users\\dasil\\AppData\\Local\\Temp\\lifehub-review-333398d2\\apps\\frontend\n> tsc --noEmit\n"
+  },
+  {
+    "name": "frontend-lint",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/frontend lint",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 11.5,
+    "log": "frontend-lint.log",
+    "output_tail": "101:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element\n\n./src/components/music/shared/MusicCard.tsx\n34:5  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element\n\n./src/components/music/sidebar/MusicSidebar.tsx\n340:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element\n380:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element\n\n./src/components/music/sidebar/SidebarPlaylistItem.tsx\n54:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element\n\n./src/hooks/use-dashboard-layout.ts\n41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 148) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 163) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 185) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 200) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 214) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 234) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n41:9  Warning: The 'queryKey' array makes the dependencies of useCallback Hook (at line 255) change on every render. To fix this, wrap the initialization of 'queryKey' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n\n./src/hooks/use-grid-interaction.ts\n258:6  Warning: React Hook useEffect has an unnecessary dependency: 'dragInfo.current'. Either exclude it or remove the dependency array. Mutable values like 'dragInfo.current' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps\n\ninfo  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules"
+  },
+  {
+    "name": "frontend-test",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/frontend test",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 3.04,
+    "log": "frontend-test.log",
+    "output_tail": "\n> @lifehub/frontend@0.1.0 test C:\\Users\\dasil\\AppData\\Local\\Temp\\lifehub-review-333398d2\\apps\\frontend\n> vitest run\n\n\n RUN  v2.1.9 C:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/apps/frontend\n\n ✓ src/lib/__tests__/brand-name.test.ts (8 tests) 3ms\n ✓ src/lib/__tests__/nav-filter.test.ts (9 tests) 4ms\n ✓ src/lib/__tests__/music-favorites.test.ts (12 tests) 4ms\n ✓ src/lib/__tests__/music-playlist-utils.test.ts (8 tests) 4ms\n ✓ src/lib/__tests__/client-mode.test.ts (6 tests) 3ms\n ✓ src/lib/calendar.test.ts (28 tests) 17ms\n ✓ src/lib/__tests__/dashboard-profiles.test.ts (9 tests) 6ms\n ✓ src/lib/__tests__/dashboard-local-storage.test.ts (7 tests) 4ms\n\n Test Files  8 passed (8)\n      Tests  87 passed (87)\n   Start at  03:26:25\n   Duration  2.00s (transform 560ms, setup 0ms, collect 1.03s, tests 46ms, environment 1ms, prepare 1.99s)\n"
+  },
+  {
+    "name": "frontend-build",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/frontend build",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 32.85,
+    "log": "frontend-build.log",
+    "output_tail": "├ ○ /plugins                             4.49 kB         119 kB\n├ ○ /projects                            10.6 kB         122 kB\n├ ○ /recipes                             2.53 kB        99.4 kB\n├ ƒ /recipes/[id]                        2.94 kB          91 kB\n├ ƒ /recipes/[id]/cook                   2.7 kB         90.8 kB\n├ ○ /recipes/create                      2.29 kB        90.4 kB\n├ ƒ /recipes/dishes/[id]                 5.44 kB         125 kB\n├ ○ /recipes/import                      2.67 kB        90.8 kB\n├ ○ /search                              5.57 kB         116 kB\n├ ○ /settings                            10.6 kB         130 kB\n├ ○ /settings/diet                       2.26 kB        90.4 kB\n├ ○ /shopping                            7.5 kB          119 kB\n├ ○ /test-dnd                            1.02 kB         106 kB\n├ ○ /travel                              9.65 kB         121 kB\n├ ○ /users                               6.53 kB         121 kB\n└ ○ /vault                               8.39 kB         128 kB\n+ First Load JS shared by all            88.1 kB\n  ├ chunks/2749-0c474bbe34644e3d.js      31.9 kB\n  ├ chunks/5b8f0dd8-f81c3a99f58c7eb3.js  53.6 kB\n  └ other shared chunks (total)          2.54 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n"
+  },
+  {
+    "name": "backend-build",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/backend build",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 14.86,
+    "log": "backend-build.log",
+    "output_tail": "\n> @lifehub/backend@0.1.0 build C:\\Users\\dasil\\AppData\\Local\\Temp\\lifehub-review-333398d2\\apps\\backend\n> nest build\n"
+  },
+  {
+    "name": "backend-lint",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/backend lint",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 5.31,
+    "log": "backend-lint.log",
+    "output_tail": "\n> @lifehub/backend@0.1.0 lint C:\\Users\\dasil\\AppData\\Local\\Temp\\lifehub-review-333398d2\\apps\\backend\n> eslint src --max-warnings 0\n"
+  },
+  {
+    "name": "backend-test",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/backend test",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 0.73,
+    "log": "backend-test.log",
+    "output_tail": "\n> @lifehub/backend@0.1.0 test C:\\Users\\dasil\\AppData\\Local\\Temp\\lifehub-review-333398d2\\apps\\backend\n> vitest run --passWithNoTests\n\n\n RUN  v2.1.9 C:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/apps/backend\n\ninclude: **/*.{test,spec}.?(c|m)[jt]s?(x)\nexclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*\nNo test files found, exiting with code 0\n"
+  },
+  {
+    "name": "backend-coverage",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/backend test:cov",
+    "exit_code": 1,
+    "status": "FAIL",
+    "duration_seconds": 1.54,
+    "log": "backend-coverage.log",
+    "output_tail": "  start-dev.mjs    |       0 |        0 |       0 |       0 | 1-37              \n backend/src       |       0 |    33.33 |   33.33 |       0 |                   \n  app.module.ts    |       0 |        0 |       0 |       0 | 1-86              \n  main.ts          |       0 |        0 |       0 |       0 | 1-47              \n  worker.ts        |       0 |      100 |     100 |       0 | 4-9               \n backend/src/db    |       0 |        0 |       0 |       0 |                   \n  migrate.js       |       0 |        0 |       0 |       0 | 1-9               \n  migrate.ts       |       0 |        0 |       0 |       0 | 1-65              \n  reset.js         |       0 |        0 |       0 |       0 | 1-7               \n  reset.ts         |       0 |        0 |       0 |       0 | 1-39              \n  seed.ts          |       0 |        0 |       0 |       0 | 1-154             \n ...end/src/health |       0 |        0 |       0 |       0 |                   \n  ...controller.ts |       0 |        0 |       0 |       0 | 1-24              \n ...end/src/system |       0 |        0 |       0 |       0 |                   \n  ...controller.ts |       0 |        0 |       0 |       0 | 1-44              \n  system.module.ts |       0 |        0 |       0 |       0 | 1-10              \n  ...em.service.ts |       0 |        0 |       0 |       0 | 1-93              \n-------------------|---------|----------|---------|---------|-------------------\ninclude: **/*.{test,spec}.?(c|m)[jt]s?(x)\nexclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*\n\nNo test files found, exiting with code 1\nC:\\Users\\dasil\\AppData\\Local\\Temp\\lifehub-review-333398d2\\apps\\backend:\n ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @lifehub/backend@0.1.0 test:cov: `vitest run --coverage`\nExit status 1"
+  },
+  {
+    "name": "pages-typecheck",
+    "command": "node.exe <COREPACK> pnpm --filter @lifehub/pages-domain typecheck",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 2.75,
+    "log": "pages-typecheck.log",
+    "output_tail": "\n> @lifehub/pages-domain@0.1.0 typecheck C:\\Users\\dasil\\AppData\\Local\\Temp\\lifehub-review-333398d2\\domains\\pages\n> tsc --noEmit\n"
+  },
+  {
+    "name": "renderer-auth-vitest",
+    "command": "node.exe <COREPACK> pnpm exec vitest run infrastructure/browser-renderer/auth.test.js",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": 0.98,
+    "log": "renderer-auth-vitest.log",
+    "output_tail": "\n RUN  v2.1.9 C:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2\n\n ✓ infrastructure/browser-renderer/auth.test.js (2 tests) 2ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  03:27:26\n   Duration  325ms (transform 20ms, setup 0ms, collect 37ms, tests 2ms, environment 0ms, prepare 82ms)\n"
+  },
+  {
+    "name": "dependency-audit-prod",
+    "command": "node.exe <COREPACK> pnpm audit --prod",
+    "exit_code": 1,
+    "status": "FAIL",
+    "duration_seconds": 10.77,
+    "log": "dependency-audit-prod.log",
+    "output_tail": "├─────────────────────┼────────────────────────────────────────────────────────┤\n│ Patched versions    │ >=1.20.6                                               │\n├─────────────────────┼────────────────────────────────────────────────────────┤\n│ Paths               │ apps\\backend > @lifehub/audit@link:../../shared/audit  │\n│                     │ > @nestjs/core@10.4.22 >                               │\n│                     │ @nestjs/platform-express@10.4.22 > body-parser@1.20.4  │\n│                     │                                                        │\n│                     │ apps\\backend > @lifehub/audit@link:../../shared/audit  │\n│                     │ > @nestjs/core@10.4.22 >                               │\n│                     │ @nestjs/platform-express@10.4.22 > express@4.22.1 >    │\n│                     │ body-parser@1.20.4                                     │\n│                     │                                                        │\n│                     │ apps\\backend >                                         │\n│                     │ @lifehub/dashboard-domain@link:../../domains/dashboard │\n│                     │ > @lifehub/permissions@link:../../shared/permissions > │\n│                     │ @nestjs/core@10.4.22 >                                 │\n│                     │ @nestjs/platform-express@10.4.22 > body-parser@1.20.4  │\n│                     │                                                        │\n│                     │ ... Found 152 paths, run `pnpm why body-parser` for    │\n│                     │ more information                                       │\n├─────────────────────┼────────────────────────────────────────────────────────┤\n│ More info           │ https://github.com/advisories/GHSA-v422-hmwv-36x6      │\n└─────────────────────┴────────────────────────────────────────────────────────┘\n49 vulnerabilities found\nSeverity: 3 low | 24 moderate | 22 high"
+  },
+  {
+    "name": "workspace-typecheck",
+    "command": "workspace-typecheck",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": null,
+    "log": "workspace-typecheck.log",
+    "output_tail": "28/29 workspace projects typechecked successfully"
+  },
+  {
+    "name": "workspace-test",
+    "command": "workspace-test",
+    "exit_code": 1,
+    "status": "FAIL",
+    "duration_seconds": null,
+    "log": "workspace-test.log",
+    "output_tail": "Contacts API suite cannot resolve @lifehub/auth; recursive run stops on first failure"
+  },
+  {
+    "name": "renderer-node-check",
+    "command": "renderer-node-check",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": null,
+    "log": "",
+    "output_tail": "node --check server.js passed"
+  },
+  {
+    "name": "compose-dev-config",
+    "command": "compose-dev-config",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": null,
+    "log": "",
+    "output_tail": "docker compose config -q passed with review placeholders"
+  },
+  {
+    "name": "compose-prod-config",
+    "command": "compose-prod-config",
+    "exit_code": 0,
+    "status": "PASS",
+    "duration_seconds": null,
+    "log": "",
+    "output_tail": "docker compose -f docker-compose.prod.yml config -q passed with review placeholders"
+  },
+  {
+    "name": "docker-runtime",
+    "command": "docker-runtime",
+    "exit_code": null,
+    "status": "BLOCKED",
+    "duration_seconds": null,
+    "log": "",
+    "output_tail": "Docker Desktop daemon not running on review VM"
+  }
+]

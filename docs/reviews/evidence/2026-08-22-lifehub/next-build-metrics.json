@@ -1,0 +1,1307 @@
+{
+  "build_exists": true,
+  "build_id": "6lE0E1MusrbVOmcY8H39k",
+  "js_chunk_count": 110,
+  "js_total_bytes": 3766597,
+  "largest_js_chunks": [
+    {
+      "file": "static/chunks/f0ee454b.16895defa38e32b4.js",
+      "bytes": 513444
+    },
+    {
+      "file": "static/chunks/8154-a45b2854a799a0e2.js",
+      "bytes": 303300
+    },
+    {
+      "file": "static/chunks/9aeb154d.ba5cbf65f6d5a795.js",
+      "bytes": 302777
+    },
+    {
+      "file": "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+      "bytes": 172838
+    },
+    {
+      "file": "static/chunks/fe69a73d.ce94750353e1e098.js",
+      "bytes": 148455
+    },
+    {
+      "file": "static/chunks/framework-69e0f7d37422957b.js",
+      "bytes": 139998
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/pages/page-ab8c5b77bc41d382.js",
+      "bytes": 137427
+    },
+    {
+      "file": "static/chunks/main-908f2293797dbcc5.js",
+      "bytes": 133509
+    },
+    {
+      "file": "static/chunks/2749-0c474bbe34644e3d.js",
+      "bytes": 124749
+    },
+    {
+      "file": "static/chunks/polyfills-42372ed130431b0a.js",
+      "bytes": 112594
+    },
+    {
+      "file": "static/chunks/ce147d14-adf6cc3c9d379f86.js",
+      "bytes": 97314
+    },
+    {
+      "file": "static/chunks/fe99c25f-f8338a72252e1923.js",
+      "bytes": 82149
+    },
+    {
+      "file": "static/chunks/2994-662ed27b53723af2.js",
+      "bytes": 72743
+    },
+    {
+      "file": "static/chunks/9946-27f2e2b312758bf9.js",
+      "bytes": 58188
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/media/page-979b9f8d70fcb07d.js",
+      "bytes": 54121
+    },
+    {
+      "file": "static/chunks/6959-6f95216782017401.js",
+      "bytes": 50710
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/dashboard/page-154d4ab338d29782.js",
+      "bytes": 47679
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/jellyfin/watch/[id]/page-762b1b41d22955cf.js",
+      "bytes": 38384
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/calendar/page-10ae2c26b7f0f2ad.js",
+      "bytes": 37691
+    },
+    {
+      "file": "static/chunks/7064-ff49166bc3603be3.js",
+      "bytes": 37488
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/shopping/page-ed0d8c01adb67b2d.js",
+      "bytes": 28298
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/settings/page-ebf00a23ea25658f.js",
+      "bytes": 28064
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/projects/page-1e0ba9da0bded6f2.js",
+      "bytes": 27929
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/users/page-017199b4d68bdc02.js",
+      "bytes": 26539
+    },
+    {
+      "file": "static/chunks/5411-a6beaa4bbbec048e.js",
+      "bytes": 26121
+    },
+    {
+      "file": "static/chunks/9858-c1bc57734e107015.js",
+      "bytes": 25736
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/jellyfin/watchlist/page-9979214540e13cec.js",
+      "bytes": 25207
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/jellyfin/music/playlist/[id]/page-bba98a3f2d1c3a43.js",
+      "bytes": 23106
+    },
+    {
+      "file": "static/chunks/app/(dashboard)/travel/page-e31c60bc0d485cd6.js",
+      "bytes": 22997
+    },
+    {
+      "file": "static/chunks/6857-e13d9fbb434bb7a9.js",
+      "bytes": 22960
+    }
+  ],
+  "app-build-manifest.json": {
+    "pages": {
+      "/_not-found/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/app/_not-found/page-06e4d9e0ba5a5a14.js"
+      ],
+      "/layout": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/3516e0f499838f33.css",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/app/layout-def684e1fbd5f09b.js"
+      ],
+      "/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/app/page-3c2e895d6c0857f2.js"
+      ],
+      "/login/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/app/login/page-4f3a4c4472ade09a.js"
+      ],
+      "/(dashboard)/email/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/5726-200caf4d563fd812.js",
+        "static/chunks/app/(dashboard)/email/page-849e13b2e149844f.js"
+      ],
+      "/(dashboard)/layout": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/7021-33749b100579c45b.js",
+        "static/chunks/app/(dashboard)/layout-01ef70182928625a.js"
+      ],
+      "/(dashboard)/contacts/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/app/(dashboard)/contacts/page-f2a927f02827010d.js"
+      ],
+      "/(dashboard)/dashboard/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/522-fd5f65d6608004b7.js",
+        "static/chunks/3594-8a35693efd6265dc.js",
+        "static/chunks/app/(dashboard)/dashboard/page-154d4ab338d29782.js"
+      ],
+      "/(dashboard)/calendar/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/3594-8a35693efd6265dc.js",
+        "static/chunks/app/(dashboard)/calendar/page-10ae2c26b7f0f2ad.js"
+      ],
+      "/(dashboard)/insurance/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/7003-e923a9fb008ec25e.js",
+        "static/chunks/app/(dashboard)/insurance/page-f39067cf79106056.js"
+      ],
+      "/(dashboard)/documents/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/9703-ad213a9ddf6d801b.js",
+        "static/chunks/app/(dashboard)/documents/page-ff1b11f80bb1c909.js"
+      ],
+      "/(dashboard)/finance/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/app/(dashboard)/finance/page-f58549744546d9c9.js"
+      ],
+      "/(dashboard)/jellyfin/browse/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/browse/page-dcc5ea853268ef81.js"
+      ],
+      "/(dashboard)/it-inventory/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/8552-4a50a8a66a755245.js",
+        "static/chunks/app/(dashboard)/it-inventory/page-3ea080b640886a60.js"
+      ],
+      "/(dashboard)/jellyfin/collections/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/collections/page-6411ba27e9cf5db6.js"
+      ],
+      "/(dashboard)/jellyfin/movies/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/7737-7db09d931ae65b5c.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/8546-ae70cb2b0b603d55.js",
+        "static/chunks/app/(dashboard)/jellyfin/movies/[id]/page-c7067b5e40e92896.js"
+      ],
+      "/(dashboard)/jellyfin/favorites/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/favorites/page-03c94d82f86b1182.js"
+      ],
+      "/(dashboard)/jellyfin/collections/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/collections/[id]/page-55a2d8494d216efb.js"
+      ],
+      "/(dashboard)/jellyfin/music/artist/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/artist/[id]/page-977e674c4df410ff.js"
+      ],
+      "/(dashboard)/jellyfin/movies/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/movies/page-31de3a9a20d7e54d.js"
+      ],
+      "/(dashboard)/jellyfin/music/album/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/album/[id]/page-cfe245a3ee5409b9.js"
+      ],
+      "/(dashboard)/jellyfin/music/playlist/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/9858-c1bc57734e107015.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/playlist/[id]/page-bba98a3f2d1c3a43.js"
+      ],
+      "/(dashboard)/jellyfin/music/genre/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/genre/[id]/page-ceb9f349c17ec6e9.js"
+      ],
+      "/(dashboard)/jellyfin/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/7124-324eac3b1a9d3ee3.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/page-bfd712da224de49c.js"
+      ],
+      "/(dashboard)/jellyfin/series/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/series/page-97d381172262a3cc.js"
+      ],
+      "/(dashboard)/jellyfin/series/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/7737-7db09d931ae65b5c.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/8546-ae70cb2b0b603d55.js",
+        "static/chunks/app/(dashboard)/jellyfin/series/[id]/page-18a9da800491498e.js"
+      ],
+      "/(dashboard)/jellyfin/search/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/561-38cd068655ccdc2c.js",
+        "static/chunks/app/(dashboard)/jellyfin/search/page-06d05c4ca790b20a.js"
+      ],
+      "/(dashboard)/pages/[slug]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/app/(dashboard)/pages/[slug]/page-7b83f8710f86e6ea.js"
+      ],
+      "/(dashboard)/jellyfin/watch/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/2355-d43d0bc098302255.js",
+        "static/chunks/app/(dashboard)/jellyfin/watch/[id]/page-762b1b41d22955cf.js"
+      ],
+      "/(dashboard)/jellyfin/photos/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/app/(dashboard)/jellyfin/photos/page-db50fcdbf2445290.js"
+      ],
+      "/(dashboard)/jellyfin/watchlist/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/app/(dashboard)/jellyfin/watchlist/page-9979214540e13cec.js"
+      ],
+      "/(dashboard)/projects/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6335-7d01607edc15e3cd.js",
+        "static/chunks/app/(dashboard)/projects/page-1e0ba9da0bded6f2.js"
+      ],
+      "/(dashboard)/pages/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/ce147d14-adf6cc3c9d379f86.js",
+        "static/chunks/fe99c25f-f8338a72252e1923.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/1192-e556a1289e9cb7f4.js",
+        "static/chunks/8154-a45b2854a799a0e2.js",
+        "static/chunks/app/(dashboard)/pages/page-ab8c5b77bc41d382.js"
+      ],
+      "/(dashboard)/recipes/[id]/cook/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/app/(dashboard)/recipes/[id]/cook/page-61f595b4a509518e.js"
+      ],
+      "/(dashboard)/recipes/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/app/(dashboard)/recipes/[id]/page-07ad9c8eeb9894d4.js"
+      ],
+      "/(dashboard)/recipes/dishes/[id]/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/7402-2d15dc16e27b979b.js",
+        "static/chunks/app/(dashboard)/recipes/dishes/[id]/page-337d17291dda72f2.js"
+      ],
+      "/(dashboard)/recipes/import/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/app/(dashboard)/recipes/import/page-4d63dcb14934ff42.js"
+      ],
+      "/(dashboard)/media/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/1192-e556a1289e9cb7f4.js",
+        "static/chunks/app/(dashboard)/media/page-979b9f8d70fcb07d.js"
+      ],
+      "/(dashboard)/recipes/create/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/app/(dashboard)/recipes/create/page-8d01dee3572a4d4c.js"
+      ],
+      "/(dashboard)/settings/diet/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/app/(dashboard)/settings/diet/page-ac18a1542ff9e4b9.js"
+      ],
+      "/(dashboard)/plugins/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/8052-bd969763ff35990d.js",
+        "static/chunks/app/(dashboard)/plugins/page-593e7540a7e7c5b3.js"
+      ],
+      "/(dashboard)/search/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/app/(dashboard)/search/page-ad51bfd6d79a4642.js"
+      ],
+      "/(dashboard)/settings/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/8702-34401abfcb5843c0.js",
+        "static/chunks/app/(dashboard)/settings/page-ebf00a23ea25658f.js"
+      ],
+      "/(dashboard)/recipes/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/app/(dashboard)/recipes/page-de106686b63bdeeb.js"
+      ],
+      "/(dashboard)/shopping/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/app/(dashboard)/shopping/page-ed0d8c01adb67b2d.js"
+      ],
+      "/(dashboard)/vault/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/3984-6443f8f8ad201ac1.js",
+        "static/chunks/app/(dashboard)/vault/page-476dffe7cdaab6a1.js"
+      ],
+      "/(dashboard)/users/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/8052-bd969763ff35990d.js",
+        "static/chunks/app/(dashboard)/users/page-017199b4d68bdc02.js"
+      ],
+      "/(dashboard)/travel/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/3457-be40c1d6ed7c7934.js",
+        "static/chunks/app/(dashboard)/travel/page-e31c60bc0d485cd6.js"
+      ],
+      "/(dashboard)/jellyfin/music/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/page-f4ba9f06f018018d.js"
+      ],
+      "/(dashboard)/jellyfin/music/artists/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/artists/page-d4b196c70645a88a.js"
+      ],
+      "/(dashboard)/jellyfin/music/albums/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/albums/page-457bdfd086685ee4.js"
+      ],
+      "/(dashboard)/test-dnd/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/app/(dashboard)/test-dnd/page-8f400781441ae4f9.js"
+      ],
+      "/(dashboard)/jellyfin/music/genres/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/genres/page-d683dcc7d817612b.js"
+      ],
+      "/(dashboard)/jellyfin/music/playlists/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/playlists/page-9e90f8ad266d0f5d.js"
+      ],
+      "/(dashboard)/jellyfin/music/favorites/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/9858-c1bc57734e107015.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/1480-4a496e976d875446.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/favorites/page-d3596094c7654d5f.js"
+      ],
+      "/(dashboard)/jellyfin/music/tracks/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/9858-c1bc57734e107015.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/1480-4a496e976d875446.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/tracks/page-68f316d99b8b2bfd.js"
+      ],
+      "/(dashboard)/jellyfin/music/search/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/search/page-b853f9050c7f128f.js"
+      ],
+      "/(dashboard)/jellyfin/music/recent/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/9858-c1bc57734e107015.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/1480-4a496e976d875446.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/recent/page-633ad8c943dfd904.js"
+      ],
+      "/(dashboard)/jellyfin/music/library/page": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+        "static/chunks/2749-0c474bbe34644e3d.js",
+        "static/chunks/main-app-a535eb98950799ca.js",
+        "static/css/2f06aaf386ccb56f.css",
+        "static/chunks/9946-27f2e2b312758bf9.js",
+        "static/chunks/6688-d308b3dc072d2ff3.js",
+        "static/chunks/0-2febd8258bb7a751.js",
+        "static/chunks/6857-e13d9fbb434bb7a9.js",
+        "static/chunks/5411-a6beaa4bbbec048e.js",
+        "static/chunks/6959-6f95216782017401.js",
+        "static/chunks/5520-4be79ae641f862fe.js",
+        "static/chunks/1880-59fa2ebb4446ce08.js",
+        "static/chunks/9858-c1bc57734e107015.js",
+        "static/chunks/2994-662ed27b53723af2.js",
+        "static/chunks/7064-ff49166bc3603be3.js",
+        "static/chunks/1480-4a496e976d875446.js",
+        "static/chunks/app/(dashboard)/jellyfin/music/library/page-070e8714352b78a8.js"
+      ]
+    }
+  },
+  "build-manifest.json": {
+    "polyfillFiles": [
+      "static/chunks/polyfills-42372ed130431b0a.js"
+    ],
+    "devFiles": [],
+    "ampDevFiles": [],
+    "lowPriorityFiles": [
+      "static/6lE0E1MusrbVOmcY8H39k/_buildManifest.js",
+      "static/6lE0E1MusrbVOmcY8H39k/_ssgManifest.js"
+    ],
+    "rootMainFiles": [
+      "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+      "static/chunks/5b8f0dd8-f81c3a99f58c7eb3.js",
+      "static/chunks/2749-0c474bbe34644e3d.js",
+      "static/chunks/main-app-a535eb98950799ca.js"
+    ],
+    "pages": {
+      "/_app": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/framework-69e0f7d37422957b.js",
+        "static/chunks/main-908f2293797dbcc5.js",
+        "static/chunks/pages/_app-1b3bd4beec6cd99c.js"
+      ],
+      "/_error": [
+        "static/chunks/webpack-ba4bad7c2b68ee1f.js",
+        "static/chunks/framework-69e0f7d37422957b.js",
+        "static/chunks/main-908f2293797dbcc5.js",
+        "static/chunks/pages/_error-1cd2f6a4ce11b699.js"
+      ]
+    },
+    "ampFirstPages": []
+  },
+  "routes-manifest.json": {
+    "version": 3,
+    "pages404": true,
+    "caseSensitive": false,
+    "basePath": "",
+    "redirects": [
+      {
+        "source": "/:path+/",
+        "destination": "/:path+",
+        "internal": true,
+        "statusCode": 308,
+        "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+      }
+    ],
+    "headers": [],
+    "dynamicRoutes": [
+      {
+        "page": "/jellyfin/collections/[id]",
+        "regex": "^/jellyfin/collections/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/collections/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/movies/[id]",
+        "regex": "^/jellyfin/movies/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/movies/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/album/[id]",
+        "regex": "^/jellyfin/music/album/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/music/album/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/artist/[id]",
+        "regex": "^/jellyfin/music/artist/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/music/artist/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/genre/[id]",
+        "regex": "^/jellyfin/music/genre/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/music/genre/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/playlist/[id]",
+        "regex": "^/jellyfin/music/playlist/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/music/playlist/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/series/[id]",
+        "regex": "^/jellyfin/series/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/series/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/watch/[id]",
+        "regex": "^/jellyfin/watch/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/jellyfin/watch/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/pages/[slug]",
+        "regex": "^/pages/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPslug": "nxtPslug"
+        },
+        "namedRegex": "^/pages/(?<nxtPslug>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/recipes/dishes/[id]",
+        "regex": "^/recipes/dishes/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/recipes/dishes/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/recipes/[id]",
+        "regex": "^/recipes/([^/]+?)(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/recipes/(?<nxtPid>[^/]+?)(?:/)?$"
+      },
+      {
+        "page": "/recipes/[id]/cook",
+        "regex": "^/recipes/([^/]+?)/cook(?:/)?$",
+        "routeKeys": {
+          "nxtPid": "nxtPid"
+        },
+        "namedRegex": "^/recipes/(?<nxtPid>[^/]+?)/cook(?:/)?$"
+      }
+    ],
+    "staticRoutes": [
+      {
+        "page": "/",
+        "regex": "^/(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/(?:/)?$"
+      },
+      {
+        "page": "/_not-found",
+        "regex": "^/_not\\-found(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/_not\\-found(?:/)?$"
+      },
+      {
+        "page": "/calendar",
+        "regex": "^/calendar(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/calendar(?:/)?$"
+      },
+      {
+        "page": "/contacts",
+        "regex": "^/contacts(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/contacts(?:/)?$"
+      },
+      {
+        "page": "/dashboard",
+        "regex": "^/dashboard(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/dashboard(?:/)?$"
+      },
+      {
+        "page": "/documents",
+        "regex": "^/documents(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/documents(?:/)?$"
+      },
+      {
+        "page": "/email",
+        "regex": "^/email(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/email(?:/)?$"
+      },
+      {
+        "page": "/finance",
+        "regex": "^/finance(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/finance(?:/)?$"
+      },
+      {
+        "page": "/insurance",
+        "regex": "^/insurance(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/insurance(?:/)?$"
+      },
+      {
+        "page": "/it-inventory",
+        "regex": "^/it\\-inventory(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/it\\-inventory(?:/)?$"
+      },
+      {
+        "page": "/jellyfin",
+        "regex": "^/jellyfin(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/browse",
+        "regex": "^/jellyfin/browse(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/browse(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/collections",
+        "regex": "^/jellyfin/collections(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/collections(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/favorites",
+        "regex": "^/jellyfin/favorites(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/favorites(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/movies",
+        "regex": "^/jellyfin/movies(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/movies(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music",
+        "regex": "^/jellyfin/music(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/albums",
+        "regex": "^/jellyfin/music/albums(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/albums(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/artists",
+        "regex": "^/jellyfin/music/artists(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/artists(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/favorites",
+        "regex": "^/jellyfin/music/favorites(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/favorites(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/genres",
+        "regex": "^/jellyfin/music/genres(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/genres(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/library",
+        "regex": "^/jellyfin/music/library(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/library(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/playlists",
+        "regex": "^/jellyfin/music/playlists(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/playlists(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/recent",
+        "regex": "^/jellyfin/music/recent(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/recent(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/search",
+        "regex": "^/jellyfin/music/search(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/search(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/music/tracks",
+        "regex": "^/jellyfin/music/tracks(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/music/tracks(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/photos",
+        "regex": "^/jellyfin/photos(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/photos(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/search",
+        "regex": "^/jellyfin/search(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/search(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/series",
+        "regex": "^/jellyfin/series(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/series(?:/)?$"
+      },
+      {
+        "page": "/jellyfin/watchlist",
+        "regex": "^/jellyfin/watchlist(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/jellyfin/watchlist(?:/)?$"
+      },
+      {
+        "page": "/login",
+        "regex": "^/login(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/login(?:/)?$"
+      },
+      {
+        "page": "/media",
+        "regex": "^/media(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/media(?:/)?$"
+      },
+      {
+        "page": "/pages",
+        "regex": "^/pages(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/pages(?:/)?$"
+      },
+      {
+        "page": "/plugins",
+        "regex": "^/plugins(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/plugins(?:/)?$"
+      },
+      {
+        "page": "/projects",
+        "regex": "^/projects(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/projects(?:/)?$"
+      },
+      {
+        "page": "/recipes",
+        "regex": "^/recipes(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/recipes(?:/)?$"
+      },
+      {
+        "page": "/recipes/create",
+        "regex": "^/recipes/create(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/recipes/create(?:/)?$"
+      },
+      {
+        "page": "/recipes/import",
+        "regex": "^/recipes/import(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/recipes/import(?:/)?$"
+      },
+      {
+        "page": "/search",
+        "regex": "^/search(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/search(?:/)?$"
+      },
+      {
+        "page": "/settings",
+        "regex": "^/settings(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/settings(?:/)?$"
+      },
+      {
+        "page": "/settings/diet",
+        "regex": "^/settings/diet(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/settings/diet(?:/)?$"
+      },
+      {
+        "page": "/shopping",
+        "regex": "^/shopping(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/shopping(?:/)?$"
+      },
+      {
+        "page": "/test-dnd",
+        "regex": "^/test\\-dnd(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/test\\-dnd(?:/)?$"
+      },
+      {
+        "page": "/travel",
+        "regex": "^/travel(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/travel(?:/)?$"
+      },
+      {
+        "page": "/users",
+        "regex": "^/users(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/users(?:/)?$"
+      },
+      {
+        "page": "/vault",
+        "regex": "^/vault(?:/)?$",
+        "routeKeys": {},
+        "namedRegex": "^/vault(?:/)?$"
+      }
+    ],
+    "dataRoutes": [],
+    "rsc": {
+      "header": "RSC",
+      "varyHeader": "RSC, Next-Router-State-Tree, Next-Router-Prefetch",
+      "prefetchHeader": "Next-Router-Prefetch",
+      "didPostponeHeader": "x-nextjs-postponed",
+      "contentTypeHeader": "text/x-component",
+      "suffix": ".rsc",
+      "prefetchSuffix": ".prefetch.rsc"
+    },
+    "rewrites": [
+      {
+        "source": "/api/v1/:path*",
+        "destination": "http://backend:3007/api/v1/:path*",
+        "regex": "^/api/v1(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
+      }
+    ]
+  }
+}

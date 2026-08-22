@@ -1,0 +1,498 @@
+{
+  "source_files": 521,
+  "total_lines": 73317,
+  "test_files": 22,
+  "test_lines": 1802,
+  "any_occurrences": 166,
+  "console_occurrences": 84,
+  "todo_fixme_occurrences": 18,
+  "largest_files": [
+    {
+      "file": "apps/frontend/src/app/(dashboard)/media/page.tsx",
+      "lines": 1704,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/pages/page.tsx",
+      "lines": 1622,
+      "any": 4,
+      "console": 2,
+      "todo": 8,
+      "tests": false
+    },
+    {
+      "file": "shared/db/src/schema/public.ts",
+      "lines": 1379,
+      "any": 1,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "domains/jellyfin/src/services/jellyfin.service.ts",
+      "lines": 1178,
+      "any": 59,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/music/shared/TrackTable.tsx",
+      "lines": 1032,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/lib/music-player-store.ts",
+      "lines": 977,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/music/nowplaying/NowPlayingView.tsx",
+      "lines": 976,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "infrastructure/browser-renderer/server.js",
+      "lines": 877,
+      "any": 0,
+      "console": 12,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "domains/pages/src/services/pages.service.ts",
+      "lines": 876,
+      "any": 1,
+      "console": 0,
+      "todo": 1,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/music/player/MusicPlayerWrapper.tsx",
+      "lines": 851,
+      "any": 1,
+      "console": 6,
+      "todo": 1,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/dashboard/widget-content.tsx",
+      "lines": 822,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/projects/page.tsx",
+      "lines": 751,
+      "any": 0,
+      "console": 1,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "domains/pages/src/repositories/pages.repository.ts",
+      "lines": 742,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "shared/db/src/schema/public.js",
+      "lines": 724,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/music/playlist/PlaylistSongTable.tsx",
+      "lines": 690,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "domains/recipes/src/services/import/recipe-extractor.service.ts",
+      "lines": 648,
+      "any": 2,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/lib/music-api.ts",
+      "lines": 622,
+      "any": 1,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/travel/page.tsx",
+      "lines": 621,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "domains/jellyfin/src/api/jellyfin.controller.ts",
+      "lines": 580,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/music/search/page.tsx",
+      "lines": 570,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/shopping/page.tsx",
+      "lines": 559,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "domains/pages/src/api/pages.controller.ts",
+      "lines": 557,
+      "any": 1,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/settings/page.tsx",
+      "lines": 550,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/jellyfin/VideoPlayer.tsx",
+      "lines": 483,
+      "any": 3,
+      "console": 1,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/page.tsx",
+      "lines": 473,
+      "any": 4,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/pages/components/blocks/BrowserBlock.tsx",
+      "lines": 471,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/music/player/MusicPlayerBar.tsx",
+      "lines": 464,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/vault/page.tsx",
+      "lines": 449,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "domains/media/src/services/media.service.ts",
+      "lines": 438,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/components/sidebar.tsx",
+      "lines": 428,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    }
+  ],
+  "largest_pages": [
+    {
+      "file": "apps/frontend/src/app/(dashboard)/media/page.tsx",
+      "lines": 1704,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/pages/page.tsx",
+      "lines": 1622,
+      "any": 4,
+      "console": 2,
+      "todo": 8,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/projects/page.tsx",
+      "lines": 751,
+      "any": 0,
+      "console": 1,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/travel/page.tsx",
+      "lines": 621,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/music/search/page.tsx",
+      "lines": 570,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/shopping/page.tsx",
+      "lines": 559,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/settings/page.tsx",
+      "lines": 550,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/page.tsx",
+      "lines": 473,
+      "any": 4,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/vault/page.tsx",
+      "lines": 449,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/insurance/page.tsx",
+      "lines": 425,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/music/library/page.tsx",
+      "lines": 412,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/it-inventory/page.tsx",
+      "lines": 399,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/documents/page.tsx",
+      "lines": 369,
+      "any": 0,
+      "console": 1,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/series/[id]/page.tsx",
+      "lines": 366,
+      "any": 9,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/recipes/[id]/cook/page.tsx",
+      "lines": 361,
+      "any": 0,
+      "console": 1,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/recipes/create/page.tsx",
+      "lines": 350,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/contacts/page.tsx",
+      "lines": 349,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/plugins/page.tsx",
+      "lines": 348,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/music/album/[id]/page.tsx",
+      "lines": 338,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/watchlist/page.tsx",
+      "lines": 337,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/calendar/page.tsx",
+      "lines": 319,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/browse/page.tsx",
+      "lines": 316,
+      "any": 6,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/users/page.tsx",
+      "lines": 308,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/recipes/import/page.tsx",
+      "lines": 300,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/search/page.tsx",
+      "lines": 286,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/recipes/page.tsx",
+      "lines": 277,
+      "any": 0,
+      "console": 1,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/email/page.tsx",
+      "lines": 276,
+      "any": 0,
+      "console": 1,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/settings/diet/page.tsx",
+      "lines": 263,
+      "any": 0,
+      "console": 2,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/finance/page.tsx",
+      "lines": 259,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    },
+    {
+      "file": "apps/frontend/src/app/(dashboard)/jellyfin/music/artist/[id]/page.tsx",
+      "lines": 255,
+      "any": 0,
+      "console": 0,
+      "todo": 0,
+      "tests": false
+    }
+  ],
+  "tests_by_area": {
+    "apps": 8,
+    "domains": 13,
+    "infrastructure": 1
+  }
+}

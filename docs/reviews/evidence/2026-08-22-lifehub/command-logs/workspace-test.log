@@ -1,0 +1,56 @@
+Scope: 28 of 29 workspace projects
+apps/frontend test$ vitest run
+apps/frontend test: [1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/apps/frontend[39m
+apps/frontend test:  [32m✓[39m src/lib/__tests__/brand-name.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+apps/frontend test:  [32m✓[39m src/lib/__tests__/music-playlist-utils.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+apps/frontend test:  [32m✓[39m src/lib/__tests__/nav-filter.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+apps/frontend test:  [32m✓[39m src/lib/__tests__/music-favorites.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+apps/frontend test:  [32m✓[39m src/lib/__tests__/client-mode.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+apps/frontend test:  [32m✓[39m src/lib/calendar.test.ts [2m([22m[2m28 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+apps/frontend test:  [32m✓[39m src/lib/__tests__/dashboard-profiles.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+apps/frontend test:  [32m✓[39m src/lib/__tests__/dashboard-local-storage.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+apps/frontend test: [2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+apps/frontend test: [2m      Tests [22m [1m[32m87 passed[39m[22m[90m (87)[39m
+apps/frontend test: [2m   Start at [22m 03:35:10
+apps/frontend test: [2m   Duration [22m 714ms[2m (transform 289ms, setup 0ms, collect 687ms, tests 48ms, environment 1ms, prepare 789ms)[22m
+apps/frontend test: Done
+domains/contacts test$ vitest run
+domains/dashboard test$ vitest run
+domains/integrations test$ vitest run
+domains/integrations test: [1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/domains/integrations[39m
+domains/contacts test: [33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+domains/dashboard test: [33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+domains/contacts test: [1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/domains/contacts[39m
+domains/dashboard test: [1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/domains/dashboard[39m
+domains/contacts test:  [31m❯[39m tests/api/contact.controller.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+domains/dashboard test:  [31m❯[39m tests/api/dashboard.controller.spec.ts [2m([22m[2m0 test[22m[2m)[22m
+domains/integrations test:  [32m✓[39m src/services/token-crypto.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+domains/integrations test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+domains/integrations test: [2m      Tests [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+domains/integrations test: [2m   Start at [22m 03:35:11
+domains/integrations test: [2m   Duration [22m 684ms[2m (transform 56ms, setup 0ms, collect 67ms, tests 4ms, environment 0ms, prepare 97ms)[22m
+domains/integrations test: Done
+domains/contacts test:  [32m✓[39m tests/unit/contact.service.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+domains/contacts test: [31m⎯⎯⎯⎯⎯⎯[1m[7m Failed Suites 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+domains/contacts test: [31m[1m[7m FAIL [27m[22m[39m tests/api/contact.controller.spec.ts[2m [ tests/api/contact.controller.spec.ts ][22m
+domains/contacts test: [31m[1mError[22m: Failed to resolve entry for package "@lifehub/auth". The package may have incorrect main/module/exports specified in its package.json.[39m
+domains/contacts test:   Plugin: [35mvite:import-analysis[39m
+domains/contacts test:   File: [36mC:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/domains/contacts/tests/api/contact.controller.spec.ts[39m
+domains/contacts test: [90m [2m❯[22m packageEntryFailure ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m46638:15[22m[39m
+domains/contacts test: [90m [2m❯[22m resolvePackageEntry ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m46635:3[22m[39m
+domains/contacts test: [90m [2m❯[22m tryNodeResolve ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m46451:16[22m[39m
+domains/contacts test: [90m [2m❯[22m ResolveIdContext.resolveId ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m46201:19[22m[39m
+domains/contacts test: [90m [2m❯[22m PluginContainer.resolveId ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49018:17[22m[39m
+domains/contacts test: [2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+domains/contacts test: [2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+domains/contacts test: [2m   Start at [22m 03:35:11
+domains/contacts test: [90m [2m❯[22m TransformPluginContext.resolve ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m49178:15[22m[39m
+domains/contacts test: [90m [2m❯[22m normalizeUrl ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64300:26[22m[39m
+domains/contacts test: [90m [2m❯[22m ../../node_modules/.pnpm/vite@5.4.21_@types+node@22.19.21_terser@5.48.0/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:[2m64439:39[22m[39m
+domains/contacts test: [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+domains/contacts test: [2m   Duration [22m 2.14s[2m (transform 42ms, setup 0ms, collect 1.57s, tests 5ms, environment 0ms, prepare 201ms)[22m
+domains/dashboard test:  [32m✓[39m tests/unit/dashboard.service.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+domains/contacts test: Failed
+C:\Users\dasil\AppData\Local\Temp\lifehub-review-333398d2\domains\contacts:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @lifehub/contacts-domain@0.1.0 test: `vitest run`
+Exit status 1

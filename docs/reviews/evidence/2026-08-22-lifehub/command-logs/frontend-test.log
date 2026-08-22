@@ -1,0 +1,20 @@
+
+> @lifehub/frontend@0.1.0 test C:\Users\dasil\AppData\Local\Temp\lifehub-review-333398d2\apps\frontend
+> vitest run
+
+
+ RUN  v2.1.9 C:/Users/dasil/AppData/Local/Temp/lifehub-review-333398d2/apps/frontend
+
+ ✓ src/lib/__tests__/brand-name.test.ts (8 tests) 3ms
+ ✓ src/lib/__tests__/nav-filter.test.ts (9 tests) 4ms
+ ✓ src/lib/__tests__/music-favorites.test.ts (12 tests) 4ms
+ ✓ src/lib/__tests__/music-playlist-utils.test.ts (8 tests) 4ms
+ ✓ src/lib/__tests__/client-mode.test.ts (6 tests) 3ms
+ ✓ src/lib/calendar.test.ts (28 tests) 17ms
+ ✓ src/lib/__tests__/dashboard-profiles.test.ts (9 tests) 6ms
+ ✓ src/lib/__tests__/dashboard-local-storage.test.ts (7 tests) 4ms
+
+ Test Files  8 passed (8)
+      Tests  87 passed (87)
+   Start at  03:26:25
+   Duration  2.00s (transform 560ms, setup 0ms, collect 1.03s, tests 46ms, environment 1ms, prepare 1.99s)

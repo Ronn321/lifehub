@@ -1,0 +1,88 @@
+{
+  "url": "file:///C:/Users/dasil/Documents/LifeHub/docs/reviews/evidence/2026-08-22-lifehub/concepts/theme-directions.html",
+  "title": "LifeHub – vier Designrichtungen",
+  "readyState": "complete",
+  "bodyText": "LifeHub – Designrichtungen 2026\n\nVergleichbare Zielbilder; Akzentfarben bleiben unabhängig vom Oberflächen-Theme wählbar.\n\n1 · LifeHub Refined\n\nBestehende Identität, konsequent und hochwertiger\n\nEmpfehlung\n◈ LifeHub\nDashboard\nKalender\nMedien\nPages\nEinstellungen\nGuten Morgen, Robert\nAnpassen\n+ Widget\nHeute\n\nDrei klare Prioritäten, ruhige Flächen, konsistente Radien.\n\nWetter\n\n13° · Bremen\nLeichter Wind\n\nAktivität\n\nSemantische Tokens, sichtbare Aktionen und bessere Dichte.\n\nopake Inhalte · 12px Radius · 150–250ms · Amber-Akzent\n2 · Apple / Frosted Glass\n\nNur für überlagernde Navigation und Floating Controls\n\nGezielt\n◌ LifeHub\nDashboard\nKalender\nMedien\nPages\nEinstellungen\nÜbersicht\nAnsicht\nNeu\nGlass Sidebar + Toolbar\n\nBlur nur dort, wo Controls Inhalt überlagern.\n\nLesbarkeit\n\nOpake Dokumente und Tabellen.\n\nFallback\n\nSolid surface bei reduced transparency oder fehlendem backdrop-filter.\n\n70–82% Fläche · blur 18px · Hairline-Border · kein Glas hinter Fließtext\n3 · Notion Productivity\n\nDokumentfokus, geringe Chrome-Dichte, starke Block-Aktionen\n\nPages\n▣ Pages\nArbeitsbereich\nProjekte\nWissen\nAufgaben\nVorlagen\nReiseplanung 2026\n•••\nTeilen\nInhaltsverzeichnis\n\nÜbersicht · Budget · Route · Dokumente\n\nDatenbank\n\nAnsichten, Properties, Filter, Zeilen als Seiten.\n\nBlock-Menü\n\nSichtbar bei Fokus, Touch und Tastatur.\n\n4–8px Radius · dichte 8px-Raster · kontextuelle Toolbar · opake Dokumentfläche\n4 · Hermes / OpenCode Inspired\n\nTechnisch präzise Shell, hohe Zustandsklarheit\n\nOptional\nLifeHub\nOverview\nServices\nAutomations\nLogs\nSettings\nSystem Status\n⌘ K\nRun\nBrowser Renderer\n\nState: reconnecting\nLatency: 128 ms\n\nAPI\n\nHealthy · 38 ms\n12 services\n\nAudit Trail\n\nExplizite States, klare Monospace-Daten, reduzierte Dekoration.\n\nNavy surfaces · Violet/Green accents · präzise Zustände · optionale Dichte\nEmpfohlene Kombination: LifeHub Refined als Standard, Glass nur für Sidebar/Topbar/Overlays, Notion-Muster ausschließlich im Pages-Workspace und Hermes/OpenCode als optionales Theme-Pack. Contentflächen bleiben opak und WCAG-AA-konform.",
+  "htmlLang": "de",
+  "htmlClass": "",
+  "localStorageKeys": [],
+  "interactiveCount": 0,
+  "interactives": [],
+  "headings": [
+    {
+      "tag": "H1",
+      "text": "LifeHub – Designrichtungen 2026"
+    },
+    {
+      "tag": "H2",
+      "text": "1 · LifeHub Refined"
+    },
+    {
+      "tag": "H3",
+      "text": "Heute"
+    },
+    {
+      "tag": "H3",
+      "text": "Wetter"
+    },
+    {
+      "tag": "H3",
+      "text": "Aktivität"
+    },
+    {
+      "tag": "H2",
+      "text": "2 · Apple / Frosted Glass"
+    },
+    {
+      "tag": "H3",
+      "text": "Glass Sidebar + Toolbar"
+    },
+    {
+      "tag": "H3",
+      "text": "Lesbarkeit"
+    },
+    {
+      "tag": "H3",
+      "text": "Fallback"
+    },
+    {
+      "tag": "H2",
+      "text": "3 · Notion Productivity"
+    },
+    {
+      "tag": "H3",
+      "text": "Inhaltsverzeichnis"
+    },
+    {
+      "tag": "H3",
+      "text": "Datenbank"
+    },
+    {
+      "tag": "H3",
+      "text": "Block-Menü"
+    },
+    {
+      "tag": "H2",
+      "text": "4 · Hermes / OpenCode Inspired"
+    },
+    {
+      "tag": "H3",
+      "text": "Browser Renderer"
+    },
+    {
+      "tag": "H3",
+      "text": "API"
+    },
+    {
+      "tag": "H3",
+      "text": "Audit Trail"
+    }
+  ],
+  "errors": [],
+  "consoleEventCount": 1,
+  "networkFailureCount": 0,
+  "consoleEvents": [
+    "{\"entry\":{\"source\":\"network\",\"level\":\"error\",\"text\":\"Failed to load resource: the server responded with a status of 404 (Not Found)\",\"timestamp\":1787361217042.215,\"url\":\"http://100.124.4.24:3007/api/v1/media/builtin:photo-lake\",\"networkRequestId\":\"16524.1993\"}}"
+  ],
+  "networkFailures": []
+}

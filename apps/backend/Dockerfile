@@ -25,6 +25,7 @@ COPY shared/storage/package.json ./shared/storage/
 
 # Alle 17 Domain-Packages
 COPY domains/calendar/package.json ./domains/calendar/
+COPY domains/contacts/package.json ./domains/contacts/
 COPY domains/dashboard/package.json ./domains/dashboard/
 COPY domains/documents/package.json ./domains/documents/
 COPY domains/email/package.json ./domains/email/
@@ -90,6 +91,7 @@ COPY shared/events/package.json ./shared/events/
 COPY shared/storage/package.json ./shared/storage/
 
 COPY domains/calendar/package.json ./domains/calendar/
+COPY domains/contacts/package.json ./domains/contacts/
 COPY domains/dashboard/package.json ./domains/dashboard/
 COPY domains/documents/package.json ./domains/documents/
 COPY domains/email/package.json ./domains/email/
@@ -135,6 +137,7 @@ COPY --from=builder /app/domains/insurance/dist ./domains/insurance/dist
 COPY --from=builder /app/domains/jellyfin/dist ./domains/jellyfin/dist
 COPY --from=builder /app/domains/pages/dist ./domains/pages/dist
 COPY --from=builder /app/domains/calendar/dist ./domains/calendar/dist
+COPY --from=builder /app/domains/contacts/dist ./domains/contacts/dist
 COPY --from=builder /app/domains/documents/dist ./domains/documents/dist
 COPY --from=builder /app/domains/email/dist ./domains/email/dist
 COPY --from=builder /app/domains/integrations/dist ./domains/integrations/dist

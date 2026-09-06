@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-type CalloutVariant = 'info' | 'warning' | 'error' | 'success';
+export type CalloutVariant = 'info' | 'warning' | 'error' | 'success';
 
 interface CalloutBlockProps {
   icon: string;

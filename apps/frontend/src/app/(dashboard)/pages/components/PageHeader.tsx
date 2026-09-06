@@ -51,17 +51,41 @@ export function PageHeader({
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [descriptionValue, setDescriptionValue] = useState(page.description ?? '');
+  // Titel-Editing (Notion-Stil): lokaler State + debounced Autosave
+  const [titleValue, setTitleValue] = useState(page.title);
+  const titleSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { icon?: string; coverMediaId?: string | null; description?: string }) =>
+    mutationFn: (data: { title?: string; icon?: string; coverMediaId?: string | null; description?: string }) =>
       api.put(`/pages/${page.id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['page', page.id] });
+      // Prefix-Invalidierung: die Detail-Query kann unter ID oder Slug laufen
+      // (pageRef), deshalb reicht ['page', page.id] für Slug-geladene Seiten nicht.
+      queryClient.invalidateQueries({ queryKey: ['page'] });
       queryClient.invalidateQueries({ queryKey: ['pages'] });
     },
   });
+
+  // Titel von außen übernehmen (z.B. nach Query-Refetch), solange nicht editiert
+  useEffect(() => {
+    if (!titleSaveTimerRef.current) setTitleValue(page.title);
+  }, [page.title]);
+
+  const handleTitleChange = (next: string) => {
+    setTitleValue(next);
+    if (titleSaveTimerRef.current) clearTimeout(titleSaveTimerRef.current);
+    titleSaveTimerRef.current = setTimeout(() => {
+      titleSaveTimerRef.current = null;
+      const trimmed = next.trim();
+      if (trimmed && trimmed !== page.title) updateMutation.mutate({ title: trimmed });
+    }, 600);
+  };
+
+  useEffect(() => () => {
+    if (titleSaveTimerRef.current) clearTimeout(titleSaveTimerRef.current);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -167,7 +191,21 @@ export function PageHeader({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight">{page.title}</h1>
+          {/* Editierbarer Titel (Notion-Stil): Input optisch wie H1, Autosave debounced */}
+          <input
+            type="text"
+            value={titleValue}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            placeholder="Unbenannt"
+            aria-label="Seitentitel"
+            className="w-full bg-transparent text-3xl font-bold tracking-tight outline-none border-none placeholder:text-fg-subtle/50"
+          />
 
           {/* Description */}
           {isEditingDescription ? (
@@ -215,6 +253,8 @@ function CoverImage({ mediaId }: { mediaId: string }) {
   const [src, setSrc] = useState<string | null>(null);
 
   useEffect(() => {
+    // Built-in-Covers brauchen keinen Media-Lookup (würde nur 404s erzeugen).
+    if (isBuiltinCover(mediaId)) return;
     async function load() {
       try {
         const res = await api.get<{ url: string }>(`/media/${mediaId}`);
@@ -226,7 +266,8 @@ function CoverImage({ mediaId }: { mediaId: string }) {
     load();
   }, [mediaId]);
 
-  // Built-in covers render directly (photo or gradient), no media lookup needed
+  // Built-in-Covers direkt rendern (Foto oder Verlauf), VOR dem Spinner-Block —
+  // Hooks bleiben oben, die Reihenfolge ist unverändert.
   if (isBuiltinCover(mediaId)) {
     const cover = getBuiltinCover(mediaId);
     if (cover?.image) {
@@ -252,7 +293,7 @@ function CoverImage({ mediaId }: { mediaId: string }) {
   return <img src={src} alt="Cover" className="w-full h-full object-cover" />;
 }
 
-function MediaPickerModal({
+export function MediaPickerModal({
   onClose,
   onSelect,
 }: {

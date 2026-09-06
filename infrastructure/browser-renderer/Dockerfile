@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
     libgbm1 libpango-1.0-0 libcairo2 libasound2 \
     pulseaudio ffmpeg \
+    xvfb \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
@@ -14,7 +15,8 @@ WORKDIR /app
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 COPY infrastructure/browser-renderer/package.json infrastructure/browser-renderer/server.js ./
 COPY infrastructure/browser-renderer/auth.js ./
-RUN npm install --omit=dev
+COPY infrastructure/browser-renderer/start.sh ./
+RUN npm install --omit=dev && chmod +x start.sh
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin lifehub-browser && \
     mkdir -p /data/browser-profiles && \
@@ -23,4 +25,4 @@ RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin lifehub-browser 
 USER lifehub-browser
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["./start.sh"]

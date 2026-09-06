@@ -168,7 +168,8 @@ export function BrowserBlock({
   const { data: downloads } = useQuery({
     queryKey: ['browser-downloads', sessionId],
     queryFn: () => api.get<DownloadItem[]>(`/browser/sessions/${sessionId}/downloads`),
-    enabled: !!sessionId,
+    // Nur pollen, wenn das Dropdown offen ist — sonst Dauerlast ohne Nutzen.
+    enabled: !!sessionId && showDownloads,
     refetchInterval: 5000,
   });
 

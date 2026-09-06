@@ -18,6 +18,10 @@ const wrtcApi = wrtc.default ?? wrtc;
 const { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, nonstandard } = wrtcApi;
 const { RTCVideoSource, RTCAudioSource } = nonstandard;
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0));
+}
+
 const PORT = Number(process.env.PORT || 3000);
 const RENDERER_KEY = process.env.BROWSER_RENDERER_KEY || '';
 const PROFILE_ROOT = process.env.BROWSER_PROFILE_ROOT || '/data/browser-profiles';
@@ -29,6 +33,16 @@ const MAX_DOWNLOAD_BYTES = Number(process.env.BROWSER_MAX_DOWNLOAD_BYTES || 500 
 // Falscher Pfad = ffmpeg kann nie Audio aufnehmen = stummer Stream.
 const PULSE_SERVER = process.env.PULSE_SERVER || 'unix:/tmp/pulse/pulse/native';
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 };
+// DPR > 1 rendert Chromium mit höherer Pixeldichte; das <video> skaliert auf
+// CSS-Größe herunter → scharfes Bild. Kosten: ~dpr² Pixel für Decode + VP8.
+const DEFAULT_DPR = clamp(process.env.BROWSER_DPR ?? 1.5, 1, 2);
+// CDP-Screencast liefert jeden Paint; ohne Gate würde eine animierte Seite die
+// CPU mit 60 FPS Decode+Encode belegen. 30 FPS reichen für flüssige Interaktion.
+const MAX_FPS = clamp(process.env.BROWSER_MAX_FPS ?? 30, 5, 60);
+const FRAME_MIN_INTERVAL_MS = Math.floor(1000 / MAX_FPS);
+// Headful-Modus (Chromium unter Xvfb, via start.sh) — echt wirkender
+// Browser-Fingerprint als Basis für Captcha-/Bot-Detection.
+const HEADFUL = process.env.BROWSER_HEADFUL === '1';
 const DEFAULT_START_URL = 'https://www.google.com/';
 const LOG_DEBUG = process.env.LOG_LEVEL === 'debug';
 const AUDIO_ENABLED = process.env.BROWSER_AUDIO === '1';
@@ -36,6 +50,16 @@ const INTERNAL_HOSTS = (process.env.BROWSER_INTERNAL_HOSTS || '')
   .split(',')
   .map((host) => host.trim().toLowerCase())
   .filter(Boolean);
+// Wenn gesetzt (z.B. "https://lifehub.example,http://localhost:3100"): WS-Upgrade
+// nur für diese Origins. Leer = kein Restrict (Bestehende Setups nicht brechen).
+const ALLOWED_ORIGINS = (process.env.BROWSER_ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+// Mausbewegungen werden sofort entgegengenommen und gebündelt alle ~16ms an
+// Chromium übergeben (60Hz last-write-wins). Jedes einzeln über CDP dispatchen
+// würde bei 120Hz-Mäusen die CDP-Pipeline fluten, ohne visuellen Nutzen.
+const MOVE_FLUSH_MS = 16;
 
 function assertSessionId(id) {
   if (!/^[a-zA-Z0-9_-]{1,128}$/.test(id)) throw new Error('Ungültige Browser-Session');
@@ -89,6 +113,42 @@ function allowedInternalHost(hostname) {
   return INTERNAL_HOSTS.some((allowed) => hostname === allowed || hostname.endsWith(`.${allowed}`));
 }
 
+/* ─── Egress-Guard mit DNS-Cache ───
+ * Prüft Hostnamen gegen private/lokale Bereiche (SSRF-Schutz). Wird von
+ * assertSafeTarget (Navigations-Start) UND vom Request-Interceptor (jeder
+ * Subrequest, Redirect, Popup) genutzt — damit können Navigationsziele nicht
+ * mehr auf private Netze umlenken. DNS-Antworten werden 60s gecacht, damit
+ * der Interceptor keine DNS-Flut erzeugt.
+ */
+const EGRESS_CACHE_TTL_MS = 60_000;
+const egressCache = new Map();
+
+async function assertHostAllowed(hostname) {
+  const key = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '');
+  const cached = egressCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    if (!cached.ok) throw new Error(`Ziel-Host "${key}" ist nicht erlaubt`);
+    return;
+  }
+
+  let ok = true;
+  try {
+    if (!key || key === 'localhost' || key.endsWith('.localhost')) ok = false;
+    else if (allowedInternalHost(key)) ok = true;
+    else if (privateAddress(key)) ok = false;
+    else {
+      const addresses = await lookup(key, { all: true, verbatim: true });
+      if (addresses.some(({ address }) => privateAddress(address))) ok = false;
+    }
+  } catch {
+    ok = false; // DNS-Fehler → sicher blocken
+  }
+
+  if (egressCache.size > 1000) egressCache.clear();
+  egressCache.set(key, { ok, expiresAt: Date.now() + EGRESS_CACHE_TTL_MS });
+  if (!ok) throw new Error(`Ziel-Host "${key}" ist nicht erlaubt`);
+}
+
 async function assertSafeTarget(rawUrl) {
   let target;
   try {
@@ -98,24 +158,15 @@ async function assertSafeTarget(rawUrl) {
   }
   if (!['http:', 'https:'].includes(target.protocol)) throw new Error('Nur HTTP(S) ist erlaubt');
   if (target.username || target.password) throw new Error('URLs mit Zugangsdaten sind nicht erlaubt');
-  const hostname = target.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  if (!hostname || hostname === 'localhost' || hostname.endsWith('.localhost')) throw new Error('Lokale Ziele sind nicht erlaubt');
-  if (allowedInternalHost(hostname)) return target;
-  if (privateAddress(hostname)) throw new Error('Private Netzwerkziele sind nicht erlaubt');
-
-  const addresses = await lookup(hostname, { all: true, verbatim: true });
-  if (addresses.some(({ address }) => privateAddress(address))) throw new Error('URL zeigt auf ein privates Netzwerkziel');
+  await assertHostAllowed(target.hostname);
   return target;
 }
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, Number(value) || 0));
-}
-
 /* ─── Anti-Bot-Erkennung (Cloudflare "Verify you are a Human" etc.) ───
- * Cloudflare wertet aus: (1) navigator.webdriver, (2) Cursor-Trajektorie vor
- * Klicks, (3) Klick-Timing. Ein einzelner Maus-Sprung + sofortiger Klick ist
- * ein starkes Bot-Signal — deshalb hier natürliche Bewegung + Stealth-Patches.
+ * Die echte Maus-Trajektorie kommt jetzt 1:1 und in Echtzeit vom User
+ * (lückenloses Forwarding, siehe queueMove) — sie ist damit bereits
+ * "menschlich". Der Bézier-Pfad bleibt nur noch für den legacy 'click'-
+ * Befehl (vollsynthetischer Klick ohne vorherige Move-Spur) erhalten.
  */
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -136,7 +187,7 @@ function humanBezierPath(x0, y0, x1, y1, steps = 14) {
     y: y0 + dy * (0.55 + Math.random() * 0.25) + (Math.random() - 0.5) * jitter,
   };
   const pts = [];
-  for (let i = 1; i <= steps; i++) {
+  for (let i = 1; i <= steps; i += 1) {
     const t = i / steps;
     const mt = 1 - t;
     pts.push({
@@ -147,7 +198,7 @@ function humanBezierPath(x0, y0, x1, y1, steps = 14) {
   return pts;
 }
 
-// Natürliche Bewegung von der aktuellen Mausposition zum Ziel, mit Hover-Pause
+// Synthetische Bewegung von der aktuellen Position zum Ziel (nur legacy 'click')
 async function humanMouseMove(page, x, y) {
   const cur = page.mouse._position || { x: DEFAULT_VIEWPORT.width / 2, y: DEFAULT_VIEWPORT.height / 2 };
   const dist = Math.hypot(x - cur.x, y - cur.y);
@@ -177,30 +228,34 @@ async function stealthify(page) {
   });
 }
 
-function rgbToI420(rgb, width, height) {
-  const chromaWidth = Math.floor(width / 2);
-  const chromaHeight = Math.floor(height / 2);
+// RGB (3 Bytes/Pixel) → I420 (YUV 4:2:0) für den WebRTC-Encoder.
+// Ergebnis ist immer gerade Dimensionen (Voraussetzung für 4:2:0).
+function rgbToI420(rgb, srcWidth, srcHeight) {
+  const width = srcWidth - (srcWidth % 2);
+  const height = srcHeight - (srcHeight % 2);
+  const chromaWidth = width / 2;
+  const chromaHeight = height / 2;
   const ySize = width * height;
-  const chromaSize = chromaWidth * chromaHeight;
-  const output = Buffer.alloc(ySize + chromaSize * 2);
+  const output = Buffer.alloc(ySize + chromaWidth * chromaHeight * 2);
   const uOffset = ySize;
-  const vOffset = ySize + chromaSize;
+  const vOffset = ySize + chromaWidth * chromaHeight;
 
   for (let y = 0; y < height; y += 1) {
+    const srcRow = y * srcWidth;
     for (let x = 0; x < width; x += 1) {
-      const source = (y * width + x) * 3;
+      const source = (srcRow + x) * 3;
       const r = rgb[source];
       const g = rgb[source + 1];
       const b = rgb[source + 2];
-      output[y * width + x] = Math.max(0, Math.min(255, Math.round(16 + 0.257 * r + 0.504 * g + 0.098 * b)));
+      output[srcRow + x] = Math.max(0, Math.min(255, Math.round(16 + 0.257 * r + 0.504 * g + 0.098 * b)));
       if ((x & 1) === 0 && (y & 1) === 0) {
-        const chroma = Math.floor(y / 2) * chromaWidth + Math.floor(x / 2);
+        const chroma = (y / 2) * chromaWidth + x / 2;
         output[uOffset + chroma] = Math.max(0, Math.min(255, Math.round(128 - 0.148 * r - 0.291 * g + 0.439 * b)));
         output[vOffset + chroma] = Math.max(0, Math.min(255, Math.round(128 + 0.439 * r - 0.368 * g - 0.071 * b)));
       }
     }
   }
-  return output;
+  return { width, height, data: output };
 }
 
 // Typen, die den Browser-/Tab-/Kontrollzustand ändern und daher einen
@@ -222,33 +277,179 @@ class BrowserSession {
     this.downloadPath = join(PROFILE_ROOT, id, 'downloads');
     this.lastUsed = Date.now();
     this.lastInputAt = 0;
-    this.captureFailures = 0;
-    this.captureInFlight = false;
     this.lastFrameAt = Date.now();
+    this.lastRealFrameAt = Date.now();
+    this.lastSentFrameAt = 0;
+    this.frameCount = 0;
+    this.lastFrame = null;
+    this.screencast = null; // { page, client, failures }
     this.stallTimer = null;
+    this.probing = false;
+    // Serielle Kette: moveChain für Mausbewegungen (60Hz-Pacer). Schnelle Ops
+    // (down/up/wheel/keyboard) laufen über die inputQueue des jeweiligen Peers —
+    // Navigation läuft bewusst NEBEN jeder Queue und blockiert keine Eingaben.
+    this.moveChain = Promise.resolve();
+    // Letzter erfolgreicher CDP-Probe — Backoff für probeAndRecover (siehe dort).
+    this.lastProbeOkAt = 0;
   }
 
-  // Stall-Watchdog (pro Session, nicht pro Peer): Liefert der Browser länger
-  // als STALL_MS keine Frames mehr, wird er HART neu gestartet (Chromium killen
-  // + Session aus dem Manager entfernen). Der nächste Client-Reconnect startet
-  // dann einen frischen Browser — echte Selbstheilung statt dauerhaft schwarz.
+  get viewport() {
+    return this._viewport || { width: DEFAULT_VIEWPORT.width, height: DEFAULT_VIEWPORT.height, dpr: DEFAULT_DPR };
+  }
+
+  set viewport(next) {
+    this._viewport = next;
+  }
+
+  /* ─── Screencast: CDP Page.startScreencast ───
+   * Event-getrieben: Chromium sendet nur Frames bei tatsächlichem Repaint
+   * (bis MAX_FPS), in voller Viewport-Auflösung × DPR. Kein Screenshot-Polling,
+   * keine 960px-Kappung, im Leerlauf kein CPU-Verbrauch.
+   */
+  async startScreencast(page, { force = false } = {}) {
+    const target = page || this.getActivePage();
+    // Kein Ziel (keine Tabs offen): evtl. noch laufende CDP-Session stoppen,
+    // sonst leckt der alte Screencast-Eintrag weiter.
+    if (!target) {
+      await this.stopScreencast();
+      return;
+    }
+    // Läuft der Screencast schon auf diesem Tab MIT den aktuellen Auflösungs-
+    // Caps, ist kein Neustart nötig (idempotent). force erzwingt Restart —
+    // nötig nach resize(), weil sich maxWidth/maxHeight geändert haben.
+    const capsW = Math.round(this.viewport.width * this.viewport.dpr);
+    const capsH = Math.round(this.viewport.height * this.viewport.dpr);
+    if (!force && this.screencast?.page === target
+      && this.screencast.capsW === capsW && this.screencast.capsH === capsH) return;
+    await this.stopScreencast();
+    let client;
+    try {
+      client = await target.createCDPSession();
+    } catch (error) {
+      console.error(`Screencast-CDP-Session failed [${this.id}]: ${error.message}`);
+      return;
+    }
+    const entry = { page: target, client, failures: 0, capsW, capsH };
+    this.screencast = entry;
+
+    client.on('Page.screencastFrame', (frame) => {
+      if (this.screencast !== entry) return; // veraltete Session
+      // Jeder Frame MUSS ge-ackt werden, sonst drosselt CDP den Stream.
+      entry.client.send('Page.screencastFrameAck', { sessionId: frame.sessionId }).catch(() => undefined);
+      const now = Date.now();
+      if (now - this.lastSentFrameAt < FRAME_MIN_INTERVAL_MS) return; // FPS-Gate
+      this.lastSentFrameAt = now;
+      void this.encodeAndBroadcast(Buffer.from(frame.data, 'base64'));
+    });
+
+    client.on('error', () => {
+      entry.failures += 1;
+      if (entry.failures === 1) {
+        // Einmaliger Neustart-Versuch nach kurzer Pause (Chromium-Reset etc.)
+        setTimeout(() => {
+          if (this.screencast === entry) void this.startScreencast();
+        }, 500);
+      }
+      if (entry.failures >= 10) {
+        console.error(`Screencast persistent failing [${this.id}] — Peers schließen (Client-Reconnect)`);
+        for (const peer of [...this.peers]) {
+          try { peer.ws.close(1011, 'Screencast failure'); } catch { /* ignore */ }
+        }
+      }
+    });
+
+    try {
+      await client.send('Page.startScreencast', {
+        format: 'jpeg',
+        quality: 70,
+        maxWidth: Math.round(this.viewport.width * this.viewport.dpr),
+        maxHeight: Math.round(this.viewport.height * this.viewport.dpr),
+        everyNthFrame: 1,
+      });
+      console.log(`Screencast started [${this.id}] @ ${this.viewport.width}x${this.viewport.height} dpr=${this.viewport.dpr}`);
+    } catch (error) {
+      console.error(`Page.startScreencast failed [${this.id}]: ${error.message}`);
+    }
+  }
+
+  async stopScreencast() {
+    const entry = this.screencast;
+    this.screencast = null;
+    if (!entry) return;
+    try { await entry.client.send('Page.stopScreencast'); } catch { /* ignore */ }
+    try { entry.client.removeAllListeners('Page.screencastFrame'); } catch { /* ignore */ }
+    try { entry.client.removeAllListeners('error'); } catch { /* ignore */ }
+    try { await entry.client.detach(); } catch { /* ignore */ }
+  }
+
+  async encodeAndBroadcast(jpeg) {
+    try {
+      const raw = await sharp(jpeg).raw().toBuffer({ resolveWithObject: true });
+      const frame = rgbToI420(raw.data, raw.info.width, raw.info.height);
+      this.lastFrame = frame;
+      this.lastRealFrameAt = Date.now();
+      this.lastFrameAt = Date.now();
+      this.lastProbeOkAt = 0; // echte Frames → Probe-Backoff zurücksetzen
+      this.frameCount += 1;
+      if (LOG_DEBUG && this.frameCount % 150 === 0) {
+        console.log(`Frames sent [${this.id}]: ${this.frameCount}`);
+      }
+      for (const peer of this.peers) {
+        try { peer.source.onFrame(frame); } catch { /* ignore */ }
+      }
+    } catch (error) {
+      console.error(`Frame encode failed [${this.id}]: ${error.message}`);
+    }
+  }
+
+  // Stall-Watchdog (pro Session): Eine statische Seite erzeugt mit dem
+  // Screencast legitimal lange keine neuen Frames — das ist KEIN Stall.
+  // Probiert wird deshalb Chromium selbst: antwortet CDP nicht mehr (eingefrorener
+  // Renderer), hart neu starten; sonst läuft der Keepalive-Replay weiter.
   ensureStallWatchdog() {
     if (this.stallTimer) return;
     const STALL_MS = 10_000;
     this.stallTimer = setInterval(() => {
-      const stalledFor = Date.now() - this.lastFrameAt;
-      if (this.peers.size > 0 && stalledFor > STALL_MS) {
-        console.error(`Session [${this.id}] stalled (${Math.round(stalledFor / 1000)}s ohne Frame) — harter Neustart`);
-        for (const peer of [...this.peers]) {
-          try { peer.ws.close(1011, 'Session restart'); } catch { /* ignore */ }
-        }
-        void this.hardReset();
-      }
+      if (this.peers.size === 0) return;
+      if (Date.now() - this.lastRealFrameAt <= STALL_MS) return;
+      void this.probeAndRecover();
     }, 2000);
+  }
+
+  async probeAndRecover() {
+    if (this.probing) return;
+    // Backoff: Statische Seiten prodden sonst alle 2s für immer. Nach einem
+    // erfolgreichen Probe höchstens alle 30s erneut prüfen.
+    if (this.lastProbeOkAt && Date.now() - this.lastProbeOkAt < 30_000) return;
+    this.probing = true;
+    try {
+      const client = this.screencast?.client;
+      if (!client) return;
+      await Promise.race([
+        client.send('Runtime.evaluate', { expression: '1', returnByValue: true }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('CDP ping timeout')), 3000)),
+      ]);
+      this.lastProbeOkAt = Date.now();
+    } catch {
+      console.error(`Session [${this.id}] stalled (CDP antwortet nicht) — harter Neustart`);
+      for (const peer of [...this.peers]) {
+        try { peer.ws.close(1011, 'Session restart'); } catch { /* ignore */ }
+      }
+      await this.hardReset();
+    } finally {
+      this.probing = false;
+    }
   }
 
   async hardReset() {
     if (this.stallTimer) { clearInterval(this.stallTimer); this.stallTimer = null; }
+    await this.stopScreencast();
+    // Peers schließen (triggert removePeer inkl. Timer-/Socket-Cleanup), sonst
+    // bleiben verwaiste Sockets/Timer nach dem Manager-Delete zurück.
+    for (const peer of [...this.peers]) {
+      try { peer.ws.close(1011, 'Session reset'); } catch { /* ignore */ }
+      this.removePeer(peer);
+    }
     // Chromium hart beenden (graceful close kann bei eingefrorenem Browser hängen)
     try {
       if (this.browser) {
@@ -260,9 +461,11 @@ class BrowserSession {
     } catch { /* ignore */ }
     this.pages.clear();
     this.activeTabId = null;
-    this.captureFailures = 0;
-    this.captureInFlight = false;
+    this.lastFrame = null;
+    this.lastRealFrameAt = Date.now();
     this.lastFrameAt = Date.now();
+    this.lastProbeOkAt = 0;
+    this.moveChain = Promise.resolve();
     // Aus dem Manager entfernen → nächster manager.get() erzeugt eine frische Session
     try { manager.sessions.delete(this.id); } catch { /* ignore */ }
   }
@@ -270,6 +473,7 @@ class BrowserSession {
   async start(startUrl = '', initialTabs = []) {
     this.lastUsed = Date.now();
     this.lastFrameAt = Date.now();
+    this.lastRealFrameAt = Date.now();
     const wasStopped = !this.browser;
     if (!this.browser) {
       const profileDir = join(PROFILE_ROOT, this.id);
@@ -283,26 +487,31 @@ class BrowserSession {
         await rm(join(profileDir, lock), { force: true }).catch(() => undefined);
       }
       this.browser = await puppeteer.launch({
-        headless: 'new',
+        headless: HEADFUL ? false : 'new',
         executablePath: CHROMIUM_PATH,
         userDataDir: profileDir,
         protocolTimeout: 60_000,
         downloadBehavior: { policy: 'allow', downloadPath: this.downloadPath },
         env: { ...process.env, PULSE_SERVER, PULSE_SINK: 'lifehub_sink' },
-        defaultViewport: DEFAULT_VIEWPORT,
+        defaultViewport: { width: this.viewport.width, height: this.viewport.height, deviceScaleFactor: this.viewport.dpr },
         args: [
           '--no-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--no-first-run',
           '--no-default-browser-check',
-          '--window-size=1280,720',
+          `--window-size=${DEFAULT_VIEWPORT.width},${DEFAULT_VIEWPORT.height}`,
           '--autoplay-policy=no-user-gesture-required',
           // Anti-Bot-Erkennung: Headless-Merkmale verbergen (Cloudflare etc.)
           '--disable-blink-features=AutomationControlled',
         ],
       });
-      this.browser.on('disconnected', () => { this.browser = null; this.pages.clear(); this.activeTabId = null; });
+      this.browser.on('disconnected', () => {
+        this.browser = null;
+        this.pages.clear();
+        this.activeTabId = null;
+        void this.stopScreencast();
+      });
     }
 
     const existingPages = await this.browser.pages();
@@ -328,6 +537,7 @@ class BrowserSession {
     if (!restoredTab && active && (active.url() === 'about:blank' || active.url() === '')) {
       await this.navigate(startUrl || DEFAULT_START_URL);
     }
+    await this.startScreencast(active);
     await this.broadcastState();
     return this.state();
   }
@@ -337,15 +547,44 @@ class BrowserSession {
     const tabId = `tab-${this.nextTabId++}`;
     this.pages.set(tabId, page);
     await stealthify(page); // Anti-Bot-Patches auf jedem Tab
-    await page.setViewport(DEFAULT_VIEWPORT).catch(() => undefined);
+    await page.setViewport({
+      width: this.viewport.width,
+      height: this.viewport.height,
+      deviceScaleFactor: this.viewport.dpr,
+    }).catch(() => undefined);
+
+    // Egress-Guard auf JEDEM Request (Subresources, Redirects, Popups):
+    // blockt Ziele in private/lokale Netze, auch nach erfolgreicher Erst-Prüfung.
+    await page.setRequestInterception(true).catch(() => undefined);
+    page.on('request', (request) => {
+      const url = request.url();
+      if (!/^https?:/i.test(url)) {
+        void request.continue().catch(() => undefined);
+        return;
+      }
+      let hostname;
+      try {
+        hostname = new URL(url).hostname;
+      } catch {
+        void request.abort('failed').catch(() => undefined);
+        return;
+      }
+      assertHostAllowed(hostname)
+        .then(() => request.continue().catch(() => undefined))
+        .catch(() => request.abort('blocked').catch(() => undefined));
+    });
+
     page.on('close', () => {
       this.pages.delete(tabId);
       if (this.activeTabId === tabId) this.activeTabId = this.pages.keys().next().value || null;
+      if (this.screencast?.page === page) void this.startScreencast();
       void this.broadcastState();
     });
     page.on('framenavigated', (frame) => {
       if (frame === page.mainFrame()) void this.broadcastState();
     });
+    // Popups erben den Egress-Guard via Request-Interceptor (wird in
+    // attachPage gesetzt, bevor die Popup-Navigation startet).
     page.on('popup', (popup) => { void this.attachPage(popup).then(() => this.broadcastState()); });
     if (!this.activeTabId) this.activeTabId = tabId;
     return tabId;
@@ -365,7 +604,15 @@ class BrowserSession {
         isActive: id === this.activeTabId,
       });
     }
-    return { sessionId: this.id, activeTabId: this.activeTabId, tabs, status: this.browser ? 'running' : 'stopped' };
+    return {
+      sessionId: this.id,
+      activeTabId: this.activeTabId,
+      tabs,
+      status: this.browser ? 'running' : 'stopped',
+      // Aktiver Viewport: Client mappt Maus-Koordinaten darauf (kann durch
+      // resize-Nachrichten vom Initialwert abweichen).
+      viewport: { width: this.viewport.width, height: this.viewport.height },
+    };
   }
 
   async navigate(rawUrl) {
@@ -385,6 +632,7 @@ class BrowserSession {
     const tabId = await this.attachPage(page);
     this.activeTabId = tabId;
     if (target !== 'about:blank') await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await this.startScreencast(page);
     await this.broadcastState();
     return this.state();
   }
@@ -393,7 +641,15 @@ class BrowserSession {
     if (!this.pages.has(tabId)) throw new Error('Browser-Tab nicht gefunden');
     await this.releaseButtons();
     this.activeTabId = tabId;
-    await this.pages.get(tabId).bringToFront().catch(() => undefined);
+    const page = this.pages.get(tabId);
+    // Viewport nachziehen (Tab kann vor einem resize erstellt worden sein)
+    await page.setViewport({
+      width: this.viewport.width,
+      height: this.viewport.height,
+      deviceScaleFactor: this.viewport.dpr,
+    }).catch(() => undefined);
+    await page.bringToFront().catch(() => undefined);
+    await this.startScreencast(page);
     await this.broadcastState();
     return this.state();
   }
@@ -403,13 +659,97 @@ class BrowserSession {
     if (!page) return this.state();
     await this.releaseButtons();
     await page.close();
+    // Der page-'close'-Handler startet den Screencast auf dem Folgetab neu —
+    // kein expliziter Restart hier (würde einen doppelten Restart auslösen).
     return this.state();
   }
 
-  async resize(width, height) {
+  async resize(width, height, dpr) {
+    const nextWidth = clamp(Math.round(width || this.viewport.width), 480, 1920);
+    const nextHeight = clamp(Math.round(height || this.viewport.height), 360, 1200);
+    const nextDpr = clamp(dpr || this.viewport.dpr, 1, 2);
+    const next = {
+      width: nextWidth - (nextWidth % 2),
+      height: nextHeight - (nextHeight % 2),
+      dpr: nextDpr,
+    };
+    if (next.width === this.viewport.width && next.height === this.viewport.height && next.dpr === this.viewport.dpr) return;
+    this.viewport = next;
+    // Altes Frame verwerfen: sonst replayt der Keepalive bis zum ersten neuen
+    // Frame weiterhin in alter Auflösung.
+    this.lastFrame = null;
+    this.lastRealFrameAt = Date.now();
     const page = this.getActivePage();
     if (!page) return;
-    await page.setViewport({ width: clamp(width, 320, 2560), height: clamp(height, 240, 1600) });
+    await page.setViewport({ width: next.width, height: next.height, deviceScaleFactor: next.dpr }).catch(() => undefined);
+    // Screencast mit neuen maxWidth/maxHeight neu starten → liefert frisches
+    // Frame in der neuen Auflösung.
+    await this.startScreencast(page, { force: true });
+  }
+
+  /* ─── Input-Pipeline ───
+   * Moves: queueMove — sofort entgegennehmen, gebündelt alle 16ms an Chromium
+   * (last-write-wins, KEIN Stale-Drop, KEIN Throttle im Client). Die sichtbare
+   * Trajektorie ist damit die echte User-Bewegung.
+   * Alle anderen Ops: serielle inputQueue (nur schnelle Ops — max. wenige ms),
+   * damit down/up-Reihenfolge garantiert ist.
+   * Navigation/Resize: asynchron NEBEN der Queue — ein 30s-goto blockiert
+   * keine Eingaben mehr.
+   */
+  queueMove(peer, message) {
+    this.lastUsed = Date.now();
+    this.lastInputAt = Date.now();
+    if (peer !== this.controlPeer) {
+      this.controlPeer = peer;
+      void this.broadcastState();
+    }
+    peer.moveSlot = {
+      x: clamp(message.x, 0, this.viewport.width),
+      y: clamp(message.y, 0, this.viewport.height),
+    };
+    if (peer.moveTimer) return;
+    peer.moveTimer = setTimeout(() => {
+      peer.moveTimer = null;
+      const slot = peer.moveSlot;
+      peer.moveSlot = null;
+      if (!slot) return;
+      const page = this.getActivePage();
+      if (!page) return;
+      this.moveChain = this.moveChain
+        .then(() => page.mouse.move(slot.x, slot.y))
+        .catch(() => undefined);
+    }, MOVE_FLUSH_MS);
+  }
+
+  // Vor down/up/click/wheel: noch nicht geflushede Move-Position geordnet
+  // übergeben (sonst klickt man auf die alte Cursor-Position).
+  async flushPendingMove(peer, page) {
+    if (!peer) return;
+    if (peer.moveTimer) { clearTimeout(peer.moveTimer); peer.moveTimer = null; }
+    const slot = peer.moveSlot;
+    peer.moveSlot = null;
+    if (!slot) return;
+    this.moveChain = this.moveChain.then(() => page.mouse.move(slot.x, slot.y)).catch(() => undefined);
+    await this.moveChain;
+  }
+
+  routeInput(peer, message) {
+    if (!message || typeof message !== 'object') return;
+    if (message.type === 'mouse' && message.action === 'move') return this.queueMove(peer, message);
+    // Navigation/Tab-Ops/Resize: asynchron, blockieren keine Eingaben
+    if (['navigate', 'reload', 'back', 'forward', 'new-tab', 'close-tab', 'activate-tab', 'resize'].includes(message.type)) {
+      void this.input(peer, message).catch((error) => console.error('Nav-Input failed:', error.message));
+      return;
+    }
+    // Control/Release: sofort, nie in der Queue warten
+    if (message.type === 'take-control' || message.type === 'release-control' || message.type === 'release') {
+      void this.input(peer, message).catch((error) => console.error('Control-Input failed:', error.message));
+      return;
+    }
+    // Schnelle Ops seriell: down/up-Reihenfolge und Klick-Sequenz bleiben intakt
+    peer.inputQueue = peer.inputQueue
+      .then(() => this.input(peer, message))
+      .catch((error) => console.error('Input failed:', error.message));
   }
 
   async input(peer, message) {
@@ -417,51 +757,62 @@ class BrowserSession {
     if (['mouse', 'wheel', 'keyboard'].includes(message.type)) this.lastInputAt = Date.now();
     if (message.type === 'take-control') {
       this.controlPeer = peer;
-      await this.broadcastState();
+      void this.broadcastState();
       return;
     }
     if (message.type === 'release-control') {
       if (this.controlPeer === peer) this.controlPeer = this.peers.values().next().value || null;
-      await this.broadcastState();
+      void this.broadcastState();
       return;
     }
     if (message.type === 'release') return this.releaseButtons();
     // Auto-Take-Control: Jede Interaktion eines Nicht-Control-Peers übernimmt
-    // die Kontrolle. Verhindert den "erster Peer blockiert alle Klicks"-Zustand
-    // (z.B. nach Browser-Tab-Wechsel oder wenn ein alter Tab offen bleibt).
+    // die Kontrolle. Verhindert den "erster Peer blockiert alle Klicks"-Zustand.
     if (peer !== this.controlPeer) {
       this.controlPeer = peer;
-      await this.broadcastState();
+      void this.broadcastState();
     }
-    const page = this.getActivePage();
+
     if (message.type === 'navigate') return this.navigate(message.url);
     if (message.type === 'new-tab') return this.newTab(message.url || DEFAULT_START_URL);
     if (message.type === 'activate-tab') return this.activate(message.tabId);
     if (message.type === 'close-tab') return this.closeTab(message.tabId);
-    if (message.type === 'reload') { await this.releaseButtons(); await page?.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 }); return this.broadcastState(); }
-    if (message.type === 'back') { await this.releaseButtons(); await page?.goBack({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
-    if (message.type === 'forward') { await this.releaseButtons(); await page?.goForward({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
+    if (message.type === 'resize') return this.resize(message.width, message.height, message.dpr);
+    if (message.type === 'reload') { await this.releaseButtons(); await this.getActivePage()?.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 }); return this.broadcastState(); }
+    if (message.type === 'back') { await this.releaseButtons(); await this.getActivePage()?.goBack({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
+    if (message.type === 'forward') { await this.releaseButtons(); await this.getActivePage()?.goForward({ waitUntil: 'domcontentloaded', timeout: 30_000 }).catch(() => undefined); return this.broadcastState(); }
+
+    const page = this.getActivePage();
     if (!page) return undefined;
 
-    if (message.type === 'resize') return this.resize(message.width, message.height);
     if (message.type === 'mouse') {
-      const x = clamp(message.x, 0, DEFAULT_VIEWPORT.width);
-      const y = clamp(message.y, 0, DEFAULT_VIEWPORT.height);
-      // Natürliche Trajektorie: Klicks fahren eine Bézier-Kurve mit
-      // Hover-Pause ab, statt mit einem Sprung ans Ziel zu springen
-      // (Cloudflare wertet die Cursor-Bewegung vor dem Klick aus).
-      // 'move'-Events vom Frontend sind echte User-Bewegungen → direkt.
-      if (message.action === 'move') await page.mouse.move(x, y);
-      if (message.action === 'down') { await humanMouseMove(page, x, y); await page.mouse.down({ button: message.button || 'left' }); }
-      if (message.action === 'up') { await page.mouse.move(x, y); await page.mouse.up({ button: message.button || 'left' }); }
+      const x = clamp(message.x, 0, this.viewport.width);
+      const y = clamp(message.y, 0, this.viewport.height);
+      // 'move' kommt nie hier an (queueMove via routeInput); kein direkter
+      // Bypass, damit alle Moves über den 16ms-Pacer laufen.
+      if (message.action === 'down') {
+        await this.flushPendingMove(peer, page);
+        await page.mouse.down({ button: message.button || 'left' });
+      }
+      if (message.action === 'up') {
+        await this.flushPendingMove(peer, page);
+        await page.mouse.move(x, y);
+        await page.mouse.up({ button: message.button || 'left' });
+      }
       if (message.action === 'click') {
+        // Legacy: vollsynthetischer Klick (Frontend nutzt down/up). Zuerst den
+        // evtl. noch gepufferten Move übergeben, sonst landet er NACH dem Klick.
+        await this.flushPendingMove(peer, page);
         await humanMouseMove(page, x, y);
         await page.mouse.down({ button: message.button || 'left' });
         await sleep(40 + Math.random() * 120);
         await page.mouse.up({ button: message.button || 'left' });
       }
     }
-    if (message.type === 'wheel') await page.mouse.wheel({ deltaX: Number(message.deltaX) || 0, deltaY: Number(message.deltaY) || 0 });
+    if (message.type === 'wheel') {
+      await this.flushPendingMove(peer, page);
+      await page.mouse.wheel({ deltaX: Number(message.deltaX) || 0, deltaY: Number(message.deltaY) || 0 });
+    }
     if (message.type === 'keyboard') {
       if (message.action === 'type') await page.keyboard.type(String(message.text || ''));
       if (message.action === 'press') await page.keyboard.press(String(message.key));
@@ -479,18 +830,6 @@ class BrowserSession {
     for (const button of ['left', 'right', 'middle']) {
       await page.mouse.up({ button }).catch(() => undefined);
     }
-  }
-
-  async captureFrame() {
-    const page = this.getActivePage();
-    if (!page) return null;
-    const screenshot = await page.screenshot({ type: 'jpeg', quality: 60 });
-    // 960px Breite spart ~40 % Pixel: JPEG-Decode, I420-Konvertierung und
-    // VP8-Encode werden spürbar billiger; das Video-Element streckt auf Fill.
-    const raw = await sharp(screenshot).resize({ width: 960, withoutEnlargement: true }).raw().toBuffer({ resolveWithObject: true });
-    const width = raw.info.width - (raw.info.width % 2);
-    const height = raw.info.height - (raw.info.height % 2);
-    return { width, height, data: rgbToI420(raw.data, raw.info.width, raw.info.height) };
   }
 
   async downloads() {
@@ -523,7 +862,7 @@ class BrowserSession {
   async addPeer(ws) {
     const source = new RTCVideoSource();
     const pc = new RTCPeerConnection({ iceServers: [] });
-    const peer = { ws, pc, source, audioSource: null, audioProcess: null, audioBuffer: Buffer.alloc(0), timer: null, channel: null, inputQueue: Promise.resolve(), pendingInputs: 0 };
+    const peer = { ws, pc, source, audioSource: null, audioProcess: null, audioBuffer: Buffer.alloc(0), timer: null, channel: null, inputQueue: Promise.resolve(), moveSlot: null, moveTimer: null };
     this.peers.add(peer);
     if (!this.controlPeer) this.controlPeer = peer;
     pc.addTrack(source.createTrack());
@@ -560,20 +899,7 @@ class BrowserSession {
       peer.channel = channel;
       channel.onmessage = (event) => {
         try {
-          const message = JSON.parse(String(event.data));
-          // Stale-Drop: gestaute 'move'-Events verwerfen (>4 Inputs in der Queue),
-          // sonst bleibt die Queue hinter der Maus zurück.
-          if (message.type === 'mouse' && message.action === 'move' && peer.pendingInputs > 4) return;
-          peer.pendingInputs += 1;
-          peer.inputQueue = peer.inputQueue
-            .then(() => this.input(peer, message))
-            .then(() => {
-              if (STATE_CHANGING_TYPES.has(message.type)) void this.sendState(ws);
-            })
-            .catch((error) => {
-              console.error('DC-Input failed:', error.message);
-            })
-            .finally(() => { peer.pendingInputs -= 1; });
+          this.routeInput(peer, JSON.parse(String(event.data)));
         } catch (error) {
           console.error('DC-Malformed:', error.message);
         }
@@ -593,48 +919,14 @@ class BrowserSession {
         peer.handshakeTimeout = null;
       }
     };
-    const capture = async () => {
-      // Lock: kein überlappender Screenshot. Wenn Chromium hängt (Screenshot
-      // läuft ewig), würde setInterval sonst parallel Screenshots stapeln und
-      // die Last weiter erhöhen — das verschlimmert das Problem.
-      if (this.captureInFlight) return;
-      this.captureInFlight = true;
-      try {
-        const frame = await this.captureFrame();
-        if (frame) {
-          source.onFrame(frame);
-          this.captureFailures = 0;
-          this.lastFrameAt = Date.now();
-        }
-      } catch (error) {
-        this.captureFailures += 1;
-        console.error(`Frame capture failed [${this.id}] (${this.captureFailures}x): ${error.message}`);
-        // Nach ~6s anhaltender Fehler (12 × 500ms) den Peer schließen →
-        // der Client baut die Verbindung automatisch neu auf.
-        if (this.captureFailures >= 12) {
-          console.error(`Closing peer [${this.id}] after ${this.captureFailures} capture failures`);
-          try { ws.close(1011, 'Frame capture stalled'); } catch { /* ignore */ }
-        }
-      } finally {
-        this.captureInFlight = false;
+    // Keepalive-Replay: Liefert der Screencast keine neuen Frames (statische
+    // Seite), dasselbe Frame erneut pushen — hält video.currentTime am Laufen
+    // (Client-Watchdog), ohne Screenshot/Encode-Kosten.
+    peer.timer = setInterval(() => {
+      if (this.lastFrame && Date.now() - this.lastRealFrameAt > 400) {
+        try { peer.source.onFrame(this.lastFrame); } catch { /* ignore */ }
       }
-    };
-    // Adaptiv: ~15 FPS innerhalb von 2 s nach der letzten Eingabe (flüssiges
-    // Scrollen/Klicken), sonst 4 FPS im Leerlauf (CPU-schonend bei mehreren
-    // parallelen Browser-Blöcken). Die In-Flight-Sperre bleibt bestehen: Ist
-    // ein Screenshot langsamer als das Intervall, werden Ticks übersprungen.
-    const FAST_MS = 66;
-    const IDLE_MS = 500;
-    const scheduleCapture = (delay) => {
-      peer.timer = setTimeout(() => {
-        void capture().finally(() => {
-          if (this.peers.has(peer)) {
-            scheduleCapture(Date.now() - this.lastInputAt < 2_000 ? FAST_MS : IDLE_MS);
-          }
-        });
-      }, delay);
-    };
-    scheduleCapture(IDLE_MS);
+    }, 500);
     this.ensureStallWatchdog();
     ws.on('message', (raw) => {
       try {
@@ -675,14 +967,7 @@ class BrowserSession {
     } else if (message.type === 'candidate' && message.candidate) {
       await peer.pc.addIceCandidate(new RTCIceCandidate(message.candidate));
     } else if (message.type === 'input') {
-      const payload = message.payload;
-      if (payload?.type === 'mouse' && payload?.action === 'move' && peer.pendingInputs > 4) return;
-      peer.pendingInputs += 1;
-      peer.inputQueue = peer.inputQueue
-        .then(() => this.input(peer, payload))
-        .then(() => { if (STATE_CHANGING_TYPES.has(payload?.type)) void this.sendState(peer.ws); })
-        .catch((error) => { console.error('WS-Input failed:', error.message); })
-        .finally(() => { peer.pendingInputs -= 1; });
+      this.routeInput(peer, message.payload);
     }
   }
 
@@ -694,6 +979,7 @@ class BrowserSession {
       .catch(() => undefined);
     if (this.controlPeer === peer) this.controlPeer = this.peers.values().next().value || null;
     if (peer.timer) clearInterval(peer.timer);
+    if (peer.moveTimer) clearTimeout(peer.moveTimer);
     if (peer.heartbeat) clearInterval(peer.heartbeat);
     if (peer.handshakeTimeout) clearTimeout(peer.handshakeTimeout);
     peer.audioProcess?.kill();
@@ -718,12 +1004,14 @@ class BrowserSession {
 
   async close() {
     if (this.stallTimer) { clearInterval(this.stallTimer); this.stallTimer = null; }
+    await this.stopScreencast();
     for (const peer of this.peers) this.removePeer(peer);
     this.controlPeer = null;
     if (this.browser) await this.browser.close().catch(() => undefined);
     this.browser = null;
     this.pages.clear();
     this.activeTabId = null;
+    this.lastFrame = null;
   }
 }
 
@@ -769,6 +1057,24 @@ const wss = new WebSocketServer({ noServer: true });
 
 function authorised(req) {
   return Boolean(RENDERER_KEY) && req.headers['x-lifehub-renderer-key'] === RENDERER_KEY;
+}
+
+// Stream-Token via Sec-WebSocket-Protocol ("bearer-<token>") — landet nicht in
+// Access-Logs/URLs. Legacy-Query-Parameter bleibt als Fallback erhalten.
+function extractStreamToken(req, requestUrl) {
+  const protocols = String(req.headers['sec-websocket-protocol'] || '')
+    .split(',')
+    .map((entry) => entry.trim());
+  const bearer = protocols.find((entry) => entry.startsWith('bearer-'));
+  if (bearer) return bearer.slice('bearer-'.length);
+  return requestUrl.searchParams.get('token');
+}
+
+function originAllowed(req) {
+  if (ALLOWED_ORIGINS.length === 0) return true; // nicht konfiguriert
+  const origin = req.headers.origin;
+  if (!origin) return true; // Non-Browser-Client
+  return ALLOWED_ORIGINS.includes(origin);
 }
 
 async function body(req) {
@@ -845,10 +1151,11 @@ const server = createServer((req, res) => { void requestHandler(req, res); });
 server.on('upgrade', (req, socket, head) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const match = requestUrl.pathname.match(/^\/session\/([^/]+)\/webrtc$/);
-  const token = requestUrl.searchParams.get('token');
+  const token = match ? extractStreamToken(req, requestUrl) : null;
   let sessionId;
   try { sessionId = match ? assertSessionId(match[1]) : null; } catch { sessionId = null; }
-  if (!sessionId || !RENDERER_KEY || !verifyRendererToken(sessionId, token, RENDERER_KEY)) {
+  const valid = sessionId && RENDERER_KEY && verifyRendererToken(sessionId, token, RENDERER_KEY);
+  if (!valid || !originAllowed(req)) {
     socket.destroy();
     return;
   }
@@ -873,4 +1180,4 @@ server.on('upgrade', (req, socket, head) => {
 
 setInterval(() => { void manager.cleanup(); }, 60_000);
 await mkdir(PROFILE_ROOT, { recursive: true });
-server.listen(PORT, '0.0.0.0', () => console.log(`Browser renderer listening on http://0.0.0.0:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`Browser renderer listening on http://0.0.0.0:${PORT} (screencast, maxFps=${MAX_FPS}, dpr=${DEFAULT_DPR}, headful=${HEADFUL})`));

@@ -64,9 +64,12 @@ export class BrowserRendererService {
         headers: { 'X-LifeHub-Renderer-Key': this.rendererKey },
         signal: AbortSignal.timeout(30_000),
       });
-      if (!response.ok) throw new ServiceUnavailableException('Download konnte nicht geladen werden');
+      if (!response.ok || !response.body) throw new ServiceUnavailableException('Download konnte nicht geladen werden');
       return {
-        body: Buffer.from(await response.arrayBuffer()),
+        // Body als Stream durchreichen — große Downloads dürfen nicht komplett
+        // in den RAM gepuffert werden (Backend-RAM-Spitzen bei 500MB-Limit).
+        body: response.body,
+        contentLength: response.headers.get('content-length'),
         contentType: response.headers.get('content-type') ?? 'application/octet-stream',
         contentDisposition: response.headers.get('content-disposition') ?? `attachment; filename="${filename.replace(/["\r\n]/g, '')}"`,
       };
@@ -76,7 +79,10 @@ export class BrowserRendererService {
     }
   }
 
-  createStreamToken(sessionId: string, ttlSeconds = 86_400) {
+  // 30 Minuten: Ein Stream-Token berechtigt nur zum Verbindungsaufbau; lange
+  // Sitzungen bleiben verbunden, nach Ablauf holt der Client via
+  // Fehler-Eskalation automatisch einen frischen Token.
+  createStreamToken(sessionId: string, ttlSeconds = 1_800) {
     if (!this.rendererKey) {
       throw new ServiceUnavailableException('Browser-Renderer ist nicht konfiguriert');
     }

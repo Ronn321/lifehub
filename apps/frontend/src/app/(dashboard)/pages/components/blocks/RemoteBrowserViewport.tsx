@@ -10,6 +10,9 @@ import {
 import { WifiOff } from 'lucide-react';
 
 export const BROWSER_VIEWPORT = { width: 1280, height: 720 } as const;
+// devicePixelRatio für den Remote-Render: HiDPI-Clients bekommen die
+// doppelte Pixeldichte, normale Displays 1.5× (Supersampling = schärfer).
+const DEFAULT_REMOTE_DPR = 1.5;
 
 export interface RemoteBrowserTab {
   id: string;
@@ -25,6 +28,7 @@ export interface RemoteBrowserState {
   status: 'running' | 'stopped';
   canControl?: boolean;
   controlHeld?: boolean;
+  viewport?: { width: number; height: number };
 }
 
 export interface RemoteBrowserViewportHandle {
@@ -40,11 +44,11 @@ interface RemoteBrowserViewportProps {
 
 const RETRY_DELAY_MS = 1500;
 
-function getRendererWebSocketUrl(streamPath: string, token: string): string {
+function getRendererWebSocketUrl(streamPath: string): string {
   const configured = process.env.NEXT_PUBLIC_BROWSER_RENDERER_URL;
   const base = configured || `${window.location.protocol}//${window.location.hostname}:3111`;
   const wsBase = base.replace(/^http:/i, 'ws:').replace(/^https:/i, 'wss:');
-  return `${wsBase.replace(/\/$/, '')}${streamPath}?token=${encodeURIComponent(token)}`;
+  return `${wsBase.replace(/\/$/, '')}${streamPath}`;
 }
 
 export const RemoteBrowserViewport = forwardRef<
@@ -55,7 +59,14 @@ export const RemoteBrowserViewport = forwardRef<
   const inputChannelRef = useRef<RTCDataChannel | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Aktiver Remote-Viewport (vom Server-State); Basis für die Koordinaten-
+  // Transformation. Kann durch resize-Nachrichten von BROWSER_VIEWPORT abweichen.
+  const remoteViewportRef = useRef<{ width: number; height: number }>(BROWSER_VIEWPORT);
   const [frameDead, setFrameDead] = useState(false);
+  // Autoplay-Policy: unmuted + autoplay wird vom Browser blockiert → kein
+  // Video, Watchdog eskaliert endlos. Default muted starten, beim ersten
+  // Pointerdown entmuten (User-Geste erlaubt Audio).
+  const [muted, setMuted] = useState(true);
 
   const sendInput = (payload: Record<string, unknown>) => {
     const data = JSON.stringify(payload);
@@ -77,7 +88,6 @@ export const RemoteBrowserViewport = forwardRef<
     let disposed = false;
     let peer: RTCPeerConnection | null = null;
     let remoteDescriptionSet = false;
-    const pendingCandidates: RTCIceCandidateInit[] = [];
     // Zählt die Verbindungsversuche innerhalb dieses Effect-Laufs (startet bei
     // 0, auch beim initialen connect()). Wird in socket.onclose erhöht.
     let connectAttempts = 0;
@@ -90,7 +100,16 @@ export const RemoteBrowserViewport = forwardRef<
       reconnectTimerRef.current = null;
       if (handshakeTimeout) clearTimeout(handshakeTimeout);
       handshakeTimeout = null;
-      try { inputChannelRef.current?.send(JSON.stringify({ type: 'release' })); } catch { /* ignore */ }
+      // Release über Channel ODER Socket schicken (sendInput-Logik): sonst
+      // bleiben bei Disconnect über WS gehaltene Tasten hängen.
+      try {
+        const release = JSON.stringify({ type: 'release' });
+        const channel = inputChannelRef.current;
+        if (channel?.readyState === 'open') channel.send(release);
+        else if (socketRef.current?.readyState === WebSocket.OPEN) {
+          socketRef.current.send(JSON.stringify({ type: 'input', payload: { type: 'release' } }));
+        }
+      } catch { /* ignore */ }
       inputChannelRef.current?.close();
       inputChannelRef.current = null;
       socketRef.current?.close();
@@ -104,7 +123,13 @@ export const RemoteBrowserViewport = forwardRef<
       if (disposed) return;
       setFrameDead(false);
       onStatus('connecting');
-      const socket = new WebSocket(getRendererWebSocketUrl(streamPath, token));
+      // ICE-Kandidaten-Puffer je Verbindungsversuch: geteilt über Reconnects
+      // würden alte Kandidaten in neue PeerConnections fließen.
+      const pendingCandidates: RTCIceCandidateInit[] = [];
+      // Token als WebSocket-Subprotocol ("bearer-<token>") statt Query-Param:
+      // landet nicht in Access-Logs/Proxies. Der Renderer prüft das Subprotocol
+      // beim Upgrade.
+      const socket = new WebSocket(getRendererWebSocketUrl(streamPath), [`bearer-${token}`]);
       socketRef.current = socket;
       peer = new RTCPeerConnection({ iceServers: [] });
       // Handshake-Timeout: Bleibt der WebRTC-Handshake (Offer/Answer) aus,
@@ -171,6 +196,7 @@ export const RemoteBrowserViewport = forwardRef<
             if (remoteDescriptionSet) await peer.addIceCandidate(message.candidate);
             else pendingCandidates.push(message.candidate);
           } else if (message.type === 'state' && message.state) {
+            if (message.state.viewport) remoteViewportRef.current = message.state.viewport;
             onState(message.state);
           }
         } catch {
@@ -194,7 +220,8 @@ export const RemoteBrowserViewport = forwardRef<
         onStatus('reconnecting');
         reconnectTimerRef.current = setTimeout(connect, RETRY_DELAY_MS * connectAttempts);
       };
-      socket.onerror = () => onStatus('error');
+      // Kein onerror→'error': onclose übernimmt die Backoff-Eskalation; ein
+      // sofortiges 'error' würde fälschlich einen Token-Refresh auslösen.
     };
 
     connect();
@@ -202,21 +229,54 @@ export const RemoteBrowserViewport = forwardRef<
       disposed = true;
       cleanup();
     };
-  }, [onState, onStatus, streamPath, token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamPath, token]);
 
-  const getPoint = (event: React.PointerEvent<HTMLDivElement>) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
+  /* Koordinaten-Mapping: Mausposition im Overlay → Remote-Viewport-Pixel.
+   * Letterbox-bewusst: Bei object-contain wird das Video innerhalb der
+   * Element-Grenzen zentriert — die tatsächliche Video-Fläche ergibt sich aus
+   * videoWidth/videoHeight (Stream-Auflösung) relativ zur Element-Bounds.
+   */
+  const mapPoint = (clientX: number, clientY: number) => {
+    const viewport = remoteViewportRef.current;
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) return null;
+    const bounds = video.getBoundingClientRect();
+    const scale = Math.min(bounds.width / video.videoWidth, bounds.height / video.videoHeight);
+    const offsetX = bounds.left + (bounds.width - video.videoWidth * scale) / 2;
+    const offsetY = bounds.top + (bounds.height - video.videoHeight * scale) / 2;
     return {
-      x: ((event.clientX - bounds.left) / bounds.width) * BROWSER_VIEWPORT.width,
-      y: ((event.clientY - bounds.top) / bounds.height) * BROWSER_VIEWPORT.height,
+      x: (clientX - offsetX) / scale,
+      y: (clientY - offsetY) / scale,
+    };
+  };
+
+  // Fallback-Mapping vor dem ersten Videoframe: Overlay-Grenzen auf den
+  // aktuellen Remote-Viewport mappen (gleiche Annahme wie beim Move-Fallback).
+  const mapPointOrFallback = (clientX: number, clientY: number, bounds: DOMRect) => {
+    const mapped = mapPoint(clientX, clientY);
+    if (mapped) return mapped;
+    return {
+      x: ((clientX - bounds.left) / bounds.width) * remoteViewportRef.current.width,
+      y: ((clientY - bounds.top) / bounds.height) * remoteViewportRef.current.height,
     };
   };
 
   const overlayRef = useRef<HTMLDivElement>(null);
-  // Hover-Drosselung: letzter Send-Zeitpunkt und letzter gesendeter Punkt, um
-  // Bewegungen nur alle 33ms und bei >3px Abstand zu übertragen (siehe onPointerMove).
-  const lastMoveSentAtRef = useRef(0);
-  const lastMovePointRef = useRef<{ x: number; y: number } | null>(null);
+  // Wheel-Akkumulation: Rad-Impulse werden gesammelt und alle 16ms gesendet
+  // (ein DataChannel-Frame pro Browser-Frame, ohne Deltas zu verlieren).
+  // Trailing-Flush: Bleiben Events aus, werden Rest-Deltas nach 20ms
+  // nachgesendet — sonst geht der Fenster-Rest verloren.
+  const wheelPendingRef = useRef({ deltaX: 0, deltaY: 0, lastSentAt: 0 });
+  const wheelFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flushWheel = () => {
+    const pending = wheelPendingRef.current;
+    if (!pending.deltaX && !pending.deltaY) return;
+    sendInput({ type: 'wheel', deltaX: pending.deltaX, deltaY: pending.deltaY });
+    pending.deltaX = 0;
+    pending.deltaY = 0;
+  };
 
   // Frame-Watchdog: Wenn das Video eingefroren ist (currentTime bleibt stehen,
   // obwohl die Verbindung offen ist), aktiv neu verbinden. 4s: kurze schwarze
@@ -245,45 +305,92 @@ export const RemoteBrowserViewport = forwardRef<
   }, [streamPath, token]);
 
   // Wheel-Scroll-Isolation: Reacts onWheel ist passiv (preventDefault greift
-  // nicht) → die LifeHub-Seite scrollte mit. Nativer non-passive Listener:
+  // nicht) → die LifeHub-Seite scrollte mit. Nativer non-passiver Listener:
   // stoppt die Propagation und leitet das Rad nur an den Remote-Browser weiter.
-  // Gedrosselt: Rad-Impulse (bei einigen Mausrädern sehr schnell) werden zu
-  // Deltas akkumuliert und max. alle 40ms gesendet, damit der DataChannel nicht
-  // geflutet wird.
   useEffect(() => {
     const el = overlayRef.current;
     if (!el) return undefined;
-    let pendingDeltaX = 0;
-    let pendingDeltaY = 0;
-    let lastSentAt = 0;
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       event.stopPropagation();
-      pendingDeltaX += event.deltaX;
-      pendingDeltaY += event.deltaY;
+      const pending = wheelPendingRef.current;
+      pending.deltaX += event.deltaX;
+      pending.deltaY += event.deltaY;
       const now = performance.now();
-      if (now - lastSentAt < 40) return;
-      lastSentAt = now;
-      sendInput({ type: 'wheel', deltaX: pendingDeltaX, deltaY: pendingDeltaY });
-      pendingDeltaX = 0;
-      pendingDeltaY = 0;
+      if (now - pending.lastSentAt < 16) {
+        // Trailing-Flush: stellt sicher, dass die akkumulierten Deltas auch
+        // ohne weiteres Wheel-Event noch gesendet werden.
+        if (!wheelFlushTimerRef.current) {
+          wheelFlushTimerRef.current = setTimeout(() => {
+            wheelFlushTimerRef.current = null;
+            wheelPendingRef.current.lastSentAt = performance.now();
+            flushWheel();
+          }, 20);
+        }
+        return;
+      }
+      pending.lastSentAt = now;
+      if (wheelFlushTimerRef.current) { clearTimeout(wheelFlushTimerRef.current); wheelFlushTimerRef.current = null; }
+      sendInput({ type: 'wheel', deltaX: pending.deltaX, deltaY: pending.deltaY });
+      pending.deltaX = 0;
+      pending.deltaY = 0;
     };
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      if (wheelFlushTimerRef.current) { clearTimeout(wheelFlushTimerRef.current); wheelFlushTimerRef.current = null; }
+      flushWheel();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamPath, token]);
+
+  /* Dynamisches Resize: Der Overlay folgt der Layout-Größe (auch Layout-Modus
+   * medium/fullscreen). Debounced überträgt der ResizeObserver die neue
+   * Container-Größe — Chromium rendert dann exakt in dieser Auflösung (× DPR),
+   * das Video füllt den Container 1:1 ohne Verzerrung.
+   */
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    let lastSent: { width: number; height: number } | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const width = Math.round(entry.contentRect.width);
+      const height = Math.round(entry.contentRect.height);
+      if (width < 480 || height < 360) return; // zu klein sinnvoll zu rendern
+      if (lastSent && Math.abs(lastSent.width - width) < 8 && Math.abs(lastSent.height - height) < 8) return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        lastSent = { width, height };
+        const dpr = Math.min(2, Math.max(DEFAULT_REMOTE_DPR, window.devicePixelRatio || 1));
+        sendInput({ type: 'resize', width, height, dpr });
+      }, 200);
+    });
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      if (timer) clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamPath, token]);
+
+  const mapButton = (button: number) => (button === 2 ? 'right' : button === 1 ? 'middle' : 'left');
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-zinc-950">
       {/* Fehlerbehandlung am Video-Element: stalled feuert bei Datenmangel,
           error bei Dekodier-/Netzwerkfehlern — beide führen über onclose zur
-          Reconnect-Eskalation. */}
+          Reconnect-Eskalation. object-contain statt object-fill: Das Video
+          behält das Seitenverhältnis des Remote-Viewports (der Server rendert
+          exakt in der Container-Größe), keine Verzerrung mehr. */}
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-fill select-none"
+        className="absolute inset-0 h-full w-full object-contain select-none"
         autoPlay
         playsInline
-        muted={false}
+        muted={muted}
         aria-label="Remote Chromium Browser"
         onStalled={() => socketRef.current?.close()}
         onError={() => socketRef.current?.close()}
@@ -295,32 +402,48 @@ export const RemoteBrowserViewport = forwardRef<
         tabIndex={0}
         onPointerDown={(event) => {
           void videoRef.current?.play().catch(() => undefined);
+          // Erste User-Geste: Autoplay-Policy erlaubt jetzt Audio → entmuten.
+          if (videoRef.current) videoRef.current.muted = false;
+          if (muted) setMuted(false);
           event.currentTarget.focus();
-          const point = getPoint(event);
+          // Vor dem ersten Frame greift das Bounds-Fallback (kein Drop).
+          const point = mapPointOrFallback(event.clientX, event.clientY, event.currentTarget.getBoundingClientRect());
           // sendInput VOR setPointerCapture: setPointerCapture kann werfen
           // (NotFoundError, wenn der Pointer nicht registriert ist — z.B. beim
-          // ersten Klick). Vorher ging der Klick dadurch verloren; erst nach
-          // einer Maus-Interaktion (Markieren) war der Pointer aktiv.
-          sendInput({ type: 'mouse', action: 'down', ...point, button: event.button === 2 ? 'right' : 'left' });
+          // ersten Klick). Vorher ging der Klick dadurch verloren.
+          sendInput({ type: 'mouse', action: 'down', ...point, button: mapButton(event.button) });
           try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* non-fatal */ }
         }}
         onPointerMove={(event) => {
-          // Hover-Bewegungen IMMER senden (gedrosselt): Cloudflare-Captchas werten
-          // die Cursor-Trajektorie zur Checkbox aus — ohne Hover sieht der Renderer
-          // nur Klick-Sprünge und der Captcha schlägt fehl. Drossel: max. alle 33ms
-          // und nur bei >3px Positionsänderung, damit der DataChannel nicht flutet.
-          const now = performance.now();
-          if (now - lastMoveSentAtRef.current < 33) return;
-          const point = getPoint(event);
-          const last = lastMovePointRef.current;
-          if (last && Math.abs(point.x - last.x) < 3 && Math.abs(point.y - last.y) < 3) return;
-          lastMoveSentAtRef.current = now;
-          lastMovePointRef.current = point;
-          sendInput({ type: 'mouse', action: 'move', ...point });
+          // LÜCKENLOS: Jedes pointermove wird sofort übertragen — keine
+          // Zeit-Drossel, kein 3px-Gate, kein Stale-Drop mehr. Coalesced
+          // Events liefern zusätzlich alle Zwischenpunkte, die der Browser
+          // pro Frame zusammengefasst hat (echte Trajektorie für Captchas).
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const native = event.nativeEvent as PointerEvent & { getCoalescedEvents?: () => PointerEvent[] };
+          const coalesced = typeof native.getCoalescedEvents === 'function' ? native.getCoalescedEvents() : [];
+          const events = coalesced.length > 0 ? coalesced : [native];
+          for (const point of events) {
+            const video = videoRef.current;
+            if (video?.videoWidth && video?.videoHeight) {
+              const mapped = mapPoint(point.clientX, point.clientY);
+              if (mapped) sendInput({ type: 'mouse', action: 'move', ...mapped });
+            } else {
+              // Fallback vor dem ersten Frame: Overlay-Grenzen auf den
+              // aktuellen Remote-Viewport mappen (gleiche Annahme wie früher).
+              sendInput({
+                type: 'mouse',
+                action: 'move',
+                x: ((point.clientX - bounds.left) / bounds.width) * remoteViewportRef.current.width,
+                y: ((point.clientY - bounds.top) / bounds.height) * remoteViewportRef.current.height,
+              });
+            }
+          }
         }}
         onPointerUp={(event) => {
-          const point = getPoint(event);
-          sendInput({ type: 'mouse', action: 'up', ...point, button: event.button === 2 ? 'right' : 'left' });
+          // Vor dem ersten Frame greift das Bounds-Fallback (kein Drop).
+          const point = mapPointOrFallback(event.clientX, event.clientY, event.currentTarget.getBoundingClientRect());
+          sendInput({ type: 'mouse', action: 'up', ...point, button: mapButton(event.button) });
           try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* non-fatal */ }
         }}
         onPointerCancel={() => sendInput({ type: 'release' })}

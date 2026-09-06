@@ -10,6 +10,9 @@ import {
   ServiceUnavailableException,
   UseGuards,
 } from '@nestjs/common';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web';
 import type { Response } from 'express';
 import { CurrentUser, JwtGuard, type JwtPayload } from '@lifehub/auth';
 import { PermissionGuard, RequirePermission } from '@lifehub/permissions';
@@ -62,7 +65,10 @@ export class BrowserController {
     const download = await this.renderer.getDownload(session.id, filename);
     res.setHeader('Content-Type', download.contentType);
     res.setHeader('Content-Disposition', download.contentDisposition);
-    res.send(download.body);
+    if (download.contentLength) res.setHeader('Content-Length', download.contentLength);
+    // Stream-Passthrough: Der Renderer-Body wird ohne komplettes Buffering
+    // an den Client durchgereicht (RAM-neutral auch bei 500MB-Downloads).
+    await pipeline(Readable.fromWeb(download.body as unknown as NodeWebReadableStream), res);
   }
 
   /** Legacy HTML proxy kept for existing saved blocks during migration. */

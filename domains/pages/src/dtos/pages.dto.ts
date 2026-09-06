@@ -27,6 +27,12 @@ export const updatePageSchema = z.object({
 });
 export type UpdatePageInput = z.infer<typeof updatePageSchema>;
 
+// BlockNote-Dokument (Array von Block-Objekten) — Inhaltsquelle des Editors
+export const updatePageDocSchema = z.object({
+  doc: z.array(z.record(z.unknown())).max(5000),
+});
+export type UpdatePageDocInput = z.infer<typeof updatePageDocSchema>;
+
 export const movePageSchema = z.object({
   newParentId: z.string().uuid().nullable(),
 });

@@ -181,6 +181,9 @@ export const mediaFiles = pgTable('media_files', {
   thumbnailPath: text('thumbnail_path'),               // Pfad zum generierten Thumbnail
   blurHash: text('blur_hash'),                          // BlurHash für Lazy-Loading
   isFavorite: boolean('is_favorite').notNull().default(false),
+  // Gesperrte Medien: locked=true wird aus allen Standard-Listings ausgeschlossen
+  // (files list, album media, GPS-Listing); einziger Zugang via GET /media/locked + Lock-Token.
+  locked: boolean('locked').notNull().default(false),
   description: text('description'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -190,6 +193,7 @@ export const mediaFiles = pgTable('media_files', {
   index('media_files_taken_idx').on(t.takenAt),
   index('media_files_gps_idx').on(t.gpsLat, t.gpsLng),
   index('media_files_owner_idx').on(t.ownerId, t.deletedAt),
+  index('media_files_locked_idx').on(t.ownerId, t.locked),
 ]);
 
 // ===================== albums (Phase 1) =====================
@@ -229,6 +233,13 @@ export const mediaTags = pgTable('media_tags', {
 }, (t) => [
   uniqueIndex('media_tags_uq').on(t.mediaId, t.tagId),
 ]);
+
+// ===================== media_lock_pins (Gesperrte Medien: PIN-Hash je Owner) =====================
+export const mediaLockPins = pgTable('media_lock_pins', {
+  ownerId: uuid('owner_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  pinHash: text('pin_hash').notNull(),   // Format: scrypt$<saltHex>$<keyHex>
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
 
 // ===================== trips (Phase 2) =====================
 export const trips = pgTable('trips', {
@@ -679,6 +690,9 @@ export const pages = pgTable('pages', {
   status: text('status').notNull().default('published'),
   tags: jsonb('tags').notNull().default('[]'),
   metadata: jsonb('metadata').notNull().default('{}'),
+  // BlockNote-Dokument (Array von Block-Objekten) — das neue Inhaltsmodell.
+  // Legacy-Seiten haben content=NULL; Synthese aus page_blocks beim ersten Lesen.
+  content: jsonb('content'),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -794,6 +808,8 @@ export const pageVersions = pgTable('page_versions', {
   icon: text('icon'),
   coverMediaId: text('cover_media_id'),
   blocks: jsonb('blocks').notNull(),
+  // BlockNote-Doc-Snapshot (neues Modell); NULL bei Legacy-Versionen
+  doc: jsonb('doc'),
   changedBy: uuid('changed_by').notNull().references(() => users.id),
   changeType: text('change_type').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

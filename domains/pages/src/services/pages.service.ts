@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Logger, Inject } from '@nestjs/common';
 import { EventsService, createEventType } from '@lifehub/events';
 import { PagesRepository } from '../repositories/pages.repository';
+import { docToMarkdown, legacyBlocksToDoc, type BlockNoteBlock } from './pages-doc';
 import type {
   CreatePageInput, UpdatePageInput, CreateBlockInput, UpdateBlockInput, ReorderBlocksInput,
   CreateRelationInput, CreateTemplateInput, UpdateTemplateInput,
@@ -86,7 +87,58 @@ export class PagesService {
     if (!page) throw new NotFoundException('Seite nicht gefunden');
     const blocks = await this.repo.findBlocksByPage(id);
     const relations = await this.repo.findRelationsByPage(id);
-    return { ...page, blocks, relations };
+    const doc = await this.resolveDoc(page, blocks);
+    return { ...page, doc, blocks, relations };
+  }
+
+  /** Doc-Synthese: pages.content lesen oder einmalig aus Legacy-Blöcken erzeugen. */
+  private async resolveDoc(
+    page: { id: string; content: unknown },
+    blocks: Array<{ id: string; type: string; content: unknown }>,
+  ): Promise<BlockNoteBlock[]> {
+    if (Array.isArray(page.content)) return page.content as BlockNoteBlock[];
+    if (blocks.length === 0) return [];
+    const doc = legacyBlocksToDoc(blocks);
+    await this.repo.updatePageContent(page.id, doc);
+    this.logger.log(`Migrierte ${blocks.length} Legacy-Blöcke zu BlockNote-Doc (Seite ${page.id})`);
+    return doc;
+  }
+
+  /**
+   * BlockNote-Doc speichern (Editor-Autosave). Version-Snapshot ist raten-
+   * limitiert: Speichert der Editor innerhalb von 5 Minuten mehrfach, wird der
+   * letzte Snapshot aktualisiert statt Versionen pro Tastenanschlag anzulegen.
+   */
+  async updatePageDoc(ownerId: string, id: string, doc: BlockNoteBlock[]) {
+    const page = await this.repo.findPageById(id, ownerId);
+    if (!page) throw new NotFoundException('Seite nicht gefunden');
+
+    const latest = await this.repo.findLatestPageVersionRow(id);
+    const withinSnapshotWindow = latest
+      && latest.changedBy === ownerId
+      && Date.now() - latest.createdAt.getTime() < 5 * 60 * 1000;
+
+    if (latest && withinSnapshotWindow) {
+      await this.repo.updatePageVersionDoc(latest.id, doc);
+    } else {
+      const blocks = await this.repo.findBlocksByPage(id);
+      await this.repo.createPageVersion({
+        pageId: id,
+        version: (latest?.version ?? await this.repo.getLatestPageVersion(id)) + 1,
+        title: page.title,
+        description: page.description ?? undefined,
+        icon: page.icon ?? undefined,
+        coverMediaId: page.coverMediaId ?? undefined,
+        blocks: blocks as any,
+        doc,
+        changedBy: ownerId,
+        changeType: 'updated',
+      });
+    }
+
+    await this.repo.updatePageContent(id, doc);
+    await this.events.emit(PageUpdated.create(id, { pageId: id, title: page.title }));
+    return { id, doc };
   }
 
   async updatePage(ownerId: string, id: string, input: UpdatePageInput) {
@@ -104,6 +156,7 @@ export class PagesService {
       icon: page.icon ?? undefined,
       coverMediaId: page.coverMediaId ?? undefined,
       blocks: blocks as any,
+      doc: page.content,
       changedBy: ownerId,
       changeType: 'updated',
     });
@@ -133,7 +186,15 @@ export class PagesService {
     const pageVersion = await this.repo.findPageVersion(pageId, version);
     if (!pageVersion) throw new NotFoundException('Version nicht gefunden');
 
-    // Restore blocks from version
+    // Neuere Versionen enthalten das BlockNote-Doc — Restore schreibt es
+    // direkt zurück in pages.content (löst den früheren Editor-Resync-Bug,
+    // weil der Editor das frische Doc neu lädt).
+    if (pageVersion.doc) {
+      await this.repo.updatePageContent(pageId, pageVersion.doc);
+      return this.repo.findPageById(pageId, ownerId);
+    }
+
+    // Legacy-Fallback: Blöcke aus der Version wiederherstellen
     const blocks = pageVersion.blocks as Array<{ type: string; content: Record<string, unknown>; sortOrder: number }>;
     const currentBlocks = await this.repo.findBlocksByPage(pageId);
 
@@ -457,7 +518,8 @@ export class PagesService {
     if (!page) throw new NotFoundException('Seite nicht gefunden');
     const blocks = await this.repo.findBlocksByPage(page.id);
     const relations = await this.repo.findRelationsByPage(page.id);
-    return { ...page, blocks, relations };
+    const doc = await this.resolveDoc(page, blocks);
+    return { ...page, doc, blocks, relations };
   }
 
   // ========== SEARCH ==========
@@ -666,25 +728,25 @@ export class PagesService {
 
   /**
    * Export a page as simplified Markdown.
-   * Iterates blocks, converting text blocks to paragraphs,
-   * headings to # ## ###, etc.
+   * Neu: Export aus dem BlockNote-Doc (volle Inhalte). Legacy-Seiten ohne Doc
+   * fallen auf den alten Block-Export zurück.
    */
   async exportPageMarkdown(ownerId: string, pageId: string): Promise<string> {
     const page = await this.repo.findPageById(pageId, ownerId);
     if (!page) throw new NotFoundException('Seite nicht gefunden');
+
+    const header: string[] = [`# ${page.title}`];
+    if (page.description) header.push('', page.description);
+    header.push('', '---', '');
+
+    if (Array.isArray(page.content) && page.content.length > 0) {
+      const body = docToMarkdown(page.content);
+      return [...header, body].join('\n').trim();
+    }
+
     const blocks = await this.repo.findBlocksByPage(pageId);
 
-    const lines: string[] = [];
-
-    // Title as H1
-    lines.push(`# ${page.title}`);
-    if (page.description) {
-      lines.push('');
-      lines.push(page.description);
-    }
-    lines.push('');
-    lines.push('---');
-    lines.push('');
+    const lines: string[] = [...header];
 
     for (const block of blocks) {
       const content = block.content as Record<string, unknown> ?? {};

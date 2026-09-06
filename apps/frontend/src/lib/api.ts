@@ -143,6 +143,19 @@ export const api = {
   },
 };
 
+/**
+ * Media-Stream-/Thumbnail-URL inkl. ?token= — <img>/<video>/<a download>
+ * können keine Authorization-Header senden; die Media-Endpoints akzeptieren
+ * den Access-Token daher als Query-Parameter (media-thumbnail.controller.ts).
+ * Zentrale Auflösung statt verteilter localStorage-Scrapes.
+ */
+export function mediaFileUrl(mediaId: string, kind: 'stream' | 'thumbnail' = 'stream'): string {
+  if (!mediaId) return '';
+  const token = getToken();
+  const query = token ? `?token=${encodeURIComponent(token)}` : '';
+  return `${API_BASE}/media/files/${mediaId}/${kind}${query}`;
+}
+
 // Auth-spezifische Schemas (geteilt mit Backend via OpenAPI später)
 export const loginSchema = z.object({
   email: z.string().email(),

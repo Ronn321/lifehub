@@ -89,6 +89,8 @@ export class PagesRepository {
     status?: string;
     tags?: string[];
     metadata?: Record<string, unknown>;
+    // BlockNote-Doc (neues Inhaltsmodell)
+    content?: unknown;
     sortOrder?: number;
   }) {
     const [row] = await this.db.update(pages)
@@ -102,6 +104,15 @@ export class PagesRepository {
     await this.db.update(pages)
       .set({ deletedAt: sql`now()` })
       .where(and(eq(pages.id, id), eq(pages.ownerId, ownerId)));
+  }
+
+  /** BlockNote-Doc schreiben (Ownership wird vom Service geprüft). */
+  async updatePageContent(id: string, content: unknown) {
+    const [row] = await this.db.update(pages)
+      .set({ content: (content ?? null) as typeof pages.$inferInsert.content, updatedAt: sql`now()` })
+      .where(eq(pages.id, id))
+      .returning({ id: pages.id });
+    return row ?? null;
   }
 
   async updatePageParent(id: string, ownerId: string, parentId: string | null) {
@@ -218,6 +229,7 @@ export class PagesRepository {
     icon?: string;
     coverMediaId?: string;
     blocks: PageBlock[];
+    doc?: unknown;
     changedBy: string;
     changeType: string;
   }) {
@@ -229,6 +241,7 @@ export class PagesRepository {
       icon: data.icon ?? null,
       coverMediaId: data.coverMediaId ?? null,
       blocks: data.blocks as typeof pageVersions.$inferInsert.blocks,
+      doc: (data.doc ?? null) as typeof pageVersions.$inferInsert.doc,
       changedBy: data.changedBy,
       changeType: data.changeType,
     }).returning();
@@ -245,6 +258,21 @@ export class PagesRepository {
     const [row] = await this.db.select().from(pageVersions)
       .where(and(eq(pageVersions.pageId, pageId), eq(pageVersions.version, version)));
     return row ?? null;
+  }
+
+  async findLatestPageVersionRow(pageId: string) {
+    const [row] = await this.db.select().from(pageVersions)
+      .where(eq(pageVersions.pageId, pageId))
+      .orderBy(desc(pageVersions.version))
+      .limit(1);
+    return row ?? null;
+  }
+
+  /** Doc im letzten Versionssnapshot aktualisieren (Rate-Limit gegen Snapshot-Spam). */
+  async updatePageVersionDoc(versionRowId: string, doc: unknown) {
+    await this.db.update(pageVersions)
+      .set({ doc: (doc ?? null) as typeof pageVersions.$inferInsert.doc })
+      .where(eq(pageVersions.id, versionRowId));
   }
 
   async getLatestPageVersion(pageId: string): Promise<number> {
@@ -492,11 +520,17 @@ export class PagesRepository {
           isNull(pages.deletedAt),
           sql`(
             ${pages.title} ILIKE ${pattern}
+            -- BlockNote-Doc: nur Text-Werte aus dem JSON extrahieren (kein
+            -- Roh-JSON-Match → keine False Positives über Feldnamen)
+            OR jsonb_path_query_array(${pages.content}, 'lax $.**.text')::text ILIKE ${pattern}
             OR EXISTS (
               SELECT 1 FROM ${pageBlocks}
               WHERE ${pageBlocks.pageId} = ${pages.id}
                 AND ${pageBlocks.deletedAt} IS NULL
-                AND ${pageBlocks.content}->>'text' ILIKE ${pattern}
+                AND (
+                  ${pageBlocks.content}->>'text' ILIKE ${pattern}
+                  OR jsonb_path_query_array(${pageBlocks.content}, 'lax $.**.text')::text ILIKE ${pattern}
+                )
             )
           )`,
         ),

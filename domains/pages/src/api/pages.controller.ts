@@ -6,6 +6,8 @@ import {
 import { JwtGuard, CurrentUser, type JwtPayload } from '@lifehub/auth';
 import { RequirePermission, PermissionGuard } from '@lifehub/permissions';
 import { PagesService } from '../services/pages.service';
+import { updatePageDocSchema } from '../dtos/pages.dto';
+import type { BlockNoteBlock as PagesDocBlock } from '../services/pages-doc';
 import {
   createPageSchema, updatePageSchema,
   createBlockSchema, updateBlockSchema,
@@ -119,6 +121,16 @@ export class PagesController {
   async updatePage(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: JwtPayload) {
     const dto = updatePageSchema.parse(body);
     return this.pages.updatePage(user.sub, id, dto);
+  }
+
+  // ========== PAGE DOC (BlockNote) ==========
+  // Editor-Autosave: speichert das komplette BlockNote-Dokument
+
+  @Put(':id/doc')
+  @RequirePermission('pages', 'update')
+  async updatePageDoc(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = updatePageDocSchema.parse(body);
+    return this.pages.updatePageDoc(user.sub, id, dto.doc as unknown as PagesDocBlock[]);
   }
 
   @Delete(':id')

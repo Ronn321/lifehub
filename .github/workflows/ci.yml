@@ -131,6 +131,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile host dists (Dockerfile takes them via COPY . .)
+        run: |
+          for pkg in shared/* domains/*; do
+            if [ -f "$pkg/src/index.ts" ]; then
+              (cd "$pkg" && npx tsc --outDir dist --declaration false --skipLibCheck)
+            fi
+          done
+
+      - name: Build backend
+        run: pnpm --filter @lifehub/backend build
+
+      - name: Build frontend
+        run: NEXT_PUBLIC_API_BASE=http://backend:3007/api/v1 pnpm --filter @lifehub/frontend build
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

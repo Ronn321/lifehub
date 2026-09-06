@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { config as loadEnv } from 'dotenv';
 import { AppModule } from './app.module.js';
+import { ZodExceptionFilter } from './zod-exception.filter.js';
 
 // .env manuell laden, BEVOR NestJS startet
 loadEnv();
@@ -33,6 +34,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // Zod-Fehler (schema.parse in allen Domain-Controllern) als 400 statt 500.
+  app.useGlobalFilters(new ZodExceptionFilter());
 
   // OpenAPI/Swagger vorerst deaktiviert (Phase 0.5+): inkompatibel mit tsx's emitDecoratorMetadata-Handling.
   // Wird reaktiviert, sobald wir auf `nest build` (TypeScript-Compiler) umstellen.

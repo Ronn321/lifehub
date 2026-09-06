@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import type { gmail_v1 } from 'googleapis';
 import { GoogleConnectionService } from '@lifehub/integrations-domain';
 import {
@@ -70,26 +70,78 @@ function walkParts(
 export function buildQuery(labelId: string, q?: string): string {
   const parts: string[] = [];
   if (q) parts.push(`(${q})`);
-  switch (labelId) {
-    case 'ARCHIVE':
-      parts.push('-in:inbox');
+  // Normalisiere Label (case-insensitive, getrimmt)
+  const id = (labelId ?? 'INBOX').trim().toUpperCase();
+  switch (id) {
+    case 'UNREAD':
+      // Ungelesene im Posteingang — entspricht mobilem Ordner „Ungelesen“
+      parts.push('in:inbox is:unread');
       break;
-    case 'TRASH':
-      parts.push('in:trash');
+    case 'STARRED':
+      parts.push('is:starred');
       break;
     case 'SENT':
       parts.push('in:sent');
       break;
+    case 'TRASH':
+      parts.push('in:trash');
+      break;
+    case 'ARCHIVE':
+      parts.push('-in:inbox');
+      break;
     case 'INBOX':
-    default:
       parts.push('in:inbox');
+      break;
+    default:
+      // Unbekannte Labels (z. B. CATEGORY_UPDATES) als Gmail-Label-Query
+      // Falls id wie `CATEGORY_...` oder `Label_...` aussieht, nutze label:
+      if (id.startsWith('CATEGORY_') || id.startsWith('LABEL_') || id.includes('/')) {
+        parts.push(`label:${labelId}`);
+      } else if (id.startsWith('IN:') || id.startsWith('IS:') || id.startsWith('LABEL:')) {
+        parts.push(labelId as string);
+      } else {
+        // Fallback: behandle als Label-Name
+        // Für Gmail-Benutzerlabels: label:"My Label"
+        // Wir versuchen label:ID und fallback zu in:inbox bei Fehlern im Caller
+        parts.push(`label:${labelId}`);
+      }
       break;
   }
   return parts.join(' ');
 }
 
+function mapGmailError(e: unknown): never {
+  // Gaxios/Google-APIs wirft Objekte mit `code` (HTTP-Status) und `errors[]` / `message`
+  const anyErr = e as Record<string, unknown>;
+  const code = typeof anyErr?.code === 'number' ? (anyErr.code as number) : undefined;
+  const status = typeof anyErr?.status === 'number' ? (anyErr.status as number) : code;
+  const msgRaw = (anyErr?.message as string) || (anyErr?.response as Record<string, unknown>)?.data as string || '';
+  const msg = typeof msgRaw === 'string' ? msgRaw : JSON.stringify(msgRaw ?? '');
+
+  // 401/403 → Google-Token ungültig/abgelaufen → 401 für Client (Sitzung neu anmelden)
+  if (status === 401 || status === 403) {
+    throw new UnauthorizedException(
+      'Google-Verbindung abgelaufen — bitte in den Einstellungen neu verbinden.',
+    );
+  }
+  // 429 / 5xx → temporärer Gmail-Fehler → 502 Bad Gateway statt 500
+  if (status === 429 || (status !== undefined && status >= 500)) {
+    throw new HttpException(
+      `Gmail vorübergehend nicht erreichbar (HTTP ${status})${msg ? `: ${msg.slice(0, 200)}` : ''}`,
+      HttpStatus.BAD_GATEWAY,
+    );
+  }
+  // Sonstige → 502 mit Details, aber nie blank 500
+  const detail = msg ? `: ${msg.slice(0, 300)}` : '';
+  throw new HttpException(
+    `Gmail-Fehler${status ? ` (HTTP ${status})` : ''}${detail}`,
+    HttpStatus.BAD_GATEWAY,
+  );
+}
+
 @Injectable()
 export class GmailService {
+  private readonly logger = new Logger(GmailService.name);
   constructor(@Inject(GoogleConnectionService) private readonly google: GoogleConnectionService) {}
 
   private async getGmailOrThrow(ownerId: string): Promise<gmail_v1.Gmail> {
@@ -101,13 +153,24 @@ export class GmailService {
     if (!conn.connected) {
       return { connected: false, email: null, unreadInbox: 0 };
     }
-    const gmail = await this.getGmailOrThrow(ownerId);
-    const res = await gmail.users.labels.get({ userId: 'me', id: 'INBOX' });
-    return {
-      connected: true,
-      email: conn.email,
-      unreadInbox: res.data.messagesUnread ?? 0,
-    };
+    try {
+      const gmail = await this.getGmailOrThrow(ownerId);
+      const res = await gmail.users.labels.get({ userId: 'me', id: 'INBOX' });
+      return {
+        connected: true,
+        email: conn.email,
+        unreadInbox: res.data.messagesUnread ?? 0,
+      };
+    } catch (e) {
+      this.logger.warn(`getStatus failed for ${ownerId}: ${(e as Error).message}`);
+      // Bei Gmail-Fehler nicht 500 werfen — Status als getrennt melden mit Warnung
+      // aber auch als 502, damit Frontend unterscheiden kann
+      if ((e as Record<string, unknown>)?.code === 401 || (e as Record<string, unknown>)?.status === 401) {
+        throw new UnauthorizedException('Google-Verbindung abgelaufen — bitte neu verbinden.');
+      }
+      // Für alle anderen Gmail-Fehler: wirf sauberen 502 statt 500
+      throw mapGmailError(e);
+    }
   }
 
   async listThreads(
@@ -116,57 +179,81 @@ export class GmailService {
   ): Promise<{ threads: EmailThreadSummary[]; nextPageToken: string | null; resultSizeEstimate: number }> {
     const labelId = options.labelId ?? 'INBOX';
     const maxResults = Math.min(Math.max(options.maxResults ?? 50, 1), 100);
-    const gmail = await this.getGmailOrThrow(ownerId);
+    let gmail: gmail_v1.Gmail;
+    try {
+      gmail = await this.getGmailOrThrow(ownerId);
+    } catch (e) {
+      // Keine Google-Verbindung → 401 (Client zeigt „Sitzung abgelaufen / neu verbinden“)
+      throw e;
+    }
 
-    const list = await gmail.users.messages.list({
-      userId: 'me',
-      q: buildQuery(labelId, options.q),
-      pageToken: options.pageToken,
-      maxResults,
-    });
-    const ids = (list.data.messages ?? []).map((m) => m.id).filter((id): id is string => !!id);
+    let list: gmail_v1.Schema$ListMessagesResponse;
+    try {
+      const res = await gmail.users.messages.list({
+        userId: 'me',
+        q: buildQuery(labelId, options.q),
+        pageToken: options.pageToken || undefined,
+        maxResults,
+      });
+      list = res.data;
+    } catch (e) {
+      this.logger.warn(`listThreads query failed (labelId=${labelId} q=${options.q ?? ''}): ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
+    const ids = (list.messages ?? []).map((m) => m.id).filter((id): id is string => !!id);
 
     const threads: EmailThreadSummary[] = [];
     for (const id of ids) {
-      const msg = await gmail.users.messages.get({
-        userId: 'me',
-        id,
-        format: 'metadata',
-        metadataHeaders: ['Subject', 'From', 'To', 'Date'],
-      });
-      const payload = msg.data.payload as GmailPart | undefined;
-      const headers = payload?.headers ?? [];
-      const labels = msg.data.labelIds ?? [];
-      const hasAttachment =
-        payload?.mimeType?.startsWith('multipart/mixed') ||
-        payload?.parts?.some((p) => p.filename) ||
-        false;
-      threads.push({
-        id: msg.data.id ?? id,
-        historyId: msg.data.historyId ?? undefined,
-        subject: headerValue(headers, 'Subject'),
-        from: headerValue(headers, 'From'),
-        to: headerValue(headers, 'To'),
-        date: headerValue(headers, 'Date') || null,
-        snippet: msg.data.snippet ?? '',
-        unread: labels.includes('UNREAD'),
-        hasAttachment,
-        labels,
-      });
+      try {
+        const msg = await gmail.users.messages.get({
+          userId: 'me',
+          id,
+          format: 'metadata',
+          metadataHeaders: ['Subject', 'From', 'To', 'Date'],
+        });
+        const payload = msg.data.payload as GmailPart | undefined;
+        const headers = payload?.headers ?? [];
+        const labels = msg.data.labelIds ?? [];
+        const hasAttachment =
+          payload?.mimeType?.startsWith('multipart/mixed') ||
+          payload?.parts?.some((p) => p.filename) ||
+          false;
+        threads.push({
+          id: msg.data.id ?? id,
+          historyId: msg.data.historyId ?? undefined,
+          subject: headerValue(headers, 'Subject'),
+          from: headerValue(headers, 'From'),
+          to: headerValue(headers, 'To'),
+          date: headerValue(headers, 'Date') || null,
+          snippet: msg.data.snippet ?? '',
+          unread: labels.includes('UNREAD'),
+          hasAttachment,
+          labels,
+        });
+      } catch (e) {
+        this.logger.warn(`messages.get metadata failed for ${id}: ${(e as Error).message}`);
+        // Einzelne defekte Nachricht überspringen statt ganze Liste mit 500 abzubrechen
+        continue;
+      }
     }
 
     return {
       threads,
-      nextPageToken: list.data.nextPageToken ?? null,
-      resultSizeEstimate: list.data.resultSizeEstimate ?? 0,
+      nextPageToken: list.nextPageToken ?? null,
+      resultSizeEstimate: list.resultSizeEstimate ?? 0,
     };
   }
 
   async getThread(ownerId: string, threadId: string): Promise<{ id: string; messages: EmailMessage[] }> {
     const gmail = await this.getGmailOrThrow(ownerId);
-    const res = await gmail.users.threads.get({ userId: 'me', id: threadId, format: 'full' });
-    const messages = (res.data.messages ?? []).map((m) => this.parseMessage(m));
-    return { id: threadId, messages };
+    try {
+      const res = await gmail.users.threads.get({ userId: 'me', id: threadId, format: 'full' });
+      const messages = (res.data.messages ?? []).map((m) => this.parseMessage(m));
+      return { id: threadId, messages };
+    } catch (e) {
+      this.logger.warn(`getThread ${threadId} failed: ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
   }
 
   private parseMessage(msg: gmail_v1.Schema$Message): EmailMessage {
@@ -208,8 +295,13 @@ export class GmailService {
       subject: input.subject,
       bodyHtml: input.bodyHtml,
     });
-    const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
-    return { id: res.data.id ?? '' };
+    try {
+      const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+      return { id: res.data.id ?? '' };
+    } catch (e) {
+      this.logger.warn(`send failed: ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
   }
 
   async reply(
@@ -286,8 +378,13 @@ export class GmailService {
       inReplyTo: messageId,
       references,
     });
-    const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw, threadId } });
-    return { id: res.data.id ?? '' };
+    try {
+      const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw, threadId } });
+      return { id: res.data.id ?? '' };
+    } catch (e) {
+      this.logger.warn(`reply failed: ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
   }
 
   async forward(
@@ -300,9 +397,16 @@ export class GmailService {
       throw new UnauthorizedException('Keine Google-Verbindung.');
     }
     const gmail = await this.getGmailOrThrow(ownerId);
-    const original = await gmail.users.messages.get({ userId: 'me', id: messageId, format: 'full' });
-    const parsed = this.parseMessage(original.data);
-    const headers = original.data.payload?.headers ?? [];
+    let original: gmail_v1.Schema$Message;
+    try {
+      const res = await gmail.users.messages.get({ userId: 'me', id: messageId, format: 'full' });
+      original = res.data;
+    } catch (e) {
+      this.logger.warn(`forward get original failed: ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
+    const parsed = this.parseMessage(original);
+    const headers = original.payload?.headers ?? [];
     const subject = parsed.subject.startsWith('WG:') ? parsed.subject : `WG: ${parsed.subject}`;
     const forwardedHeader = [
       '<p>---------- Weitergeleitete Nachricht ----------</p>',
@@ -321,8 +425,13 @@ export class GmailService {
       bodyHtml,
     });
     void headers;
-    const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
-    return { id: res.data.id ?? '' };
+    try {
+      const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+      return { id: res.data.id ?? '' };
+    } catch (e) {
+      this.logger.warn(`forward failed: ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
   }
 
   async modifyThread(
@@ -331,15 +440,20 @@ export class GmailService {
     input: ModifyThreadInput,
   ): Promise<{ id: string }> {
     const gmail = await this.getGmailOrThrow(ownerId);
-    await gmail.users.threads.modify({
-      userId: 'me',
-      id: threadId,
-      requestBody: {
-        addLabelIds: input.addLabelIds ?? [],
-        removeLabelIds: input.removeLabelIds ?? [],
-      },
-    });
-    return { id: threadId };
+    try {
+      await gmail.users.threads.modify({
+        userId: 'me',
+        id: threadId,
+        requestBody: {
+          addLabelIds: input.addLabelIds ?? [],
+          removeLabelIds: input.removeLabelIds ?? [],
+        },
+      });
+      return { id: threadId };
+    } catch (e) {
+      this.logger.warn(`modifyThread ${threadId} failed: ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
   }
 
   async getAttachment(
@@ -348,16 +462,21 @@ export class GmailService {
     attachmentId: string,
   ): Promise<{ data: Buffer; filename: string; mimeType: string }> {
     const gmail = await this.getGmailOrThrow(ownerId);
-    const res = await gmail.users.messages.attachments.get({
-      userId: 'me',
-      messageId,
-      id: attachmentId,
-    });
-    return {
-      data: Buffer.from(res.data.data ?? '', 'base64url'),
-      filename: 'attachment',
-      mimeType: 'application/octet-stream',
-    };
+    try {
+      const res = await gmail.users.messages.attachments.get({
+        userId: 'me',
+        messageId,
+        id: attachmentId,
+      });
+      return {
+        data: Buffer.from(res.data.data ?? '', 'base64url'),
+        filename: 'attachment',
+        mimeType: 'application/octet-stream',
+      };
+    } catch (e) {
+      this.logger.warn(`getAttachment failed: ${(e as Error).message}`);
+      throw mapGmailError(e);
+    }
   }
 }
 

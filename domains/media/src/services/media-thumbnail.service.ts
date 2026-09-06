@@ -81,9 +81,21 @@ export class MediaThumbnailService {
   }
 
   /**
+   * Ob die Datei gesperrt ist (für Stream-/Thumbnail-Schutz).
+   * Gibt false zurück, wenn die Datei nicht existiert/nicht dem Owner gehört
+   * (NotFound wirft dann getThumbnail wie bisher).
+   */
+  async isLocked(ownerId: string, fileId: string): Promise<boolean> {
+    const file = await this.repo.findFileById(fileId, ownerId);
+    if (!file) return false;
+    return (file as { locked?: boolean }).locked ?? false;
+  }
+
+  /**
    * Extract a single frame near the middle of the video via ffmpeg and cache it
    * as a JPEG thumbnail. Uses the file duration (seconds * 1000) to pick the
-   * middle frame; falls back to 60s when duration is unknown. No ffprobe call.
+   * middle frame; falls back to 2s when duration is unknown (60s schlug bei
+   * kurzen Videos fehl). No ffprobe call.
    */
   private async generateVideoThumb(
     src: string,
@@ -91,9 +103,11 @@ export class MediaThumbnailService {
     size: number,
     duration: number | null,
   ): Promise<void> {
-    let at = 60;
+    let at = 2;
     if (typeof duration === 'number' && Number.isFinite(duration) && duration > 0) {
-      at = duration / 2;
+      // duration ist ms (siehe Schema-Kommentar); mittiger Frame, aber nie > (Dauer-1s).
+      at = Math.max(1, Math.min(duration / 2000, duration / 1000 - 1));
+      if (!Number.isFinite(at) || at <= 0) at = 2;
     }
 
     try {

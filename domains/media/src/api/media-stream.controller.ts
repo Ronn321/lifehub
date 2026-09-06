@@ -1,5 +1,5 @@
-import { Controller, Get, Headers, Inject, Param, Query, Req, Res, UnauthorizedException } from '@nestjs/common';
-import { verifyAccessToken } from '@lifehub/auth';
+import { Controller, ForbiddenException, Get, Headers, Inject, Param, Query, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { verifyAccessToken, verifyLockToken } from '@lifehub/auth';
 import { MediaService } from '../services/media.service';
 import type { Request, Response } from 'express';
 import * as fs from 'fs';
@@ -41,6 +41,7 @@ export class MediaStreamController {
     @Req() req: Request,
     @Query('token') token?: string,
     @Query('size') size?: string,
+    @Query('lockToken') lockToken?: string,
   ) {
     // Auth from query token
     if (!token) throw new UnauthorizedException('Missing token parameter');
@@ -51,7 +52,23 @@ export class MediaStreamController {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    const { filePath, mimeType, filename, fileSize } = await this.media.getFileStreamInfo(payload.sub, id);
+    const { filePath, mimeType, filename, fileSize, locked } = await this.media.getFileStreamInfo(payload.sub, id);
+
+    // Gesperrte Dateien brauchen zusätzlich einen gültigen Lock-Token
+    // (scope 'media:locked', sub == owner, nicht abgelaufen) → sonst 403.
+    if (locked) {
+      const header = req.headers.authorization;
+      const candidate = lockToken ?? (header?.startsWith('Lock ') ? header.slice(5).trim() : undefined);
+      let ok = false;
+      if (candidate) {
+        try {
+          ok = (await verifyLockToken(candidate)) === payload.sub;
+        } catch {
+          ok = false;
+        }
+      }
+      if (!ok) throw new ForbiddenException('Gesperrte Datei: gültiger Lock-Token erforderlich');
+    }
 
     // ?size= — downscaled still/preview via the SAME stream endpoint that is
     // verified to paint in the browser. Images -> sharp JPEG; videos -> ffmpeg frame.
@@ -60,8 +77,9 @@ export class MediaStreamController {
       try {
         let buf: Buffer;
         if (mimeType.startsWith('video/')) {
+          // -ss 2 statt 60: kurze Videos (<60s) schlugen mit 60 fehl.
           const { stdout } = await execFileAsync('ffmpeg', [
-            '-ss', '60', '-i', filePath, '-frames:v', '1',
+            '-ss', '2', '-i', filePath, '-frames:v', '1',
             '-vf', `scale=${s}:-2`, '-q:v', '5', '-f', 'image2', '-v', 'error', 'pipe:1',
           ], { maxBuffer: 16 * 1024 * 1024 });
           buf = Buffer.from(stdout);

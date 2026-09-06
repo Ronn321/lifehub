@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Post, Put, Query, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, HttpCode, Inject, Param, Post, Put, Query, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { JwtGuard, CurrentUser, verifyAccessToken, type JwtPayload } from '@lifehub/auth';
 import { RequirePermission, PermissionGuard } from '@lifehub/permissions';
 import { MediaService } from '../services/media.service';
-import { createSourceSchema, updateSourceSchema, createAlbumSchema, updateAlbumSchema, addToAlbumSchema, createTagSchema, createAndAssignTagSchema } from '../dtos/media.dto';
+import { MediaLockService } from '../services/media-lock.service';
+import { createSourceSchema, updateSourceSchema, createAlbumSchema, updateAlbumSchema, addToAlbumSchema, createTagSchema, createAndAssignTagSchema, assignTagSchema, lockPinSchema, unlockSchema } from '../dtos/media.dto';
 import type { Request } from 'express';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
@@ -18,7 +19,10 @@ const schema = {
 @UseGuards(JwtGuard, PermissionGuard)
 @Controller('media')
 export class MediaController {
-  constructor(@Inject(MediaService) private readonly media: MediaService) {}
+  constructor(
+    @Inject(MediaService) private readonly media: MediaService,
+    @Inject(MediaLockService) private readonly locks: MediaLockService,
+  ) {}
 
   // ========== SOURCES ==========
   @Post('sources')
@@ -76,13 +80,23 @@ export class MediaController {
     @Query('limit') limit: string | undefined,
     @Query('offset') offset: string | undefined,
     @Query('favorite') favorite: string | undefined,
+    @Query('tagId') tagId: string | undefined,
+    @Query('hasGps') hasGps: string | undefined,
+    @Query('type') type: string | undefined,
     @CurrentUser() user: JwtPayload,
   ) {
+    // type strikt validieren: nur 'image'/'video', sonst 400 statt stiller Voll-Liste.
+    if (type !== undefined && type !== 'image' && type !== 'video') {
+      throw new BadRequestException("Query param 'type' must be 'image' or 'video'");
+    }
     return this.media.listFiles(user.sub, {
       sourceId,
       limit: limit ? parseInt(limit) : undefined,
       offset: offset ? parseInt(offset) : undefined,
       favorite: favorite === 'true' || favorite === '1',
+      tagId,
+      hasGps: hasGps === 'true' || hasGps === '1',
+      type: type as 'image' | 'video' | undefined,
     });
   }
 
@@ -189,10 +203,87 @@ export class MediaController {
     return this.media.createAndAssignTag(user.sub, id, dto);
   }
 
+  @Put('files/:id/tags')
+  @RequirePermission('media', 'update')
+  async assignExistingTag(@Param('id') id: string, @Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = assignTagSchema.parse(body);
+    return this.media.assignExistingTag(user.sub, id, dto.tagId);
+  }
+
   @Delete('files/:id/tags/:tagId')
   @HttpCode(204)
   @RequirePermission('media', 'update')
   async removeTag(@Param('id') id: string, @Param('tagId') tagId: string, @CurrentUser() user: JwtPayload) {
     await this.media.removeTagFromFile(user.sub, id, tagId);
+  }
+
+  // ========== GESPERRTE MEDIEN ==========
+  // PIN + Lock-Token-Flow (Details siehe Report):
+  // 1) PUT /media/locked/pin {pin} → PIN setzen
+  // 2) POST /media/files/:id/lock → Datei sperren
+  // 3) POST /media/locked/unlock {pin} → {lockToken} (15min, scope media:locked)
+  // 4) GET /media/locked?lockToken=… / Stream / Thumbnail mit lockToken
+
+  @Get('locked/pin/status')
+  @RequirePermission('media', 'read')
+  async lockPinStatus(@CurrentUser() user: JwtPayload) {
+    return this.locks.pinStatus(user.sub);
+  }
+
+  @Put('locked/pin')
+  @RequirePermission('media', 'update')
+  async setLockPin(@Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = lockPinSchema.parse(body);
+    return this.locks.setPin(user.sub, dto.pin, dto.oldPin);
+  }
+
+  @Post('locked/unlock')
+  @HttpCode(200)
+  @RequirePermission('media', 'read')
+  async unlockLocked(@Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = unlockSchema.parse(body);
+    return this.locks.unlock(user.sub, dto.pin);
+  }
+
+  @Get('locked')
+  @RequirePermission('media', 'read')
+  async listLocked(
+    @Query('limit') limit: string | undefined,
+    @Query('offset') offset: string | undefined,
+    @Query('lockToken') lockToken: string | undefined,
+    @Req() req: Request,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const token = this.locks.extractLockToken(lockToken, req.headers.authorization);
+    if (!(await this.locks.isValidLockToken(user.sub, token))) {
+      throw new ForbiddenException('Gültiger Lock-Token erforderlich (POST /media/locked/unlock)');
+    }
+    return this.media.listLockedFiles(user.sub, {
+      limit: limit ? parseInt(limit) : undefined,
+      offset: offset ? parseInt(offset) : undefined,
+    });
+  }
+
+  @Post('files/:id/lock')
+  @HttpCode(200)
+  @RequirePermission('media', 'update')
+  async lockFile(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.locks.lockFile(user.sub, id);
+  }
+
+  @Post('files/:id/unlock')
+  @HttpCode(200)
+  @RequirePermission('media', 'update')
+  async unlockFile(
+    @Param('id') id: string,
+    @Query('lockToken') lockToken: string | undefined,
+    @Req() req: Request,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const token = this.locks.extractLockToken(lockToken, req.headers.authorization);
+    if (!(await this.locks.isValidLockToken(user.sub, token))) {
+      throw new ForbiddenException('Gültiger Lock-Token erforderlich (POST /media/locked/unlock)');
+    }
+    return this.locks.unlockFile(user.sub, id);
   }
 }

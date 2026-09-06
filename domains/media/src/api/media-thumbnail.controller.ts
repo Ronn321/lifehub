@@ -1,5 +1,5 @@
-import { Controller, Get, Inject, Param, Query, Req, Res, UnauthorizedException } from '@nestjs/common';
-import { verifyAccessToken } from '@lifehub/auth';
+import { Controller, ForbiddenException, Get, Inject, Param, Query, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { verifyAccessToken, verifyLockToken } from '@lifehub/auth';
 import type { Response, Request } from 'express';
 import { createReadStream } from 'fs';
 import { MediaThumbnailService } from '../services/media-thumbnail.service';
@@ -18,6 +18,7 @@ export class MediaThumbnailController {
     @Param('id') id: string,
     @Query('size') size: string | undefined,
     @Query('token') token: string | undefined,
+    @Query('lockToken') lockToken: string | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -29,6 +30,22 @@ export class MediaThumbnailController {
       payload = await verifyAccessToken(authToken);
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Gesperrte Dateien brauchen zusätzlich einen gültigen Lock-Token
+    // (?lockToken= oder Authorization: Lock <token>) → sonst 403.
+    if (await this.thumbs.isLocked(payload.sub, id)) {
+      const header = req.headers.authorization;
+      const candidate = lockToken ?? (header?.startsWith('Lock ') ? header.slice(5).trim() : undefined);
+      let ok = false;
+      if (candidate) {
+        try {
+          ok = (await verifyLockToken(candidate)) === payload.sub;
+        } catch {
+          ok = false;
+        }
+      }
+      if (!ok) throw new ForbiddenException('Gesperrte Datei: gültiger Lock-Token erforderlich');
     }
 
     // Parse + clamp requested size to a sane range (64..1024), default 512.

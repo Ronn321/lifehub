@@ -1,5 +1,6 @@
-import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
-import { MediaRepository } from '../repositories/media.repository';
+import { Injectable, BadRequestException, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { MediaRepository, type FileListFilters } from '../repositories/media.repository';
+import { MediaThumbnailService } from './media-thumbnail.service';
 import type { CreateSourceInput, UpdateSourceInput, CreateAlbumInput } from '../dtos/media.dto';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
@@ -48,7 +49,13 @@ const MAX_SCAN_DEPTH = 3;
 export class MediaService {
   private readonly logger = new Logger(MediaService.name);
 
-  constructor(private readonly repo: MediaRepository) {}
+  constructor(
+    private readonly repo: MediaRepository,
+    // Optional/zirkulär-sicher: Thumbnail-Warmup nach dem Scan darf den
+    // Scan-Response niemals fehlschlagen lassen.
+    @Inject(forwardRef(() => MediaThumbnailService))
+    private readonly thumbs?: MediaThumbnailService,
+  ) {}
 
   // ========== SOURCES ==========
   async createSource(ownerId: string, input: CreateSourceInput) {
@@ -78,12 +85,17 @@ export class MediaService {
   }
 
   // ========== FILES ==========
-  async listFiles(ownerId: string, options?: { sourceId?: string; favorite?: boolean; limit?: number; offset?: number }) {
+  async listFiles(ownerId: string, options?: FileListFilters) {
     const [items, total] = await Promise.all([
       this.repo.findFilesByOwner(ownerId, options),
-      this.repo.countFilesByOwner(ownerId, options?.sourceId, options?.favorite),
+      this.repo.countFilesByOwner(ownerId, options),
     ]);
     return { items, total };
+  }
+
+  /** Nur gesperrte Dateien (Aufrufer muss Lock-Token geprüft haben). */
+  async listLockedFiles(ownerId: string, options?: { limit?: number; offset?: number }) {
+    return this.repo.findLockedFilesByOwner(ownerId, options);
   }
 
   async getFile(ownerId: string, id: string) {
@@ -129,6 +141,7 @@ export class MediaService {
       mimeType: file.mimeType,
       filename: file.filename,
       fileSize: stats.size,
+      locked: (file as { locked?: boolean }).locked ?? false,
     };
   }
 
@@ -212,10 +225,27 @@ export class MediaService {
   async createAndAssignTag(ownerId: string, fileId: string, input: { name: string; color?: string }) {
     const file = await this.repo.findFileById(fileId, ownerId);
     if (!file) throw new NotFoundException('Media file not found');
-    const tag = await this.repo.createTag({ ownerId, domain: 'media', ...input });
+    // Härtung: existierenden Tag (owner, domain='media', name) wiederverwenden,
+    // statt in die Unique-Constraint zu laufen (war vorher unhandled 500).
+    const existing = await this.repo.findTagByOwnerDomainName(ownerId, 'media', input.name);
+    const tag = existing
+      ?? await this.repo.createTag({ ownerId, domain: 'media', ...input });
     if (!tag) throw new Error('Tag konnte nicht erstellt werden');
     await this.repo.assignTagToFile(fileId, tag.id);
     return tag;
+  }
+
+  /**
+   * Bestehenden Tag zuordnen (idempotent via onConflictDoNothing).
+   * 404, wenn der Tag nicht dem Owner gehört.
+   */
+  async assignExistingTag(ownerId: string, fileId: string, tagId: string) {
+    const file = await this.repo.findFileById(fileId, ownerId);
+    if (!file) throw new NotFoundException('Media file not found');
+    const tag = await this.repo.findTagById(tagId, ownerId);
+    if (!tag) throw new NotFoundException('Tag not found');
+    await this.repo.assignTagToFile(fileId, tag.id);
+    return { tagId: tag.id, tagName: tag.name, tagColor: tag.color };
   }
 
   // ========== SCAN ==========
@@ -375,7 +405,44 @@ export class MediaService {
       `${result.added} added, ${result.skipped} skipped, ${result.errors} errors`,
     );
 
+    // Thumbnail-Warmup (fire-and-forget): erzeugt die 512er-Thumbs für alle
+    // Dateien dieser Source im Hintergrund. getThumbnail hat ein existsSync-Gate,
+    // daher sind Wiederholungen billig. Fehler werden geloggt, der Scan-Response
+    // schlägt dadurch niemals fehl.
+    void this.warmThumbnails(ownerId, sourceId).catch((err) => {
+      this.logger.warn(`Thumbnail warm-up failed for source "${source.name}": ${err instanceof Error ? err.message : String(err)}`);
+    });
+
     return result;
+  }
+
+  /**
+   * Fire-and-forget Thumbnail-Warmup nach einem Scan: ruft für jede Datei der
+   * Source getThumbnail(ownerId, id, 512) auf (sequentiell, Fehler pro Datei
+   * werden geschluckt/geloggt).
+   */
+  private async warmThumbnails(ownerId: string, sourceId: string): Promise<void> {
+    if (!this.thumbs) return;
+    const limit = 200;
+    let offset = 0;
+    for (;;) {
+      const batch = await this.repo.findFilesByOwner(ownerId, {
+        sourceId,
+        includeLocked: true, // Warmup erfasst ALLE Dateien (auch gesperrte → kein Leak, nur Cache-Datei)
+        limit,
+        offset,
+      });
+      if (batch.length === 0) break;
+      for (const file of batch) {
+        try {
+          await this.thumbs.getThumbnail(ownerId, file.id, 512);
+        } catch (err) {
+          this.logger.debug(`Warm-up skipped ${file.id}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+      if (batch.length < limit) break;
+      offset += limit;
+    }
   }
 
   /**

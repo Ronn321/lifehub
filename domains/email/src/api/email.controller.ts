@@ -28,12 +28,24 @@ export class EmailController {
   async listThreads(
     @CurrentUser() user: JwtPayload,
     @Query('labelId') labelId?: string,
+    @Query('labelIds') labelIds?: string | string[],
     @Query('pageToken') pageToken?: string,
     @Query('maxResults') maxResults?: string,
     @Query('q') q?: string,
   ) {
+    // Rückwärtskompatibel: Mobile sendete historisch `labelIds` (plural, Gmail-Konvention),
+    // Web sendet `labelId` (singular). Akzeptiere beides; bei beiden vorhanden gewinnt `labelIds`.
+    let effectiveLabelId = labelId;
+    if (labelIds !== undefined) {
+      if (Array.isArray(labelIds)) {
+        effectiveLabelId = labelIds[0] ?? labelId;
+      } else if (typeof labelIds === 'string' && labelIds.length > 0) {
+        // Falls komma-separiert (z. B. `labelIds=INBOX,UNREAD`), nimm nur das erste
+        effectiveLabelId = labelIds.split(',')[0]?.trim() || labelId;
+      }
+    }
     return this.gmail.listThreads(user.sub, {
-      labelId,
+      labelId: effectiveLabelId,
       pageToken,
       maxResults: maxResults ? Number(maxResults) : undefined,
       q,

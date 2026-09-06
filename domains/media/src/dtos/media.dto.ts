@@ -51,3 +51,15 @@ export const createAndAssignTagSchema = z.object({
   color: z.string().max(20).optional(),
 });
 export type CreateAndAssignTagInput = z.infer<typeof createAndAssignTagSchema>;
+
+// PIN muss als String kommen (führende Nullen erhalten!), 4..12 Zeichen.
+export const lockPinSchema = z.object({
+  pin: z.string().min(4).max(12),
+  oldPin: z.string().min(4).max(12).optional(),
+});
+export type LockPinInput = z.infer<typeof lockPinSchema>;
+
+export const unlockSchema = z.object({
+  pin: z.string().min(4).max(12),
+});
+export type UnlockInput = z.infer<typeof unlockSchema>;

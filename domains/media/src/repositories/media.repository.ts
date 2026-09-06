@@ -1,6 +1,25 @@
 import { Inject } from '@nestjs/common';
-import { and, eq, isNull, sql, desc, asc } from 'drizzle-orm';
-import { DbService, mediaSources, mediaFiles, albums, albumItems, mediaTags, tags, type Db } from '@lifehub/db';
+import { and, eq, isNotNull, isNull, sql, desc, asc, like, type SQL } from 'drizzle-orm';
+import { DbService, mediaSources, mediaFiles, albums, albumItems, mediaTags, mediaLockPins, tags, type Db } from '@lifehub/db';
+
+export interface FileListFilters {
+  sourceId?: string;
+  favorite?: boolean;
+  /** Nur Dateien mit diesem Tag (media_tags-Join) */
+  tagId?: string;
+  /** hasGps=true → nur Dateien mit gps_lat UND gps_lng gesetzt */
+  hasGps?: boolean;
+  /** MIME-Präfix-Filter: 'image' → image/%, 'video' → video/% */
+  type?: 'image' | 'video';
+  /**
+   * Locked-Handling: Standard-Listings schließen locked=true IMMER aus.
+   * Nur `includeLocked: true` (GET /media/locked, mit gültigem Lock-Token)
+   * listet gesperrte Dateien.
+   */
+  includeLocked?: boolean;
+  limit?: number;
+  offset?: number;
+}
 
 export class MediaRepository {
   constructor(@Inject(DbService) private readonly dbService: DbService) {}
@@ -79,44 +98,87 @@ export class MediaRepository {
     return row ?? null;
   }
 
-  async findFilesByOwner(ownerId: string, options?: { sourceId?: string; favorite?: boolean; limit?: number; offset?: number }) {
-    const conditions = [eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)];
+  /** Gemeinsame WHERE-Bedingungen für Dateien-Listings (Liste + Count bleiben konsistent). */
+  private fileListConditions(ownerId: string, options?: FileListFilters): SQL[] {
+    const conditions: SQL[] = [eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)];
     if (options?.sourceId) conditions.push(eq(mediaFiles.sourceId, options.sourceId));
     if (options?.favorite) conditions.push(eq(mediaFiles.isFavorite, true));
-    return this.db.select({
-      id: mediaFiles.id,
-      ownerId: mediaFiles.ownerId,
-      sourceId: mediaFiles.sourceId,
-      filename: mediaFiles.filename,
-      relativePath: mediaFiles.relativePath,
-      mimeType: mediaFiles.mimeType,
-      fileSize: mediaFiles.fileSize,
-      width: mediaFiles.width,
-      height: mediaFiles.height,
-      duration: mediaFiles.duration,
-      gpsLat: mediaFiles.gpsLat,
-      gpsLng: mediaFiles.gpsLng,
-      takenAt: mediaFiles.takenAt,
-      createdAt: mediaFiles.createdAt,
-      updatedAt: mediaFiles.updatedAt,
-      deletedAt: mediaFiles.deletedAt,
-      isFavorite: mediaFiles.isFavorite,
-    }).from(mediaFiles)
+    // Locked-Exclusion: Standard immer raus; nur includeLocked listet sie.
+    if (!options?.includeLocked) conditions.push(eq(mediaFiles.locked, false));
+    if (options?.hasGps) conditions.push(isNotNull(mediaFiles.gpsLat), isNotNull(mediaFiles.gpsLng));
+    if (options?.type === 'image') conditions.push(like(mediaFiles.mimeType, 'image/%'));
+    else if (options?.type === 'video') conditions.push(like(mediaFiles.mimeType, 'video/%'));
+    return conditions;
+  }
+
+  /** Gemeinsame Spaltenauswahl für Dateien-Listings. */
+  private static readonly fileListColumns = {
+    id: mediaFiles.id,
+    ownerId: mediaFiles.ownerId,
+    sourceId: mediaFiles.sourceId,
+    filename: mediaFiles.filename,
+    relativePath: mediaFiles.relativePath,
+    mimeType: mediaFiles.mimeType,
+    fileSize: mediaFiles.fileSize,
+    width: mediaFiles.width,
+    height: mediaFiles.height,
+    duration: mediaFiles.duration,
+    gpsLat: mediaFiles.gpsLat,
+    gpsLng: mediaFiles.gpsLng,
+    takenAt: mediaFiles.takenAt,
+    createdAt: mediaFiles.createdAt,
+    updatedAt: mediaFiles.updatedAt,
+    deletedAt: mediaFiles.deletedAt,
+    isFavorite: mediaFiles.isFavorite,
+    locked: mediaFiles.locked,
+  };
+
+  async findFilesByOwner(ownerId: string, options?: FileListFilters) {
+    const conditions = this.fileListConditions(ownerId, options);
+    if (options?.tagId) {
+      // tagId-Filter via media_tags-Join (inner: nur getaggte Dateien)
+      return this.db.select(MediaRepository.fileListColumns).from(mediaFiles)
+        .innerJoin(mediaTags, and(eq(mediaTags.mediaId, mediaFiles.id), eq(mediaTags.tagId, options.tagId)))
+        .where(and(...conditions))
+        .orderBy(desc(mediaFiles.takenAt ?? mediaFiles.createdAt))
+        .limit(options?.limit ?? 50)
+        .offset(options?.offset ?? 0);
+    }
+    return this.db.select(MediaRepository.fileListColumns).from(mediaFiles)
       .where(and(...conditions))
       .orderBy(desc(mediaFiles.takenAt ?? mediaFiles.createdAt))
       .limit(options?.limit ?? 50)
       .offset(options?.offset ?? 0);
   }
 
-  /** Total file count for pagination (same filters as findFilesByOwner) */
-  async countFilesByOwner(ownerId: string, sourceId?: string, favorite?: boolean): Promise<number> {
-    const conditions = [eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)];
-    if (sourceId) conditions.push(eq(mediaFiles.sourceId, sourceId));
-    if (favorite) conditions.push(eq(mediaFiles.isFavorite, true));
+  /** Total file count for pagination (gleiche Filter wie findFilesByOwner). */
+  async countFilesByOwner(ownerId: string, options?: FileListFilters): Promise<number>;
+  async countFilesByOwner(ownerId: string, sourceId?: string, favorite?: boolean): Promise<number>;
+  async countFilesByOwner(
+    ownerId: string,
+    optionsOrSourceId?: FileListFilters | string,
+    favorite?: boolean,
+  ): Promise<number> {
+    // Rückwärtskompatibel: alte Signatur (ownerId, sourceId?, favorite?) bleibt gültig.
+    const options: FileListFilters = typeof optionsOrSourceId === 'string'
+      ? { sourceId: optionsOrSourceId, favorite }
+      : (optionsOrSourceId ?? {});
+    const conditions = this.fileListConditions(ownerId, options);
+    const where = and(...conditions);
+    if (options.tagId) {
+      // tagId-Filter via media_tags-Join (inner: nur getaggte Dateien)
+      const [row] = await this.db.select({ count: sql<number>`count(*)::int` }).from(mediaFiles)
+        .innerJoin(
+          mediaTags,
+          and(eq(mediaTags.mediaId, mediaFiles.id), eq(mediaTags.tagId, options.tagId)),
+        )
+        .where(where);
+      return row?.count ?? 0;
+    }
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })
       .from(mediaFiles)
-      .where(and(...conditions));
+      .where(where);
     return row?.count ?? 0;
   }
 
@@ -220,12 +282,70 @@ export class MediaRepository {
         updatedAt: mediaFiles.updatedAt,
         deletedAt: mediaFiles.deletedAt,
         isFavorite: mediaFiles.isFavorite,
+        locked: mediaFiles.locked,
       },
       sortOrder: albumItems.sortOrder,
     }).from(albumItems)
       .innerJoin(mediaFiles, eq(albumItems.mediaId, mediaFiles.id))
-      .where(eq(albumItems.albumId, albumId))
+      // Gesperrte Medien erscheinen nicht im Album-Listing (nur via GET /media/locked).
+      .where(and(eq(albumItems.albumId, albumId), eq(mediaFiles.locked, false), isNull(mediaFiles.deletedAt)))
       .orderBy(albumItems.sortOrder);
+  }
+
+  /** Nur gesperrte Dateien des Owners (GET /media/locked — braucht Lock-Token). */
+  async findLockedFilesByOwner(ownerId: string, options?: { limit?: number; offset?: number }) {
+    const conditions = [
+      eq(mediaFiles.ownerId, ownerId),
+      isNull(mediaFiles.deletedAt),
+      eq(mediaFiles.locked, true),
+    ];
+    const [items, total] = await Promise.all([
+      this.db.select(MediaRepository.fileListColumns).from(mediaFiles)
+        .where(and(...conditions))
+        .orderBy(desc(mediaFiles.takenAt ?? mediaFiles.createdAt))
+        .limit(options?.limit ?? 50)
+        .offset(options?.offset ?? 0),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(mediaFiles)
+        .where(and(...conditions)).then((rows) => rows[0]?.count ?? 0),
+    ]);
+    return { items, total };
+  }
+
+  async setFileLocked(id: string, ownerId: string, locked: boolean) {
+    const [row] = await this.db.update(mediaFiles)
+      .set({ locked, updatedAt: sql`now()` })
+      .where(and(eq(mediaFiles.id, id), eq(mediaFiles.ownerId, ownerId), isNull(mediaFiles.deletedAt)))
+      .returning();
+    return row ?? null;
+  }
+
+  // ========== LOCK-PIN ==========
+
+  async findLockPinByOwner(ownerId: string) {
+    const [row] = await this.db.select().from(mediaLockPins)
+      .where(eq(mediaLockPins.ownerId, ownerId));
+    return row ?? null;
+  }
+
+  async upsertLockPin(ownerId: string, pinHash: string) {
+    const [row] = await this.db.insert(mediaLockPins)
+      .values({ ownerId, pinHash, updatedAt: sql`now()` })
+      .onConflictDoUpdate({ target: mediaLockPins.ownerId, set: { pinHash, updatedAt: sql`now()` } })
+      .returning();
+    return row;
+  }
+
+  /** Tag-Lookup für Wiederverwendung (owner+domain+name ist unique). */
+  async findTagByOwnerDomainName(ownerId: string, domain: string, name: string) {
+    const [row] = await this.db.select().from(tags)
+      .where(and(eq(tags.ownerId, ownerId), eq(tags.domain, domain), eq(tags.name, name)));
+    return row ?? null;
+  }
+
+  async findTagById(id: string, ownerId: string) {
+    const [row] = await this.db.select().from(tags)
+      .where(and(eq(tags.id, id), eq(tags.ownerId, ownerId)));
+    return row ?? null;
   }
 
   // ========== TAGS ==========

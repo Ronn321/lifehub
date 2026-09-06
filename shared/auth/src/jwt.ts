@@ -7,6 +7,12 @@ export interface JwtPayload {
   sub: string;          // userId
   email: string;
   roles: string[];      // ['admin', 'family', ...]
+  /**
+   * Optionaler Scope für zweckgebundene Kurzzeit-Tokens.
+   * 'media:locked' → Zugang zu gesperrten Medien (GET /media/locked,
+   * Stream/Thumbnail gesperrter Dateien). Normale Access-Tokens haben keinen Scope.
+   */
+  scope?: string;
   iat?: number;
   exp?: number;
   jti?: string;
@@ -117,3 +123,39 @@ export function hashRefreshToken(token: string): string {
 }
 
 export const REFRESH_TTL = REFRESH_TTL_SECONDS;
+
+// ===================== Lock-Token (gesperrte Medien) =====================
+
+export const LOCK_TOKEN_SCOPE = 'media:locked';
+const LOCK_TOKEN_TTL = '15m'; // kurze Lebensdauer: PIN muss regelmäßig neu eingegeben werden
+
+/**
+ * Signiert einen kurzlebigen Lock-Token (JWT RS256, gleiche Keys wie Access-Tokens).
+ * Claims: sub = ownerId, scope = 'media:locked', exp = +15min.
+ * Gültig für: GET /media/locked, Stream/Thumbnail gesperrter Dateien.
+ */
+export async function signLockToken(ownerId: string): Promise<string> {
+  const jti = randomBytes(16).toString('hex');
+  const key = await getPrivateKey();
+  return new SignJWT({ sub: ownerId, email: '', roles: [], scope: LOCK_TOKEN_SCOPE })
+    .setProtectedHeader({ alg: ALG, typ: 'JWT' })
+    .setIssuedAt()
+    .setExpirationTime(LOCK_TOKEN_TTL)
+    .setJti(jti)
+    .sign(key);
+}
+
+/**
+ * Verifiziert einen Lock-Token: Signatur + Expiry (jose) + Scope-Claim.
+ * Gibt die ownerId (sub) zurück, wirft bei ungültig/abgelaufen/falschem Scope.
+ */
+export async function verifyLockToken(token: string): Promise<string> {
+  const key = await getPublicKey();
+  const { payload } = await jwtVerify(token, key, { algorithms: [ALG] });
+  if ((payload as unknown as JwtPayload).scope !== LOCK_TOKEN_SCOPE) {
+    throw new Error('Invalid lock token scope');
+  }
+  const sub = (payload as unknown as JwtPayload).sub;
+  if (!sub) throw new Error('Lock token has no subject');
+  return sub;
+}

@@ -74,8 +74,8 @@ FROM node:20-alpine AS runner
 RUN corepack enable && \
     corepack prepare pnpm@9.15.0 --activate
 
-# curl fuer Healthchecks
-RUN apk add --no-cache curl
+# curl fuer Healthchecks, ffmpeg fuer Video-Thumbnails (Media-Domain)
+RUN apk add --no-cache curl ffmpeg
 
 WORKDIR /app
 

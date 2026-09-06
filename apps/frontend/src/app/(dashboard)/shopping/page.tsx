@@ -73,13 +73,13 @@ function CreateListDialog({ open, onClose, onSuccess }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg p-6 mx-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-bg-surface rounded-xl shadow-2xl w-full max-w-lg p-6 mx-4" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">Neue Einkaufsliste</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Titel</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="z.B. Wocheneinkauf"
               value={title} onChange={(e) => setTitle(e.target.value)}
             />
@@ -87,7 +87,7 @@ function CreateListDialog({ open, onClose, onSuccess }: {
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Geschäft (optional)</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="z.B. Edeka"
               value={store} onChange={(e) => setStore(e.target.value)}
             />
@@ -99,17 +99,17 @@ function CreateListDialog({ open, onClose, onSuccess }: {
                 <button
                   key={c}
                   onClick={() => setColor(color === c ? '' : c)}
-                  className={`w-8 h-8 rounded-full transition-all ${color === c ? 'ring-2 ring-offset-2 ring-amber-500 dark:ring-offset-zinc-900' : ''}`}
+                  className={`w-8 h-8 rounded-full transition-all ${color === c ? 'ring-2 ring-offset-2 ring-brand-500 dark:ring-offset-bg-surface' : ''}`}
                   style={{ backgroundColor: c }}
                 />
               ))}
             </div>
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <button
             onClick={() => mutation.mutate()}
             disabled={!title || mutation.isPending}
-            className="w-full py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
           >
             {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Liste anlegen
@@ -129,7 +129,7 @@ function ListCard({ list, onClick, onDelete, onArchive }: {
 
   return (
     <div
-      className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:shadow-md transition-all cursor-pointer overflow-hidden relative group"
+      className="rounded-xl border border-border bg-bg-surface hover:shadow-md transition-all cursor-pointer overflow-hidden relative group"
       onClick={onClick}
     >
       {list.color && (
@@ -139,9 +139,9 @@ function ListCard({ list, onClick, onDelete, onArchive }: {
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <ShoppingCart className="h-4 w-4 text-amber-500" />
+              <ShoppingCart className="h-4 w-4 text-brand-500" />
               {list.store && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium flex items-center gap-1">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-bg-raised text-fg-muted font-medium flex items-center gap-1">
                   <Store className="h-3 w-3" /> {list.store}
                 </span>
               )}
@@ -150,21 +150,21 @@ function ListCard({ list, onClick, onDelete, onArchive }: {
           </div>
           <div className="relative shrink-0">
             <button
-              className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="p-1.5 rounded-lg hover:bg-bg-raised opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-8 z-20 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg py-1 min-w-[140px]">
+              <div className="absolute right-0 top-8 z-20 bg-bg-surface border border-border rounded-lg shadow-lg py-1 min-w-[140px]">
                 <button
-                  className="w-full text-left px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2"
+                  className="w-full text-left px-3 py-1.5 text-sm text-fg-muted hover:bg-bg-raised flex items-center gap-2"
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onArchive(); }}
                 >
                   <Archive className="h-3.5 w-3.5" /> Archivieren
                 </button>
                 <button
-                  className="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2"
+                  className="w-full text-left px-3 py-1.5 text-sm text-danger hover:bg-bg-raised flex items-center gap-2"
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Löschen
@@ -174,13 +174,13 @@ function ListCard({ list, onClick, onDelete, onArchive }: {
           </div>
         </div>
 
-        <div className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+        <div className="mt-3 text-sm text-fg-muted">
           <span>{list.checkedCount} / {list.itemCount} Artikel erledigt</span>
         </div>
         {list.itemCount > 0 && (
-          <div className="mt-2 h-2 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+          <div className="mt-2 h-2 rounded-full bg-bg-raised overflow-hidden">
             <div
-              className="h-full rounded-full bg-amber-500 transition-all"
+              className="h-full rounded-full bg-brand-500 transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -195,33 +195,33 @@ function ItemRow({ item, onToggle, onDelete }: {
   item: ShoppingItem; onToggle: () => void; onDelete: () => void;
 }) {
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${item.checked ? 'bg-zinc-50 dark:bg-zinc-800/30 opacity-60' : 'bg-zinc-50 dark:bg-zinc-800/50'}`}>
+    <div className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${item.checked ? 'bg-bg-raised/50 opacity-60' : 'bg-bg-raised/70'}`}>
       <button
         onClick={onToggle}
-        className={`shrink-0 rounded-full transition-colors ${item.checked ? 'text-amber-500' : 'text-zinc-400 hover:text-amber-500'}`}
+        className={`shrink-0 rounded-full transition-colors ${item.checked ? 'text-brand-500' : 'text-fg-subtle hover:text-brand-500'}`}
       >
         {item.checked ? <Check className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
       </button>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-medium ${item.checked ? 'line-through text-zinc-400' : ''}`}>
+          <span className={`text-sm font-medium ${item.checked ? 'line-through text-fg-subtle' : ''}`}>
             {item.name}
           </span>
           {item.category && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-bg-raised text-fg-muted">
               {item.category}
             </span>
           )}
         </div>
         {(item.amount || item.unit) && (
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-fg-subtle mt-0.5">
             {[item.amount, item.unit].filter(Boolean).join(' ')}
           </p>
         )}
       </div>
       <button
         onClick={onDelete}
-        className="shrink-0 p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors opacity-0 group-hover:opacity-100"
+        className="shrink-0 p-1.5 rounded-lg text-fg-subtle hover:text-danger hover:bg-danger/10 transition-colors opacity-0 group-hover:opacity-100"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
@@ -289,9 +289,9 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-5 w-20 bg-zinc-200 dark:bg-zinc-800 rounded" />
-        <div className="h-8 w-48 bg-zinc-200 dark:bg-zinc-800 rounded" />
-        <div className="h-32 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
+        <div className="h-5 w-20 bg-bg-raised rounded" />
+        <div className="h-8 w-48 bg-bg-raised rounded" />
+        <div className="h-32 bg-bg-raised rounded-xl" />
       </div>
     );
   }
@@ -299,8 +299,8 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
   if (!list) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">Einkaufsliste nicht gefunden.</p>
-        <button onClick={onBack} className="mt-2 text-sm text-amber-600 hover:underline">
+        <p className="text-danger">Einkaufsliste nicht gefunden.</p>
+        <button onClick={onBack} className="mt-2 text-sm text-brand-500 hover:underline">
           Zurück zur Übersicht
         </button>
       </div>
@@ -326,7 +326,7 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
         <div>
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 mb-2 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg mb-2 transition-colors"
           >
             <ChevronLeft className="h-4 w-4" /> Zurück
           </button>
@@ -337,18 +337,18 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
             <h2 className="text-2xl font-bold">{list.title}</h2>
           </div>
           {list.store && (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1">
+            <p className="text-sm text-fg-muted mt-1 flex items-center gap-1">
               <Store className="h-3.5 w-3.5" /> {list.store}
             </p>
           )}
-          <p className="text-sm text-zinc-400 mt-1">
+          <p className="text-sm text-fg-subtle mt-1">
             {uncheckedCount} offen · {checkedCount} erledigt
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => archiveMutation.mutate()}
-            className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg border border-border text-sm text-fg-muted hover:bg-bg-raised transition-colors flex items-center gap-1.5"
           >
             <Archive className="h-3.5 w-3.5" /> Archivieren
           </button>
@@ -356,18 +356,18 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
+        <div className="rounded-lg bg-danger/10 border border-danger/30 p-3 text-sm text-danger">
           {error}
         </div>
       )}
 
       {/* Add Item Form */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+      <div className="rounded-xl border border-border bg-bg-surface p-4">
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex-1 min-w-[120px]">
             <label className="block text-xs text-muted-foreground mb-1">Artikel</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="z.B. Milch"
               value={newName} onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && newName) addItemMutation.mutate(); }}
@@ -376,7 +376,7 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
           <div className="w-20">
             <label className="block text-xs text-muted-foreground mb-1">Menge</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="2"
               value={newAmount} onChange={(e) => setNewAmount(e.target.value)}
             />
@@ -384,7 +384,7 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
           <div className="w-20">
             <label className="block text-xs text-muted-foreground mb-1">Einheit</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="Liter"
               value={newUnit} onChange={(e) => setNewUnit(e.target.value)}
             />
@@ -392,7 +392,7 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
           <div className="w-28">
             <label className="block text-xs text-muted-foreground mb-1">Kategorie</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="Obst"
               value={newCategory} onChange={(e) => setNewCategory(e.target.value)}
             />
@@ -400,7 +400,7 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
           <button
             onClick={() => addItemMutation.mutate()}
             disabled={!newName || addItemMutation.isPending}
-            className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center gap-1.5"
           >
             {addItemMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -414,7 +414,7 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
 
       {/* Items by Category */}
       {list.items.length === 0 ? (
-        <div className="text-center py-12 text-zinc-400">
+        <div className="text-center py-12 text-fg-subtle">
           <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p>Noch keine Artikel auf dieser Liste.</p>
           <p className="text-sm mt-1">Füge oben den ersten Artikel hinzu.</p>
@@ -423,7 +423,7 @@ function ListDetailView({ listId, onBack }: { listId: string; onBack: () => void
         Object.entries(grouped).map(([category, items]) => (
           <div key={category} className="space-y-2">
             {category !== 'Alle' && (
-              <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 px-1">{category}</h3>
+              <h3 className="text-sm font-medium text-fg-muted px-1">{category}</h3>
             )}
             <div className="space-y-1.5">
               {items.map((item) => (
@@ -482,13 +482,13 @@ export default function ShoppingPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Einkaufslisten</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          <p className="text-sm text-fg-muted mt-1">
             {activeLists.length} aktive Listen
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-colors flex items-center gap-1.5"
+          className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors flex items-center gap-1.5"
         >
           <Plus className="h-4 w-4" /> Neue Liste
         </button>
@@ -497,21 +497,21 @@ export default function ShoppingPage() {
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 animate-pulse">
-              <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-800 rounded mb-3" />
-              <div className="h-6 w-32 bg-zinc-200 dark:bg-zinc-800 rounded mb-2" />
-              <div className="h-3 w-20 bg-zinc-200 dark:bg-zinc-800 rounded" />
+            <div key={i} className="rounded-xl border border-border bg-bg-surface p-5 animate-pulse">
+              <div className="h-4 w-24 bg-bg-raised rounded mb-3" />
+              <div className="h-6 w-32 bg-bg-raised rounded mb-2" />
+              <div className="h-3 w-20 bg-bg-raised rounded" />
             </div>
           ))}
         </div>
       ) : activeLists.length === 0 ? (
-        <div className="text-center py-16 text-zinc-400">
+        <div className="text-center py-16 text-fg-subtle">
           <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-20" />
           <p className="text-lg font-medium">Noch keine Einkaufslisten</p>
           <p className="text-sm mt-1">Erstelle deine erste Einkaufsliste.</p>
           <button
             onClick={() => setShowCreate(true)}
-            className="mt-4 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-colors inline-flex items-center gap-1.5"
+            className="mt-4 px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors inline-flex items-center gap-1.5"
           >
             <Plus className="h-4 w-4" /> Neue Liste
           </button>
@@ -532,16 +532,16 @@ export default function ShoppingPage() {
 
       {archivedLists.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-zinc-400 mb-3">Archivierte Listen</h2>
+          <h2 className="text-lg font-semibold text-fg-muted mb-3">Archivierte Listen</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {archivedLists.map((list) => (
               <div
                 key={list.id}
-                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 opacity-60 cursor-pointer hover:opacity-100 transition-opacity"
+                className="rounded-xl border border-border bg-bg-surface p-5 opacity-60 cursor-pointer hover:opacity-100 transition-opacity"
                 onClick={() => setSelectedListId(list.id)}
               >
                 <h3 className="font-semibold truncate">{list.title}</h3>
-                <p className="text-sm text-zinc-400 mt-1">{list.itemCount} Artikel</p>
+                <p className="text-sm text-fg-subtle mt-1">{list.itemCount} Artikel</p>
               </div>
             ))}
           </div>

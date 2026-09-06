@@ -59,10 +59,10 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  planning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  building: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  done: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  archived: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-300',
+  planning: 'bg-warning/10 text-warning border border-warning/30',
+  building: 'bg-info/10 text-info border border-info/30',
+  done: 'bg-success/10 text-success border border-success/30',
+  archived: 'bg-bg-raised text-fg-muted border border-border',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -71,12 +71,12 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  '3d_print': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  arduino: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300',
-  raspi: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300',
-  code: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
-  electronics: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
-  diy: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  '3d_print': 'bg-warning/10 text-warning border border-warning/30',
+  arduino: 'bg-success/10 text-success border border-success/30',
+  raspi: 'bg-danger/10 text-danger border border-danger/30',
+  code: 'bg-info/10 text-info border border-info/30',
+  electronics: 'bg-info/10 text-info border border-info/30',
+  diy: 'bg-brand-500/10 text-brand-500 border border-brand-500/30',
 };
 
 function formatDate(dateStr: string) {
@@ -114,13 +114,13 @@ function ProjectCreateDialog({ open, onClose, onSuccess }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg p-6 mx-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-bg-surface rounded-xl shadow-2xl w-full max-w-lg p-6 mx-4" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">Neues Projekt</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Titel</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="z.B. LED-Würfel"
               value={title} onChange={(e) => setTitle(e.target.value)}
             />
@@ -128,7 +128,7 @@ function ProjectCreateDialog({ open, onClose, onSuccess }: {
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Beschreibung (optional)</label>
             <textarea
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[80px] resize-y"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[80px] resize-y"
               placeholder="Projektbeschreibung im Markdown..."
               value={description} onChange={(e) => setDescription(e.target.value)}
             />
@@ -137,7 +137,7 @@ function ProjectCreateDialog({ open, onClose, onSuccess }: {
             <div>
               <label className="block text-sm text-muted-foreground mb-1">Typ</label>
               <select
-                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500"
                 value={status} onChange={(e) => setStatus(e.target.value)}
               >
                 <option value="3d_print">3D-Druck</option>
@@ -151,7 +151,7 @@ function ProjectCreateDialog({ open, onClose, onSuccess }: {
             <div>
               <label className="block text-sm text-muted-foreground mb-1">Status</label>
               <select
-                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500"
                 value={type} onChange={(e) => setType(e.target.value)}
               >
                 <option value="planning">Planung</option>
@@ -164,7 +164,7 @@ function ProjectCreateDialog({ open, onClose, onSuccess }: {
           <div>
             <label className="block text-sm text-muted-foreground mb-1">GitHub-URL (optional)</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="https://github.com/..."
               value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)}
             />
@@ -172,16 +172,16 @@ function ProjectCreateDialog({ open, onClose, onSuccess }: {
           <div>
             <label className="block text-sm text-muted-foreground mb-1">YouTube-URL (optional, nur /embed/)</label>
             <input
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="https://www.youtube.com/embed/..."
               value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)}
             />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <button
             onClick={() => mutation.mutate()}
             disabled={!title || mutation.isPending}
-            className="w-full py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
           >
             {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Projekt anlegen
@@ -199,7 +199,7 @@ function ProjectCard({ project, onClick, onDelete }: {
 
   return (
     <div
-      className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:shadow-md transition-all cursor-pointer overflow-hidden relative group"
+      className="rounded-xl border border-border bg-bg-surface hover:shadow-md transition-all cursor-pointer overflow-hidden relative group"
       onClick={onClick}
     >
       <div className="p-5">
@@ -207,20 +207,20 @@ function ProjectCard({ project, onClick, onDelete }: {
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold truncate pr-2">{project.title}</h3>
             {project.description && (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">{project.description}</p>
+              <p className="text-sm text-fg-muted mt-1 line-clamp-2">{project.description}</p>
             )}
           </div>
           <div className="relative shrink-0">
             <button
-              className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="p-1.5 rounded-lg hover:bg-bg-raised opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-8 z-20 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg py-1 min-w-[120px]">
+              <div className="absolute right-0 top-8 z-20 bg-bg-surface border border-border rounded-lg shadow-lg py-1 min-w-[120px]">
                 <button
-                  className="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2"
+                  className="w-full text-left px-3 py-1.5 text-sm text-danger hover:bg-bg-raised flex items-center gap-2"
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Löschen
@@ -237,7 +237,7 @@ function ProjectCard({ project, onClick, onDelete }: {
             {STATUS_LABELS[project.status]}
           </span>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-fg-muted">
           <span className="flex items-center gap-1">
             <FileText className="h-3.5 w-3.5" />
             {project.notes.length} Notizen
@@ -340,9 +340,9 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-5 w-20 bg-zinc-200 dark:bg-zinc-800 rounded" />
-        <div className="h-8 w-48 bg-zinc-200 dark:bg-zinc-800 rounded" />
-        <div className="h-32 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
+        <div className="h-5 w-20 bg-bg-raised rounded" />
+        <div className="h-8 w-48 bg-bg-raised rounded" />
+        <div className="h-32 bg-bg-raised rounded-xl" />
       </div>
     );
   }
@@ -350,8 +350,8 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
   if (loadError || !project) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">Projekt nicht gefunden.</p>
-        <button onClick={onBack} className="mt-2 text-sm text-amber-600 hover:underline">
+        <p className="text-danger">Projekt nicht gefunden.</p>
+        <button onClick={onBack} className="mt-2 text-sm text-brand-500 hover:underline">
           Zurück zur Übersicht
         </button>
       </div>
@@ -362,14 +362,14 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <button onClick={onBack} className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 mb-2 transition-colors">
+          <button onClick={onBack} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg mb-2 transition-colors">
             <ChevronLeft className="h-4 w-4" /> Zurück
           </button>
           <h2 className="text-2xl font-bold">{project.title}</h2>
           {project.description && (
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1 whitespace-pre-wrap">{project.description}</p>
+            <p className="text-fg-muted mt-1 whitespace-pre-wrap">{project.description}</p>
           )}
-          <div className="flex items-center gap-3 mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="flex items-center gap-3 mt-2 text-sm text-fg-muted">
             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[project.type]}`}>
               {TYPE_LABELS[project.type]}
             </span>
@@ -383,7 +383,7 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
           <select
             value={project.status}
             onChange={(e) => updateProjectMutation.mutate({ status: e.target.value })}
-            className="text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 px-2 py-1.5 bg-transparent"
+            className="text-sm rounded-lg border border-border px-2 py-1.5 bg-transparent"
           >
             <option value="3d_print">3D-Druck</option>
             <option value="arduino">Arduino</option>
@@ -395,7 +395,7 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
           <select
             value={project.type}
             onChange={(e) => updateProjectMutation.mutate({ type: e.target.value })}
-            className="text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 px-2 py-1.5 bg-transparent"
+            className="text-sm rounded-lg border border-border px-2 py-1.5 bg-transparent"
           >
             <option value="planning">Planung</option>
             <option value="building">In Bau</option>
@@ -404,22 +404,22 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
           </select>
           <button
             onClick={() => { if (window.confirm('Wirklich löschen?')) deleteProjectMutation.mutate(); }}
-            className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+            className="p-2 rounded-lg text-danger hover:bg-danger/10 transition-colors"
           >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex gap-1 border-b border-border">
         {(['overview', 'notes', 'links'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               tab === t
-                ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                ? 'border-brand-500 text-brand-500'
+                : 'border-transparent text-fg-muted hover:text-fg'
             }`}
           >
             {t === 'overview' ? 'Übersicht' :
@@ -429,7 +429,7 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
+        <div className="rounded-lg bg-danger/10 border border-danger/30 p-3 text-sm text-danger">
           {error}
         </div>
       )}
@@ -442,8 +442,8 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
               { label: 'Links', value: project.links.length, icon: Link2 },
               { label: 'Dateien', value: project.files.length, icon: Edit3 },
             ].map((stat) => (
-              <div key={stat.label} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-                <span className="flex items-center gap-1 text-sm text-zinc-500 mb-2">
+              <div key={stat.label} className="rounded-xl border border-border bg-bg-surface p-4">
+                <span className="flex items-center gap-1 text-sm text-fg-muted mb-2">
                   <stat.icon className="h-4 w-4" /> {stat.label}
                 </span>
                 <p className="text-3xl font-bold">{stat.value}</p>
@@ -452,12 +452,12 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
           </div>
 
           {project.githubUrl && (
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <div className="rounded-xl border border-border bg-bg-surface p-4">
               <h3 className="text-sm font-medium flex items-center gap-2 mb-2">
                 <Github className="h-4 w-4" /> GitHub
               </h3>
               <a href={project.githubUrl} target="_blank" rel="noopener noreferrer"
-                className="text-amber-600 hover:underline text-sm flex items-center gap-1"
+                className="text-brand-500 hover:underline text-sm flex items-center gap-1"
               >
                 {project.githubUrl} <ExternalLink className="h-3 w-3" />
               </a>
@@ -465,7 +465,7 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
           )}
 
           {project.youtubeUrl && (
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <div className="rounded-xl border border-border bg-bg-surface p-4">
               <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
                 <Youtube className="h-4 w-4" /> YouTube
               </h3>
@@ -488,7 +488,7 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
         <div className="space-y-4">
           <div className="space-y-2">
             <textarea
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[100px] resize-y text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[100px] resize-y text-sm"
               placeholder="Neue Notiz im Markdown..."
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
@@ -496,22 +496,22 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
             <button
               onClick={() => addNoteMutation.mutate()}
               disabled={!newNoteContent.trim()}
-              className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-sm font-medium"
             >
               Notiz hinzufügen
             </button>
           </div>
 
           {project.notes.length === 0 && (
-            <p className="text-sm text-zinc-500 text-center py-8">Noch keine Notizen.</p>
+            <p className="text-sm text-fg-muted text-center py-8">Noch keine Notizen.</p>
           )}
 
           {project.notes.map((note) => (
-            <div key={note.id} className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
+            <div key={note.id} className="rounded-lg border border-border bg-bg-surface p-4">
               {editNoteId === note.id ? (
                 <div className="space-y-2">
                   <textarea
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[100px] resize-y text-sm"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[100px] resize-y text-sm"
                     value={editNoteContent}
                     onChange={(e) => setEditNoteContent(e.target.value)}
                   />
@@ -519,13 +519,13 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
                     <button
                       onClick={() => updateNoteMutation.mutate({ noteId: note.id, content: editNoteContent })}
                       disabled={!editNoteContent.trim()}
-                      className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-medium"
+                      className="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-xs font-medium"
                     >
                       Speichern
                     </button>
                     <button
                       onClick={() => { setEditNoteId(null); setEditNoteContent(''); }}
-                      className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-xs font-medium"
+                      className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium"
                     >
                       Abbrechen
                     </button>
@@ -538,19 +538,19 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => { setEditNoteId(note.id); setEditNoteContent(note.content); }}
-                        className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        className="p-1 rounded hover:bg-bg-raised transition-colors"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => { if (window.confirm('Notiz löschen?')) deleteNoteMutation.mutate(note.id); }}
-                        className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-500"
+                        className="p-1 rounded hover:bg-danger/10 transition-colors text-danger"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">{formatDate(note.createdAt)}</p>
+                  <p className="text-xs text-fg-subtle mt-2">{formatDate(note.createdAt)}</p>
                 </>
               )}
             </div>
@@ -562,15 +562,15 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
         <div className="space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
             <input placeholder="URL"
-              className="flex-1 min-w-[200px] px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="flex-1 min-w-[200px] px-3 py-2 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               value={newLinkUrl} onChange={(e) => setNewLinkUrl(e.target.value)}
             />
             <input placeholder="Label"
-              className="w-32 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-32 px-3 py-2 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               value={newLinkLabel} onChange={(e) => setNewLinkLabel(e.target.value)}
             />
             <select
-              className="w-28 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm"
+              className="w-28 px-3 py-2 rounded-lg border border-border bg-transparent text-sm"
               value={newLinkType} onChange={(e) => setNewLinkType(e.target.value)}
             >
               <option value="other">Sonstiges</option>
@@ -580,35 +580,35 @@ function ProjectDetailView({ projectId, onBack }: { projectId: string; onBack: (
             <button
               onClick={() => addLinkMutation.mutate()}
               disabled={!newLinkUrl}
-              className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-medium"
+              className="px-3 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-sm font-medium"
             >
               <Plus className="h-4 w-4" />
             </button>
           </div>
 
           {project.links.length === 0 && (
-            <p className="text-sm text-zinc-500 text-center py-8">Noch keine Links hinzugefügt.</p>
+            <p className="text-sm text-fg-muted text-center py-8">Noch keine Links hinzugefügt.</p>
           )}
 
           {project.links.map((link) => (
-            <div key={link.id} className="flex items-center gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 shrink-0">
+            <div key={link.id} className="flex items-center gap-3 p-3 rounded-lg bg-bg border border-border">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-500/10 text-brand-500 shrink-0">
                 {link.type === 'github' ? <Github className="h-4 w-4" /> :
                  link.type === 'youtube' ? <Youtube className="h-4 w-4" /> :
                  <Link2 className="h-4 w-4" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{link.label || link.url}</p>
-                <p className="text-xs text-zinc-500 truncate">{link.url}</p>
+                <p className="text-xs text-fg-muted truncate">{link.url}</p>
               </div>
               <a href={link.url} target="_blank" rel="noopener noreferrer"
-                className="p-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-bg-raised transition-colors"
               >
-                <ExternalLink className="h-4 w-4 text-zinc-500" />
+                <ExternalLink className="h-4 w-4 text-fg-muted" />
               </a>
               <button
                 onClick={() => { if (window.confirm('Link löschen?')) deleteLinkMutation.mutate(link.id); }}
-                className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-500"
+                className="p-2 rounded-lg hover:bg-danger/10 transition-colors text-danger"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -648,7 +648,7 @@ export default function ProjectsPage() {
   if (!accessToken) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-fg-subtle" />
       </div>
     );
   }
@@ -666,13 +666,13 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Projekte</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+          <p className="text-fg-muted mt-1">
             Alle deine Maker- und Code-Projekte an einem Ort
           </p>
         </div>
         <button
           onClick={() => setDialogOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium transition-colors"
         >
           <Plus className="h-4 w-4" /> Neues Projekt
         </button>
@@ -683,9 +683,9 @@ export default function ProjectsPage() {
           placeholder="Projekt suchen..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-sm px-4 py-2 pl-10 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full max-w-sm px-4 py-2 pl-10 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </div>
@@ -693,10 +693,10 @@ export default function ProjectsPage() {
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 animate-pulse">
-              <div className="h-6 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded mb-3" />
-              <div className="h-4 w-full bg-zinc-200 dark:bg-zinc-800 rounded mb-2" />
-              <div className="h-4 w-2/3 bg-zinc-200 dark:bg-zinc-800 rounded" />
+            <div key={i} className="rounded-xl border border-border p-5 animate-pulse">
+              <div className="h-6 w-3/4 bg-bg-raised rounded mb-3" />
+              <div className="h-4 w-full bg-bg-raised rounded mb-2" />
+              <div className="h-4 w-2/3 bg-bg-raised rounded" />
             </div>
           ))}
         </div>
@@ -704,8 +704,8 @@ export default function ProjectsPage() {
 
       {error && (
         <div className="text-center py-12">
-          <p className="text-red-500">Fehler beim Laden der Projekte.</p>
-          <button onClick={() => queryClient.invalidateQueries({ queryKey: ['projects'] })} className="mt-2 text-sm text-amber-600 hover:underline">
+          <p className="text-danger">Fehler beim Laden der Projekte.</p>
+          <button onClick={() => queryClient.invalidateQueries({ queryKey: ['projects'] })} className="mt-2 text-sm text-brand-500 hover:underline">
             Erneut versuchen
           </button>
         </div>
@@ -713,16 +713,16 @@ export default function ProjectsPage() {
 
       {projects && filtered?.length === 0 && (
         <div className="text-center py-16">
-          <div className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-600 mb-4 flex items-center justify-center">
+          <div className="h-12 w-12 mx-auto text-fg-subtle mb-4 flex items-center justify-center">
             <Edit3 className="h-12 w-12" />
           </div>
           <h3 className="text-lg font-medium mb-2">Noch keine Projekte</h3>
-          <p className="text-zinc-500 dark:text-zinc-400 mb-4">
+          <p className="text-fg-muted mb-4">
             Lege dein erstes Projekt an und dokumentiere deine Arbeit.
           </p>
           <button
             onClick={() => setDialogOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium transition-colors"
           >
             <Plus className="h-4 w-4" /> Erstes Projekt anlegen
           </button>

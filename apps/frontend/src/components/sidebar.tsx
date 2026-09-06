@@ -3,12 +3,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import {
-  Shield, LayoutDashboard, Image, BookOpen, ShoppingCart, PiggyBank,
-  Server, Key, Menu, X, Users, Plane, Code2, Notebook,
-  FileText, FolderLock, Calendar, Search, Puzzle, ShieldCheck,
-  ScrollText, Settings, Monitor, ChevronRight, ChevronDown, Pin, Plus,
-  PanelLeftClose, PanelLeftOpen, Mail, BookUser,
+  Shield, Notebook,
+  Settings, ChevronRight, ChevronDown, Pin, Plus,
+  PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
+import { NAV_ITEMS } from '@/components/ui/lifehub/nav-items';
 import { ThemeToggle } from './theme-toggle';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/cn';
@@ -42,26 +41,8 @@ interface PinnedPage {
   slug: string | null;
 }
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, disabled: false },
-  { href: '/calendar', label: 'Kalender', icon: Calendar, disabled: false },
-  { href: '/email', label: 'E-Mail', icon: Mail, disabled: false },
-  { href: '/media', label: 'Medien', icon: Image, disabled: false },
-  { href: '/travel', label: 'Reisen', icon: Plane, disabled: false },
-  { href: '/projects', label: 'Projekte', icon: Code2, disabled: false },
-  { href: '/recipes', label: 'Rezepte', icon: BookOpen, disabled: false },
-  { href: '/shopping', label: 'Einkauf', icon: ShoppingCart, disabled: false },
-  { href: '/contacts', label: 'Kontakte', icon: BookUser, disabled: false },
-  { href: '/finance', label: 'Finanzen', icon: PiggyBank, disabled: false },
-  { href: '/insurance', label: 'Versicherung', icon: ShieldCheck, disabled: false },
-  { href: '/vault', label: 'Tresor', icon: FolderLock, disabled: false },
-  { href: '/documents', label: 'Dokumente', icon: ScrollText, disabled: false },
-  { href: '/it-inventory', label: 'Haus-IT', icon: Server, disabled: false },
-  { href: '/jellyfin', label: 'Jellyfin', icon: Monitor, disabled: false },
-  { href: '/search', label: 'Suche', icon: Search, disabled: false },
-  { href: '/plugins', label: 'Plugins', icon: Puzzle, disabled: false },
-  { href: '/users', label: 'Benutzer', icon: Users, disabled: false },
-];
+// Navigation lives in components/ui/lifehub/nav-items.ts
+// (shared with bottom tab bar, command palette and breadcrumbs).
 
 function flattenPages(pagesList: Page[] | undefined): Page[] {
   if (!pagesList) return [];
@@ -107,7 +88,7 @@ export function Sidebar() {
 
   // Expose the real nav list to the mobile WebView shell.
   useEffect(() => {
-    window.__lifehubNav = navItems.map((i) => ({ href: i.href, label: i.label }));
+    window.__lifehubNav = NAV_ITEMS.map((i) => ({ href: i.href, label: i.label }));
   }, []);
 
   // Externes Einklappen/Aufklappen (z.B. BrowserBlock-Vollbild-Modus)
@@ -179,23 +160,24 @@ export function Sidebar() {
   const pinnedList = allPages.filter((p) => pinnedPageIds.has(p.id));
   const unpinnedList = allPages.filter((p) => !pinnedPageIds.has(p.id));
 
-  const visibleItems = useMemo(() => filterNavItems(navItems, hiddenNav), [hiddenNav]);
+  const visibleItems = useMemo(() => filterNavItems(NAV_ITEMS, hiddenNav), [hiddenNav]);
+
+  // Open the tablet drawer from the topbar menu button (the dashboard layout
+  // dispatches this; phones use the bottom-tab "Mehr" sheet instead).
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('lifehub:open-sidebar', handler);
+    return () => window.removeEventListener('lifehub:open-sidebar', handler);
+  }, []);
 
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 lg:hidden rounded-md bg-bg-surface border border-border p-2 text-fg"
-      >
-        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </button>
-
-      {/* Sidebar */}
+      {/* Sidebar (desktop ≥1024px + tablet drawer; phones use the bottom tab bar) */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 border-r border-border bg-bg-surface transition-all duration-200',
-          'lg:static lg:inset-auto lg:translate-x-0',
+          'max-md:hidden',
+          'md:w-64 lg:static lg:inset-auto lg:translate-x-0',
           'flex flex-col',
           open ? 'translate-x-0' : '-translate-x-full',
           desktopCollapsed ? 'w-[64px]' : 'w-64',
@@ -391,6 +373,16 @@ export function Sidebar() {
           </Link>
         </div>
       </aside>
+
+      {/* Tablet drawer backdrop (phones use the bottom tab bar, so keep it md-only) */}
+      {open && (
+        <button
+          type="button"
+          aria-label="Navigation schließen"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-30 bg-black/50 md:max-lg:block lg:hidden"
+        />
+      )}
 
       {/* ─── Context Menu ─── */}
       {contextMenu && (

@@ -42,11 +42,11 @@ const typeIcons: Record<string, React.ReactNode> = {
 };
 
 const typeColors: Record<string, string> = {
-  contract: 'bg-red-500/10 text-red-500',
-  receipt: 'bg-green-500/10 text-green-500',
-  manual: 'bg-blue-500/10 text-blue-500',
+  contract: 'bg-danger/10 text-danger',
+  receipt: 'bg-success/10 text-success',
+  manual: 'bg-info/10 text-info',
   official: 'bg-purple-500/10 text-purple-500',
-  other: 'bg-amber-500/10 text-amber-500',
+  other: 'bg-brand-500/10 text-brand-500',
 };
 
 function formatDate(date: string | null) {
@@ -313,7 +313,7 @@ function UploadDialog({ onClose }: { onClose: () => void }) {
           >
             {file ? (
               <div className="text-center">
-                <Check className="h-6 w-6 text-green-500 mx-auto mb-1" />
+                <Check className="h-6 w-6 text-success mx-auto mb-1" />
                 <p className="text-sm font-medium">{file.name}</p>
                 <p className="text-xs text-fg-muted mt-0.5">{formatFileSize(file.size)}</p>
               </div>

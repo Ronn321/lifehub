@@ -154,7 +154,7 @@ export default function FinancePage() {
                   <td className="px-4 py-3">{tx.description}</td>
                   <td className="px-4 py-3 text-fg-muted">{tx.payee ?? '-'}</td>
                   <td className={cn('px-4 py-3 text-right font-medium',
-                    parseFloat(tx.amount) >= 0 ? 'text-green-600' : 'text-red-600'
+                    parseFloat(tx.amount) >= 0 ? 'text-success' : 'text-danger'
                   )}>
                     {formatEuro(tx.amount)}
                   </td>
@@ -184,7 +184,7 @@ export default function FinancePage() {
                     <span className="text-fg-muted">{formatEuro(b.spent)} / {formatEuro(b.amount)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-bg overflow-hidden">
-                    <div className={cn('h-full rounded-full transition-all', over ? 'bg-red-500' : 'bg-brand-500')}
+                    <div className={cn('h-full rounded-full transition-all', over ? 'bg-danger' : 'bg-brand-500')}
                       style={{ width: `${Math.min(pct, 100)}%` }} />
                   </div>
                   <div className="flex justify-between text-xs text-fg-muted mt-1">

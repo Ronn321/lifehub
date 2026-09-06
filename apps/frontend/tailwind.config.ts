@@ -7,6 +7,11 @@ const config: Config = {
     extend: {
       colors: {
         // Brand: dynamic accent (CSS vars set via data-accent on <html>, default amber)
+        // UI-002: `text-brand-fg` is the contrast-safe text color for brand-500/600
+        // surfaces (near-black `9 9 11`; white-on-500 fails AA on all presets at
+        // 2.28–4.23:1, near-black passes at 4.70–8.73:1). Call sites owned by
+        // another agent currently use `text-white` — migrate them to
+        // `text-brand-fg` there; this token only needs to exist + stay in sync.
         brand: {
           50: 'rgb(var(--brand-50) / <alpha-value>)',
           100: 'rgb(var(--brand-100) / <alpha-value>)',
@@ -18,6 +23,8 @@ const config: Config = {
           700: 'rgb(var(--brand-700) / <alpha-value>)',
           800: 'rgb(var(--brand-800) / <alpha-value>)',
           900: 'rgb(var(--brand-900) / <alpha-value>)',
+          // No numeric shade — used as `text-brand-fg` on brand-500/600 backgrounds.
+          fg: 'rgb(var(--brand-fg) / <alpha-value>)',
         },
         // Calendar accent palette (falls back to brand-* per step when not overridden)
         cal: {

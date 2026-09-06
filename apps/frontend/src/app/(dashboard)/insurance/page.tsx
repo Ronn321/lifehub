@@ -264,8 +264,8 @@ function DetailView({ policy, onBack, onDelete, onAddDoc, isDeleting }: {
           </div>
 
           {policy.cancellationPeriodDays && (
-            <div className="col-span-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            <div className="col-span-2 rounded-lg bg-warning/10 border border-warning/30 p-3 flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium">Kündigungsfrist</p>
                 <p className="text-xs text-fg-muted">

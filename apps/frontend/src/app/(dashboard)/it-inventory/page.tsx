@@ -29,17 +29,17 @@ interface Device {
 }
 
 const deviceTypeMeta: Record<DeviceType, { label: string; icon: typeof Server; color: string }> = {
-  server: { label: 'Server', icon: Server, color: 'text-blue-500' },
-  nas: { label: 'NAS', icon: HardDrive, color: 'text-cyan-500' },
-  router: { label: 'Router', icon: Router, color: 'text-orange-500' },
-  switch: { label: 'Switch', icon: Network, color: 'text-purple-500' },
-  raspi: { label: 'Raspberry Pi', icon: Cpu, color: 'text-green-500' },
-  printer: { label: 'Drucker', icon: Printer, color: 'text-red-500' },
-  pc: { label: 'PC', icon: Monitor, color: 'text-zinc-500' },
-  laptop: { label: 'Laptop', icon: Laptop, color: 'text-indigo-500' },
-  tablet: { label: 'Tablet', icon: Tablet, color: 'text-pink-500' },
-  phone: { label: 'Smartphone', icon: Smartphone, color: 'text-yellow-500' },
-  other: { label: 'Sonstiges', icon: Wifi, color: 'text-gray-400' },
+  server: { label: 'Server', icon: Server, color: 'text-info' },
+  nas: { label: 'NAS', icon: HardDrive, color: 'text-info' },
+  router: { label: 'Router', icon: Router, color: 'text-warning' },
+  switch: { label: 'Switch', icon: Network, color: 'text-brand-500' },
+  raspi: { label: 'Raspberry Pi', icon: Cpu, color: 'text-success' },
+  printer: { label: 'Drucker', icon: Printer, color: 'text-danger' },
+  pc: { label: 'PC', icon: Monitor, color: 'text-fg-muted' },
+  laptop: { label: 'Laptop', icon: Laptop, color: 'text-info' },
+  tablet: { label: 'Tablet', icon: Tablet, color: 'text-danger' },
+  phone: { label: 'Smartphone', icon: Smartphone, color: 'text-warning' },
+  other: { label: 'Sonstiges', icon: Wifi, color: 'text-fg-subtle' },
 };
 
 /* ─── Device Dialog ─── */
@@ -75,16 +75,16 @@ function DeviceDialog({ open, device, onClose, onSuccess }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-bg-surface rounded-xl shadow-2xl w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">{isEdit ? 'Gerät bearbeiten' : 'Gerät hinzufügen'}</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Name *</label>
-            <input className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="z.B. Heimserver" value={name} onChange={(e) => setName(e.target.value)} />
+            <input className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="z.B. Heimserver" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Typ</label>
-            <select className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500" value={type} onChange={(e) => setType(e.target.value as DeviceType)}>
+            <select className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500" value={type} onChange={(e) => setType(e.target.value as DeviceType)}>
               {Object.entries(deviceTypeMeta).map(([key, meta]) => (
                 <option key={key} value={key}>{meta.label}</option>
               ))}
@@ -93,36 +93,36 @@ function DeviceDialog({ open, device, onClose, onSuccess }: {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-muted-foreground mb-1">IP-Adresse</label>
-              <input className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="192.168.1.1" value={ipAddress} onChange={(e) => setIpAddress(e.target.value)} />
+              <input className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="192.168.1.1" value={ipAddress} onChange={(e) => setIpAddress(e.target.value)} />
             </div>
             <div>
               <label className="block text-sm text-muted-foreground mb-1">MAC-Adresse</label>
-              <input className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="AA:BB:CC:DD:EE:FF" value={macAddress} onChange={(e) => setMacAddress(e.target.value)} />
+              <input className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="AA:BB:CC:DD:EE:FF" value={macAddress} onChange={(e) => setMacAddress(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-muted-foreground mb-1">Hostname</label>
-              <input className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="heimserver" value={hostname} onChange={(e) => setHostname(e.target.value)} />
+              <input className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="heimserver" value={hostname} onChange={(e) => setHostname(e.target.value)} />
             </div>
             <div>
               <label className="block text-sm text-muted-foreground mb-1">Betriebssystem</label>
-              <input className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Debian 12" value={os} onChange={(e) => setOs(e.target.value)} />
+              <input className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Debian 12" value={os} onChange={(e) => setOs(e.target.value)} />
             </div>
           </div>
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Standort</label>
-            <input className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Keller, Serverrack" value={location} onChange={(e) => setLocation(e.target.value)} />
+            <input className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Keller, Serverrack" value={location} onChange={(e) => setLocation(e.target.value)} />
           </div>
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Notizen</label>
-            <textarea className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[80px]" placeholder="..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <textarea className="w-full px-3 py-2 rounded-lg border border-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[80px]" placeholder="..." value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <button
             onClick={() => mutation.mutate()}
             disabled={!name || mutation.isPending}
-            className="w-full py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
           >
             {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             {isEdit ? 'Speichern' : 'Gerät hinzufügen'}
@@ -141,7 +141,7 @@ function DeviceCard({ device, onEdit, onDelete }: {
   const Icon = meta.icon;
 
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:shadow-md transition-all p-4">
+    <div className="rounded-xl border border-border bg-bg-surface hover:shadow-md transition-all p-4">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3 min-w-0">
           <div className={`shrink-0 mt-0.5 ${meta.color}`}>
@@ -149,33 +149,33 @@ function DeviceCard({ device, onEdit, onDelete }: {
           </div>
           <div className="min-w-0">
             <h3 className="font-semibold truncate">{device.name}</h3>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium inline-block mt-1">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-bg-raised text-fg-muted font-medium inline-block mt-1">
               {meta.label}
             </span>
             {device.location && (
-              <p className="text-xs text-zinc-400 mt-1">{device.location}</p>
+              <p className="text-xs text-fg-subtle mt-1">{device.location}</p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <button onClick={onEdit} className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-amber-500 transition-colors">
+          <button onClick={onEdit} className="p-1.5 rounded-lg hover:bg-bg-raised text-fg-subtle hover:text-brand-500 transition-colors">
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button onClick={onDelete} className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-red-500 transition-colors">
+          <button onClick={onDelete} className="p-1.5 rounded-lg hover:bg-bg-raised text-fg-subtle hover:text-danger transition-colors">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
       {(device.ipAddress || device.hostname || device.os) && (
-        <div className="mt-3 space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="mt-3 space-y-1 text-xs text-fg-muted">
           {device.ipAddress && <p className="flex items-center gap-1"><Network className="h-3 w-3" /> {device.ipAddress}</p>}
           {device.hostname && <p className="flex items-center gap-1"><Monitor className="h-3 w-3" /> {device.hostname}</p>}
           {device.os && <p className="flex items-center gap-1"><Cpu className="h-3 w-3" /> {device.os}</p>}
-          {device.macAddress && <p className="font-mono text-[10px] text-zinc-400">{device.macAddress}</p>}
+          {device.macAddress && <p className="font-mono text-[10px] text-fg-subtle">{device.macAddress}</p>}
         </div>
       )}
       {device.notes && (
-        <p className="mt-2 text-xs text-zinc-400 line-clamp-2">{device.notes}</p>
+        <p className="mt-2 text-xs text-fg-subtle line-clamp-2">{device.notes}</p>
       )}
     </div>
   );
@@ -188,33 +188,33 @@ function NetworkView({ devices, onEdit, onDelete }: {
   const networkDevices = devices.filter(d => d.ipAddress);
 
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
-      <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
+    <div className="rounded-xl border border-border bg-bg-surface overflow-hidden">
+      <div className="px-4 py-3 border-b border-border">
         <h3 className="font-semibold text-sm flex items-center gap-2">
-          <Network className="h-4 w-4 text-amber-500" />
+          <Network className="h-4 w-4 text-brand-500" />
           Netzwerk-Übersicht ({networkDevices.length} Geräte mit IP)
         </h3>
       </div>
-      <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+      <div className="divide-y divide-border">
         {networkDevices.length === 0 ? (
-          <p className="p-6 text-sm text-zinc-400 text-center">Keine Geräte mit IP-Adresse.</p>
+          <p className="p-6 text-sm text-fg-subtle text-center">Keine Geräte mit IP-Adresse.</p>
         ) : (
           networkDevices.map((device) => {
             const meta = deviceTypeMeta[device.type] ?? deviceTypeMeta.other;
             const Icon = meta.icon;
             return (
-              <div key={device.id} className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group">
+              <div key={device.id} className="flex items-center gap-3 px-4 py-3 hover:bg-bg-raised/50 transition-colors group">
                 <Icon className={`h-4 w-4 ${meta.color} shrink-0`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{device.name}</p>
-                  <p className="text-xs text-zinc-400 truncate">{device.hostname || device.macAddress || '-'}</p>
+                  <p className="text-xs text-fg-subtle truncate">{device.hostname || device.macAddress || '-'}</p>
                 </div>
-                <p className="text-sm font-mono text-zinc-500">{device.ipAddress}</p>
+                <p className="text-sm font-mono text-fg-muted">{device.ipAddress}</p>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => onEdit(device)} className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400 hover:text-amber-500">
+                  <button onClick={() => onEdit(device)} className="p-1 rounded hover:bg-bg-raised text-fg-subtle hover:text-brand-500">
                     <Pencil className="h-3 w-3" />
                   </button>
-                  <button onClick={() => onDelete(device)} className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400 hover:text-red-500">
+                  <button onClick={() => onDelete(device)} className="p-1 rounded hover:bg-bg-raised text-fg-subtle hover:text-danger">
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
@@ -253,7 +253,7 @@ export default function ItInventoryPage() {
   if (!accessToken) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-fg-muted" />
       </div>
     );
   }
@@ -276,13 +276,13 @@ export default function ItInventoryPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold">Haus-IT</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          <p className="text-sm text-fg-muted mt-1">
             {devices?.length ?? 0} Geräte im Inventar
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-colors flex items-center gap-1.5"
+          className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors flex items-center gap-1.5"
         >
           <Plus className="h-4 w-4" /> Gerät hinzufügen
         </button>
@@ -291,23 +291,23 @@ export default function ItInventoryPage() {
       {/* Search + View Toggle */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-subtle" />
           <input
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             placeholder="Suchen..."
             value={search} onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex rounded-lg border border-zinc-300 dark:border-zinc-700 overflow-hidden">
+        <div className="flex rounded-lg border border-border overflow-hidden">
           <button
             onClick={() => setView('grid')}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${view === 'grid' ? 'bg-amber-600 text-white' : 'bg-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors ${view === 'grid' ? 'bg-brand-500 text-white' : 'bg-transparent text-fg-muted hover:text-fg'}`}
           >
             Übersicht
           </button>
           <button
             onClick={() => setView('network')}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${view === 'network' ? 'bg-amber-600 text-white' : 'bg-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors ${view === 'network' ? 'bg-brand-500 text-white' : 'bg-transparent text-fg-muted hover:text-fg'}`}
           >
             Netzwerk
           </button>
@@ -321,10 +321,10 @@ export default function ItInventoryPage() {
             const meta = deviceTypeMeta[type as DeviceType] ?? deviceTypeMeta.other;
             const Icon = meta.icon;
             return (
-              <div key={type} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-xs">
+              <div key={type} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-raised text-xs">
                 <Icon className={`h-3.5 w-3.5 ${meta.color}`} />
                 <span>{meta.label}</span>
-                <span className="text-zinc-400 ml-0.5">({count})</span>
+                <span className="text-fg-subtle ml-0.5">({count})</span>
               </div>
             );
           })}
@@ -334,26 +334,26 @@ export default function ItInventoryPage() {
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 animate-pulse">
+            <div key={i} className="rounded-xl border border-border bg-bg-surface p-5 animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                <div className="h-8 w-8 bg-bg-raised rounded" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-800 rounded" />
-                  <div className="h-3 w-16 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                  <div className="h-4 w-24 bg-bg-raised rounded" />
+                  <div className="h-3 w-16 bg-bg-raised rounded" />
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-zinc-400">
+        <div className="text-center py-16 text-fg-subtle">
           <Server className="h-16 w-16 mx-auto mb-4 opacity-20" />
           <p className="text-lg font-medium">Keine Geräte gefunden</p>
           <p className="text-sm mt-1">{search ? 'Keine Ergebnisse für deine Suche.' : 'Füge dein erstes Gerät hinzu.'}</p>
           {!search && (
             <button
               onClick={() => setShowCreate(true)}
-              className="mt-4 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-colors inline-flex items-center gap-1.5"
+              className="mt-4 px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium transition-colors inline-flex items-center gap-1.5"
             >
               <Plus className="h-4 w-4" /> Gerät hinzufügen
             </button>

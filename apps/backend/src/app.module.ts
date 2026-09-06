@@ -23,8 +23,14 @@ import { JellyfinModule } from '@lifehub/jellyfin-domain';
 import { CalendarModule } from '@lifehub/calendar-domain';
 import { IntegrationsModule } from '@lifehub/integrations-domain';
 import { EmailModule } from '@lifehub/email-domain';
+import { DocumentsModule } from '@lifehub/documents-domain';
+import { InsuranceModule } from '@lifehub/insurance-domain';
+import { VaultModule } from '@lifehub/vault-domain';
+import { SearchModule } from '@lifehub/search-domain';
+import { ItInventoryModule } from '@lifehub/it-inventory-domain';
+import { PluginsModule } from '@lifehub/plugins-domain';
+import { ContactsModule } from '@lifehub/contacts-domain';
 import { SystemModule } from './system/system.module.js';
-import { ContactsModule } from '../../../domains/contacts/src/api/contacts.module.js';
 
 @Module({
   imports: [
@@ -78,6 +84,12 @@ import { ContactsModule } from '../../../domains/contacts/src/api/contacts.modul
     CalendarModule,
     IntegrationsModule,
     EmailModule,
+    DocumentsModule,
+    InsuranceModule,
+    VaultModule,
+    SearchModule,
+    ItInventoryModule,
+    PluginsModule,
     ContactsModule,
     SystemModule,
   ],

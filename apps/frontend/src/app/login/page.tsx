@@ -13,8 +13,8 @@ export default function LoginPage() {
   const brandName = useBrandName();
   const setAuth = useAuthStore((s) => s.setAuth);
   const existingToken = useAuthStore((s) => s.accessToken);
-  const [email, setEmail] = useState('admin@lifehub.local');
-  const [password, setPassword] = useState('admin12345');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -45,14 +45,24 @@ export default function LoginPage() {
         // Prüfen ob Desktop (window.lifehub.isDesktop) oder Tailscale/Local Docker down
         const isDesktop = typeof window !== 'undefined' && (window as unknown as { lifehub?: { isDesktop: boolean } }).lifehub?.isDesktop;
         if (isDesktop) {
+          // Desktop-only mock: lets the Electron thin client reach the
+          // dashboard UI without a backend (offline demo). No extra
+          // privileges — roles stay ['admin'] for local UI parity only.
+          // Display name/email mirror the entered email field.
+          const localPart = (email || 'offline').split('@')[0] || 'offline';
+          const displayName = localPart
+            .split(/[._-]+/)
+            .filter(Boolean)
+            .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+            .join(' ') || 'Offline User';
           // Mock-Auth für Offline-Login (zeigt Dashboard auch ohne Backend)
           const mockAuth = {
             accessToken: 'offline-mock-token',
             refreshToken: 'offline-mock-refresh',
             user: {
               id: 'offline-user',
-              email: email || 'admin@lifehub.local',
-              displayName: 'Offline User',
+              email: email || 'offline@lifehub.local',
+              displayName,
               avatarUrl: null,
               isActive: true,
               locale: 'de',
@@ -137,8 +147,13 @@ export default function LoginPage() {
           </button>
 
           <p className="text-center text-xs text-fg-subtle">
-            Default: <code className="text-brand-500">admin@lifehub.local</code> / <code className="text-brand-500">admin12345</code>
+            Standard-Login: Bestehendes Konto verwenden
           </p>
+          {process.env.NODE_ENV !== 'production' && (
+            <p className="text-center text-xs text-fg-subtle">
+              Dev-Hinweis: <code className="text-brand-500">admin@lifehub.local</code> / <code className="text-brand-500">admin12345</code>
+            </p>
+          )}
         </form>
       </div>
     </main>

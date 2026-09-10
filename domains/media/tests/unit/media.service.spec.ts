@@ -1,7 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeAll, beforeEach } from 'vitest';
 import { NotFoundException } from '@nestjs/common';
+import { hashPassword } from '@lifehub/auth';
 import { MediaService } from '../../src/services/media.service';
 import { MediaLockService } from '../../src/services/media-lock.service';
+import { resetPinSchema } from '../../src/dtos/media.dto';
 
 const OWNER = '11111111-1111-4111-8111-111111111111';
 const FILE_ID = '22222222-2222-4222-8222-222222222222';
@@ -189,5 +191,61 @@ describe('MediaLockService — PIN-Flow', () => {
 
   it('isValidLockToken: false ohne Token', async () => {
     await expect(makeLockService({}).isValidLockToken(OWNER, undefined)).resolves.toBe(false);
+  });
+});
+
+describe('MediaLockService.resetPin — PIN-Reset per Account-Passwort', () => {
+  const PASSWORD = 'korrektes-passwort-123';
+  let passwordHash: string;
+
+  beforeAll(async () => {
+    // Echter argon2id-Hash (derselbe Helper wie Login-Flow) — keine Mocks der Krypto.
+    passwordHash = await hashPassword(PASSWORD);
+  }, 30000);
+
+  function makeResetRepo(opts: { withUser?: boolean; unlockedCount?: number } = {}) {
+    const { withUser = true, unlockedCount = 2 } = opts;
+    return {
+      findUserPasswordHash: vi.fn().mockResolvedValue(withUser ? passwordHash : null),
+      deleteLockPin: vi.fn().mockResolvedValue(undefined),
+      unlockAllLockedFiles: vi.fn().mockResolvedValue(unlockedCount),
+    };
+  }
+
+  it('korrektes Passwort: löscht PIN + entsperrt Dateien, gibt unlockedCount zurück', async () => {
+    const repo = makeResetRepo();
+    const svc = makeLockService(repo);
+    await expect(svc.resetPin(OWNER, PASSWORD)).resolves.toEqual({ success: true, unlockedCount: 2 });
+    expect(repo.findUserPasswordHash).toHaveBeenCalledWith(OWNER);
+    expect(repo.deleteLockPin).toHaveBeenCalledWith(OWNER);
+    expect(repo.unlockAllLockedFiles).toHaveBeenCalledWith(OWNER);
+  });
+
+  it('falsches Passwort: 403 + PIN und Dateien unangetastet', async () => {
+    const repo = makeResetRepo();
+    const svc = makeLockService(repo);
+    await expect(svc.resetPin(OWNER, 'falsch')).rejects.toMatchObject({ status: 403, message: 'Falsches Passwort' });
+    expect(repo.deleteLockPin).not.toHaveBeenCalled();
+    expect(repo.unlockAllLockedFiles).not.toHaveBeenCalled();
+  });
+
+  it('unbekannter/gelöschter User: 403 (kein User-Enumeration-Orakel)', async () => {
+    const repo = makeResetRepo({ withUser: false });
+    const svc = makeLockService(repo);
+    await expect(svc.resetPin(OWNER, PASSWORD)).rejects.toMatchObject({ status: 403 });
+    expect(repo.deleteLockPin).not.toHaveBeenCalled();
+  });
+
+  it('keine PIN gesetzt: idempotent erfolgreich mit unlockedCount 0', async () => {
+    const repo = makeResetRepo({ unlockedCount: 0 });
+    const svc = makeLockService(repo);
+    await expect(svc.resetPin(OWNER, PASSWORD)).resolves.toEqual({ success: true, unlockedCount: 0 });
+    expect(repo.deleteLockPin).toHaveBeenCalledWith(OWNER);
+  });
+
+  it('resetPinSchema: password min(1), leeres Passwort abgewiesen', () => {
+    expect(resetPinSchema.parse({ password: 'x' })).toEqual({ password: 'x' });
+    expect(() => resetPinSchema.parse({ password: '' })).toThrow();
+    expect(() => resetPinSchema.parse({})).toThrow();
   });
 });

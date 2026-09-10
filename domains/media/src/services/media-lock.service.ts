@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { randomBytes, scrypt as scryptCb, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { signLockToken, verifyLockToken } from '@lifehub/auth';
+import { signLockToken, verifyLockToken, verifyPassword } from '@lifehub/auth';
 import { MediaRepository } from '../repositories/media.repository';
 
 const scryptAsync = promisify(scryptCb);
@@ -75,6 +75,25 @@ export class MediaLockService {
     const ok = await this.verifyPin(pin, existing.pinHash);
     if (!ok) throw new ForbiddenException('Falsche PIN');
     return { lockToken: await signLockToken(ownerId) };
+  }
+
+  /**
+   * PIN zurücksetzen (vergessene PIN): verifiziert das ACCOUNT-Passwort des
+   * Callers (argon2id, derselbe verifyPassword-Helper wie der Login-Flow),
+   * NICHT die alte PIN. Falsches Passwort → 403 'Falsches Passwort'.
+   *
+   * Bei Erfolg: PIN-Zeile löschen + alle gesperrten Dateien des Owners
+   * entsperren (der Reset stellt vollen Zugriff wieder her — sonst blieben
+   * locked=true-Dateien ohne PIN dauerhaft unzugänglich). Idempotent:
+   * ohne gesetzte PIN → { success: true, unlockedCount: 0 }.
+   */
+  async resetPin(ownerId: string, password: string): Promise<{ success: true; unlockedCount: number }> {
+    const passwordHash = await this.repo.findUserPasswordHash(ownerId);
+    const ok = passwordHash ? await verifyPassword(passwordHash, password) : false;
+    if (!ok) throw new ForbiddenException('Falsches Passwort');
+    await this.repo.deleteLockPin(ownerId);
+    const unlockedCount = await this.repo.unlockAllLockedFiles(ownerId);
+    return { success: true, unlockedCount };
   }
 
   /**

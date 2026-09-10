@@ -63,3 +63,9 @@ export const unlockSchema = z.object({
   pin: z.string().min(4).max(12),
 });
 export type UnlockInput = z.infer<typeof unlockSchema>;
+
+// PIN-Reset: authentifiziert sich NICHT per alter PIN, sondern per Account-Passwort.
+export const resetPinSchema = z.object({
+  password: z.string().min(1),
+});
+export type ResetPinInput = z.infer<typeof resetPinSchema>;

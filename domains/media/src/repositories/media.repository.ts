@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { and, eq, isNotNull, isNull, sql, desc, asc, like, type SQL } from 'drizzle-orm';
-import { DbService, mediaSources, mediaFiles, albums, albumItems, mediaTags, mediaLockPins, tags, type Db } from '@lifehub/db';
+import { DbService, mediaSources, mediaFiles, albums, albumItems, mediaTags, mediaLockPins, tags, users, type Db } from '@lifehub/db';
 
 export interface FileListFilters {
   sourceId?: string;
@@ -333,6 +333,30 @@ export class MediaRepository {
       .onConflictDoUpdate({ target: mediaLockPins.ownerId, set: { pinHash, updatedAt: sql`now()` } })
       .returning();
     return row;
+  }
+
+  /** PIN-Zeile löschen (PIN-Reset). Idempotent — keine PIN → no-op. */
+  async deleteLockPin(ownerId: string) {
+    await this.db.delete(mediaLockPins).where(eq(mediaLockPins.ownerId, ownerId));
+  }
+
+  /**
+   * Alle gesperrten Dateien des Owners entsperren.
+   * @returns Anzahl entsperrter Dateien.
+   */
+  async unlockAllLockedFiles(ownerId: string): Promise<number> {
+    const rows = await this.db.update(mediaFiles)
+      .set({ locked: false, updatedAt: sql`now()` })
+      .where(and(eq(mediaFiles.ownerId, ownerId), eq(mediaFiles.locked, true), isNull(mediaFiles.deletedAt)))
+      .returning({ id: mediaFiles.id });
+    return rows.length;
+  }
+
+  /** Account-Passwort-Hash des Owners (für PIN-Reset-Verifizierung). */
+  async findUserPasswordHash(ownerId: string): Promise<string | null> {
+    const [row] = await this.db.select({ passwordHash: users.passwordHash }).from(users)
+      .where(and(eq(users.id, ownerId), isNull(users.deletedAt)));
+    return row?.passwordHash ?? null;
   }
 
   /** Tag-Lookup für Wiederverwendung (owner+domain+name ist unique). */

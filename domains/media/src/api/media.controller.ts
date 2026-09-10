@@ -3,7 +3,7 @@ import { JwtGuard, CurrentUser, verifyAccessToken, type JwtPayload } from '@life
 import { RequirePermission, PermissionGuard } from '@lifehub/permissions';
 import { MediaService } from '../services/media.service';
 import { MediaLockService } from '../services/media-lock.service';
-import { createSourceSchema, updateSourceSchema, createAlbumSchema, updateAlbumSchema, addToAlbumSchema, createTagSchema, createAndAssignTagSchema, assignTagSchema, lockPinSchema, unlockSchema } from '../dtos/media.dto';
+import { createSourceSchema, updateSourceSchema, createAlbumSchema, updateAlbumSchema, addToAlbumSchema, createTagSchema, createAndAssignTagSchema, assignTagSchema, lockPinSchema, unlockSchema, resetPinSchema } from '../dtos/media.dto';
 import type { Request } from 'express';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
@@ -235,6 +235,19 @@ export class MediaController {
   async setLockPin(@Body() body: unknown, @CurrentUser() user: JwtPayload) {
     const dto = lockPinSchema.parse(body);
     return this.locks.setPin(user.sub, dto.pin, dto.oldPin);
+  }
+
+  // PIN-Reset bei vergessener PIN: authentifiziert per Account-Passwort
+  // (NICHT per alter PIN). Löscht die PIN und entsperrt alle gesperrten
+  // Dateien des Owners (voller Zugriff wird wiederhergestellt).
+  // Altausgestellte Lock-Token (15min TTL) verfallen wirkungslos — ohne PIN
+  // ist kein Lock-Token mehr für irgendeine Aktion erforderlich.
+  @Delete('locked/pin')
+  @HttpCode(200)
+  @RequirePermission('media', 'update')
+  async resetLockPin(@Body() body: unknown, @CurrentUser() user: JwtPayload) {
+    const dto = resetPinSchema.parse(body);
+    return this.locks.resetPin(user.sub, dto.password);
   }
 
   @Post('locked/unlock')

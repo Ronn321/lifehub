@@ -2,12 +2,25 @@
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+import {
+  clearLockToken,
+  fetchLocked,
+  getLockedStreamUrl,
+  getLockStatus,
+  getLockToken,
+  isLockedFeatureUnavailable,
+  lockFile,
+  setLockPin,
+  unlockFile,
+  unlockMedia,
+} from '@/lib/media';
 import {
   Plus, FolderOpen, Image, Loader2, AlertCircle, Hash, Tag, FileText, X,
   FolderSearch, Star, MapPin, ChevronLeft, ChevronRight, Camera,
   Heart, Filter, Globe, ScanSearch, Search, Check,
+  Lock, LockOpen, KeyRound,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import dynamic from 'next/dynamic';
@@ -65,13 +78,14 @@ interface ScanResult {
 /*  Tabs                                                              */
 /* ------------------------------------------------------------------ */
 
-type TabId = 'sources' | 'albums' | 'gallery' | 'map';
+type TabId = 'sources' | 'albums' | 'gallery' | 'map' | 'locked';
 
 const TABS: { id: TabId; label: string; icon: ReactNode }[] = [
   { id: 'gallery', label: 'Galerie', icon: <Camera className="h-4 w-4" /> },
   { id: 'albums', label: 'Alben', icon: <Image className="h-4 w-4" /> },
   { id: 'map', label: 'Karte', icon: <MapPin className="h-4 w-4" /> },
   { id: 'sources', label: 'Quellen', icon: <FolderOpen className="h-4 w-4" /> },
+  { id: 'locked', label: 'Gesperrt', icon: <Lock className="h-4 w-4" /> },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -131,6 +145,9 @@ export default function MediaPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const [hydrated, setHydrated] = useState(false);
 
+  // Locked-Feature-Verfügbarkeit (NAS-Backend kann 500 liefern → Hinweis statt Crash).
+  const [lockedUnavailable, setLockedUnavailable] = useState(false);
+
   useEffect(() => {
     setHydrated(true);
   }, []);
@@ -139,6 +156,16 @@ export default function MediaPage() {
       router.push('/login');
     }
   }, [hydrated, accessToken, router]);
+
+  // Beim Wegwechseln vom „Gesperrt"-Tab automatisch wieder sperren
+  // (Lock-Token aus Memory + sessionStorage löschen).
+  const prevTabRef = useRef<TabId>(activeTab);
+  useEffect(() => {
+    if (prevTabRef.current === 'locked' && activeTab !== 'locked') {
+      clearLockToken();
+    }
+    prevTabRef.current = activeTab;
+  }, [activeTab]);
 
   if (!hydrated || !accessToken) {
     return (
@@ -162,22 +189,31 @@ export default function MediaPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-md border border-border bg-bg-surface p-1 w-fit">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'flex items-center gap-2 rounded px-4 py-1.5 text-sm font-medium transition-colors',
-              activeTab === tab.id
-                ? 'bg-bg-raised text-fg'
-                : 'text-fg-muted hover:text-fg',
-            )}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap gap-1 rounded-md border border-border bg-bg-surface p-1 w-fit">
+        {TABS.map((tab) => {
+          // „Gesperrt" ausblenden, wenn das Backend die Locked-Routen nicht kann.
+          if (tab.id === 'locked' && lockedUnavailable) return null;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                if (activeTab === 'locked' && tab.id !== 'locked') {
+                  clearLockToken();
+                }
+                setActiveTab(tab.id);
+              }}
+              className={cn(
+                'flex items-center gap-2 rounded px-4 py-1.5 text-sm font-medium transition-colors',
+                activeTab === tab.id
+                  ? 'bg-bg-raised text-fg'
+                  : 'text-fg-muted hover:text-fg',
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content */}
@@ -187,8 +223,13 @@ export default function MediaPage() {
       {activeTab === 'albums' && (
         <AlbumsTab onCreate={() => setShowAlbumModal(true)} />
       )}
-      {activeTab === 'gallery' && <GalleryTab />}
+      {activeTab === 'gallery' && (
+        <GalleryTab onLockedUnavailable={() => setLockedUnavailable(true)} />
+      )}
       {activeTab === 'map' && <MapView />}
+      {activeTab === 'locked' && (
+        <LockedTab onLockedUnavailable={() => setLockedUnavailable(true)} />
+      )}
 
       {/* Modals */}
       {showSourceModal && <SourceDialog onClose={() => setShowSourceModal(false)} />}
@@ -764,7 +805,7 @@ function AlbumDetailView({
 /*  Gallery Tab (full implementation)                                 */
 /* ------------------------------------------------------------------ */
 
-function GalleryTab() {
+function GalleryTab({ onLockedUnavailable }: { onLockedUnavailable: () => void }) {
   const qc = useQueryClient();
   const [sourceFilter, setSourceFilter] = useState<string>('');
   const [favoriteFilter, setFavoriteFilter] = useState(false);
@@ -774,6 +815,11 @@ function GalleryTab() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [addToAlbumId, setAddToAlbumId] = useState<string | null>(null);
+  // Gesperrte Medien
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [showLockConfirm, setShowLockConfirm] = useState(false);
+  const [lockToast, setLockToast] = useState<string | null>(null);
+  const [lockHint, setLockHint] = useState<string | null>(null);
 
   // Pagination + page size (persisted per browser)
   const [pageSize, setPageSize] = useState<number>(() => {
@@ -860,6 +906,62 @@ function GalleryTab() {
       api.post<{ isFavorite: boolean }>(`/media/files/${fileId}/favorite`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['media-files'] });
+    },
+  });
+
+  // Lock-Status: null = Backend kennt die Routen nicht (oder defekt) → „Sperren" ausblenden.
+  const { data: lockStatus } = useQuery<{ hasPin: boolean } | null>({
+    queryKey: ['media-lock-status'],
+    queryFn: getLockStatus,
+    staleTime: 60_000,
+    retry: false,
+  });
+  useEffect(() => {
+    if (lockStatus === null) onLockedUnavailable();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockStatus]);
+
+  // Sperren-Mutation: POST /media/files/:id/lock pro Datei, danach refetch + Toast.
+  const lockMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      let ok = 0;
+      let noPin = false;
+      for (const id of ids) {
+        try {
+          await lockFile(id);
+          ok++;
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 409) noPin = true;
+          else if (isLockedFeatureUnavailable(err)) throw err;
+          // Einzelne Fehler (z.B. schon gesperrt) ignorieren, Rest weiter sperren.
+        }
+      }
+      return { ok, noPin, total: ids.length };
+    },
+    onSuccess: ({ ok, noPin, total }) => {
+      qc.invalidateQueries({ queryKey: ['media-files'] });
+      qc.invalidateQueries({ queryKey: ['media-locked'] });
+      clearSelection();
+      setShowLockConfirm(false);
+      if (noPin) {
+        // 409: keine PIN gesetzt → Setup-Flow anbieten.
+        setShowPinSetup(true);
+        setLockHint(ok > 0
+          ? `${ok} von ${total} Medien gesperrt. Lege zuerst eine PIN fest, um weitere zu sperren.`
+          : 'Lege zuerst eine PIN fest, um Medien zu sperren.');
+        return;
+      }
+      setLockToast(`${ok} ${ok === 1 ? 'Medium' : 'Medien'} gesperrt`);
+      setTimeout(() => setLockToast(null), 4000);
+    },
+    onError: (err) => {
+      setShowLockConfirm(false);
+      if (isLockedFeatureUnavailable(err)) {
+        onLockedUnavailable();
+        setLockHint('Sperren ist derzeit nicht verfügbar (Backend antwortet nicht).');
+      } else {
+        setLockHint(`Sperren fehlgeschlagen: ${(err as Error).message}`);
+      }
     },
   });
 
@@ -977,10 +1079,33 @@ function GalleryTab() {
             <button onClick={() => setAddToAlbumId('__select__')} className="rounded-md bg-brand-500 px-3 py-1 text-xs font-medium text-bg hover:bg-brand-400 transition-colors">
               + Zu Album
             </button>
+            {lockStatus !== null && (
+              <button
+                onClick={() => { setLockHint(null); setShowLockConfirm(true); }}
+                className="flex items-center gap-1 rounded-md border border-border px-3 py-1 text-xs font-medium text-fg-muted hover:text-fg transition-colors"
+              >
+                <Lock className="h-3 w-3" />
+                Sperren
+              </button>
+            )}
             <button onClick={clearSelection} className="text-xs text-fg-muted hover:text-fg transition-colors">
               Abbrechen
             </button>
           </div>
+        )}
+
+        {/* Lock-Hinweis / Toast */}
+        {(lockHint || lockToast) && (
+          <span className={cn(
+            'flex items-center gap-1.5 text-xs',
+            lockHint ? 'text-amber-500' : 'text-green-500',
+          )}>
+            {lockHint ? <AlertCircle className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+            {lockHint ?? lockToast}
+            <button onClick={() => { setLockHint(null); setLockToast(null); }} className="hover:text-fg">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
         )}
 
         {/* Total count */}
@@ -1181,6 +1306,53 @@ function GalleryTab() {
           onClose={() => { setAddToAlbumId(null); clearSelection(); }}
         />
       )}
+
+      {/* PIN einrichten (Erst-Setup: kein oldPin nötig) */}
+      {showPinSetup && (
+        <PinDialog
+          mode={lockStatus?.hasPin ? 'change' : 'setup'}
+          hint={lockHint}
+          onClose={() => { setShowPinSetup(false); setLockHint(null); }}
+          onSuccess={() => {
+            setShowPinSetup(false);
+            setLockHint(null);
+            qc.invalidateQueries({ queryKey: ['media-lock-status'] });
+            // Nach dem Setup direkt weiter sperren, falls noch Auswahl besteht.
+            if (selectedIds.size > 0) setShowLockConfirm(true);
+            else {
+              setLockToast('PIN gespeichert');
+              setTimeout(() => setLockToast(null), 4000);
+            }
+          }}
+        />
+      )}
+
+      {/* Sperren bestätigen */}
+      {showLockConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowLockConfirm(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm space-y-4 rounded-lg border border-border bg-bg-surface p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Medien sperren?</h2>
+              <button type="button" onClick={() => setShowLockConfirm(false)} className="text-fg-muted hover:text-fg"><X className="h-5 w-5" /></button>
+            </div>
+            <p className="text-sm text-fg-muted">
+              {selectedIds.size} {selectedIds.size === 1 ? 'Medium wird' : 'Medien werden'} mit deiner PIN gesperrt und{' '}
+              aus Galerie, Alben und Karte ausgeblendet. Ansehen nur noch im Reiter „Gesperrt&quot;.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setShowLockConfirm(false)} className="flex-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-fg hover:bg-bg transition-colors">Abbrechen</button>
+              <button
+                onClick={() => lockMut.mutate(Array.from(selectedIds))}
+                disabled={lockMut.isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-bg hover:bg-brand-400 disabled:opacity-50 transition-colors"
+              >
+                {lockMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {lockMut.isPending ? 'Sperre…' : 'Sperren'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1243,6 +1415,7 @@ function Lightbox({
   hasPrev,
   hasNext,
   onFavoriteToggle,
+  getUrl,
 }: {
   file: MediaFile;
   onClose: () => void;
@@ -1251,7 +1424,10 @@ function Lightbox({
   hasPrev: boolean;
   hasNext: boolean;
   onFavoriteToggle: () => void;
+  /** URL-Resolver (Default: normaler Stream). Für gesperrte Dateien getLockedStreamUrl übergeben. */
+  getUrl?: (fileId: string, size?: number) => string;
 }) {
+  const resolveUrl = getUrl ?? getStreamUrl;
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
@@ -1292,7 +1468,7 @@ function Lightbox({
       >
         {isVideo(file.mimeType) ? (
           <video
-            src={getStreamUrl(file.id)}
+            src={resolveUrl(file.id)}
             controls
             autoPlay
             className="max-h-[85vh] max-w-[85vw] rounded-lg"
@@ -1301,7 +1477,7 @@ function Lightbox({
           </video>
         ) : (
           <img
-            src={getStreamUrl(file.id)}
+            src={resolveUrl(file.id)}
             alt={file.filename}
             className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg"
           />
@@ -1345,6 +1521,608 @@ function Lightbox({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Locked Tab (gesperrte Medien: PIN-Gate + Grid + Entsperren)      */
+/* ------------------------------------------------------------------ */
+
+function LockedTab({ onLockedUnavailable }: { onLockedUnavailable: () => void }) {
+  const qc = useQueryClient();
+  const [lockToken, setLockTokenState] = useState<string | null>(() => getLockToken());
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [unlockToast, setUnlockToast] = useState<string | null>(null);
+
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return 50;
+    const saved = parseInt(localStorage.getItem('lifehub-media-page-size') ?? '50', 10);
+    return Number.isFinite(saved) && saved > 0 ? saved : 50;
+  });
+  const [page, setPage] = useState(1);
+
+  // Lock-Status für PIN-Gate (setup-Link / change-Dialog).
+  const { data: lockStatus } = useQuery<{ hasPin: boolean } | null>({
+    queryKey: ['media-lock-status'],
+    queryFn: getLockStatus,
+    staleTime: 60_000,
+    retry: false,
+  });
+  useEffect(() => {
+    if (lockStatus === null) onLockedUnavailable();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockStatus]);
+
+  // Gesperrte Dateien — nur mit gültigem Lock-Token (sonst 403 → PIN-Gate).
+  const {
+    data,
+    isLoading,
+    error,
+    isFetching,
+  } = useQuery<{ items: MediaFile[]; total: number }>({
+    queryKey: ['media-locked', page, pageSize, lockToken ? 'unlocked' : 'locked'],
+    queryFn: () => fetchLocked(pageSize, (page - 1) * pageSize) as Promise<{ items: MediaFile[]; total: number }>,
+    enabled: !!lockToken,
+    staleTime: 30_000,
+    retry: false,
+  });
+
+  const files = data?.items ?? [];
+  const totalFiles = data?.total ?? 0;
+
+  const isLockedError = !!error && error instanceof ApiError && (error.status === 403 || error.status === 401);
+  const isUnavailable = !!error && isLockedFeatureUnavailable(error);
+
+  useEffect(() => {
+    // Abgelaufener/ungültiger Token (403) → PIN erneut abfragen.
+    if (isLockedError) {
+      clearLockToken();
+      setLockTokenState(null);
+    }
+    if (isUnavailable) onLockedUnavailable();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function clearSelection() { setSelectedIds(new Set()); setSelectMode(false); }
+
+  function relock() {
+    clearLockToken();
+    setLockTokenState(null);
+    clearSelection();
+    qc.removeQueries({ queryKey: ['media-locked'] });
+  }
+
+  const favMut = useMutation({
+    mutationFn: (fileId: string) =>
+      api.post<{ isFavorite: boolean }>(`/media/files/${fileId}/favorite`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['media-locked'] });
+    },
+  });
+
+  const unlockMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      let ok = 0;
+      for (const id of ids) {
+        try {
+          await unlockFile(id);
+          ok++;
+        } catch {
+          // Einzelne Fehler ignorieren, Rest weiter entsperren.
+        }
+      }
+      return ok;
+    },
+    onSuccess: (ok) => {
+      qc.invalidateQueries({ queryKey: ['media-locked'] });
+      qc.invalidateQueries({ queryKey: ['media-files'] });
+      clearSelection();
+      setUnlockToast(`${ok} ${ok === 1 ? 'Medium' : 'Medien'} entsperrt`);
+      setTimeout(() => setUnlockToast(null), 4000);
+    },
+  });
+
+  const grouped = files.reduce<Record<string, MediaFile[]>>((acc, f) => {
+    const key = dateGroupKey(f.takenAt ?? f.createdAt);
+    (acc[key] ??= []).push(f);
+    return acc;
+  }, {});
+  const sortedGroups = Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a));
+
+  const lightboxFile = lightboxIndex >= 0 ? (files[lightboxIndex] ?? null) : null;
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-sm text-fg-muted">
+          {lockToken ? `${totalFiles} gesperrte ${totalFiles === 1 ? 'Datei' : 'Dateien'}` : 'Mit deiner PIN geschützte Medien'}
+        </p>
+        <div className="ml-auto flex items-center gap-2">
+          {lockToken && (
+            <>
+              <button
+                onClick={() => setShowPinSetup(true)}
+                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-fg transition-colors"
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                PIN ändern
+              </button>
+              <button
+                onClick={relock}
+                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-fg transition-colors"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                Sperren
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* PIN-Gate */}
+      {!lockToken && (
+        <PinGate
+          lockStatus={lockStatus ?? undefined}
+          unavailable={isUnavailable}
+          toast={toast}
+          onUnlock={(token) => {
+            setLockTokenState(token);
+            setPage(1);
+            setToast('Entsperrt — viel Spaß beim Stöbern.');
+            setTimeout(() => setToast(null), 4000);
+          }}
+          onSetup={() => setShowPinSetup(true)}
+        />
+      )}
+
+      {/* Entsperrt: Auswahl-Toolbar */}
+      {lockToken && (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => { if (selectMode) clearSelection(); else setSelectMode(true); }}
+            className={cn(
+              'flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
+              selectMode
+                ? 'border-brand-500/50 bg-brand-500/10 text-brand-500'
+                : 'border-border text-fg-muted hover:text-fg',
+            )}
+          >
+            <Check className="h-3.5 w-3.5" />
+            Auswählen
+          </button>
+          {selectMode && selectedIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-fg-muted">{selectedIds.size} ausgewählt</span>
+              <button
+                onClick={() => unlockMut.mutate(Array.from(selectedIds))}
+                disabled={unlockMut.isPending}
+                className="flex items-center gap-1 rounded-md bg-brand-500 px-3 py-1 text-xs font-medium text-bg hover:bg-brand-400 disabled:opacity-50 transition-colors"
+              >
+                {unlockMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <LockOpen className="h-3 w-3" />}
+                {unlockMut.isPending ? 'Entsperre…' : 'Entsperren'}
+              </button>
+              <button onClick={clearSelection} className="text-xs text-fg-muted hover:text-fg transition-colors">
+                Abbrechen
+              </button>
+            </div>
+          )}
+          {unlockToast && (
+            <span className="flex items-center gap-1.5 text-xs text-green-500">
+              <Check className="h-3.5 w-3.5" />
+              {unlockToast}
+            </span>
+          )}
+          {totalFiles > 0 && (
+            <div className="flex items-center gap-3">
+              <PaginationBar
+                page={page}
+                total={totalFiles}
+                pageSize={pageSize}
+                onPageChange={(p) => {
+                  setPage(p);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  localStorage.setItem('lifehub-media-page-size', String(size));
+                  setPage(1);
+                }}
+              />
+              {isFetching && data && (
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-fg-muted" />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Entsperrt: Lade-/Fehler-/Leerzustand */}
+      {lockToken && isLoading && (
+        <div className="flex items-center justify-center py-20 text-fg-muted">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          Lade gesperrte Medien …
+        </div>
+      )}
+
+      {lockToken && error && !isLoading && !isLockedError && !isUnavailable && (
+        <div className="flex items-start gap-3 rounded-lg border border-danger/20 bg-danger/5 p-4 text-danger">
+          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">Fehler beim Laden</p>
+            <p className="text-sm text-danger/80 mt-1">{(error as Error).message}</p>
+          </div>
+        </div>
+      )}
+
+      {lockToken && !isLoading && !error && files.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-20 text-fg-muted">
+          <Lock className="h-12 w-12 mb-3 opacity-30" />
+          <p className="font-medium">Keine gesperrten Medien</p>
+          <p className="text-sm mt-1 max-w-md text-center">
+            Wähle in der Galerie Medien aus und tippe auf „Sperren&quot;, um sie hier zu schützen.
+          </p>
+        </div>
+      )}
+
+      {/* Entsperrt: Grid (Kachel-Rendering wie Galerie, URLs mit lockToken) */}
+      {lockToken && !isLoading && !error && sortedGroups.length > 0 && (
+        <div className="space-y-8">
+          {sortedGroups.map(([groupKey, groupFiles]) => (
+            <div key={groupKey}>
+              <h3 className="text-sm font-semibold text-fg-muted mb-3 sticky top-0 bg-bg py-2 z-10 border-b border-border">
+                {groupKey === '0000-00' ? 'Ohne Datum' : formatDateGroup(groupFiles[0]?.takenAt)}
+                <span className="text-xs ml-2 text-fg-subtle">{groupFiles.length} Dateien</span>
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {groupFiles.map((file) => (
+                  <div
+                    key={file.id}
+                    className={`group relative aspect-[4/3] rounded-lg overflow-hidden border transition-colors cursor-pointer ${
+                      selectMode && selectedIds.has(file.id)
+                        ? 'border-brand-500 ring-2 ring-brand-500/30'
+                        : 'border-border hover:border-brand-500/50'
+                    }`}
+                    onClick={() => {
+                      if (selectMode) toggleSelect(file.id);
+                      else setLightboxIndex(files.findIndex((f) => f.id === file.id));
+                    }}
+                  >
+                    {selectMode && (
+                      <div className="absolute top-1.5 left-1.5 z-10">
+                        <div className={`rounded-full p-0.5 ${selectedIds.has(file.id) ? 'bg-brand-500' : 'bg-black/40'}`}>
+                          <Check className={`h-4 w-4 ${selectedIds.has(file.id) ? 'text-white' : 'text-white/70'}`} />
+                        </div>
+                      </div>
+                    )}
+                    {isImage(file.mimeType) ? (
+                      <img
+                        src={getLockedStreamUrl(file.id, 768)}
+                        alt={file.filename}
+                        className="h-full w-full object-contain bg-bg-raised"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : isVideo(file.mimeType) ? (
+                      <VideoPreviewTile
+                        src={getLockedStreamUrl(file.id)}
+                        alt={file.filename}
+                        thumbnail={getLockedStreamUrl(file.id, 768)}
+                        className="h-full w-full object-contain bg-bg-raised"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-bg-raised">
+                        <FileText className="h-10 w-10 opacity-30" />
+                      </div>
+                    )}
+
+                    {/* Schloss-Badge */}
+                    <div className="absolute top-1.5 left-1.5 rounded bg-black/50 p-0.5">
+                      <Lock className="h-3 w-3 text-white" />
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        favMut.mutate(file.id);
+                      }}
+                      className={cn(
+                        'absolute top-1.5 right-1.5 rounded-full p-1 transition-all opacity-0 group-hover:opacity-100',
+                        file.isFavorite
+                          ? 'text-red-400 bg-black/40'
+                          : 'text-white bg-black/40 hover:text-red-300',
+                      )}
+                    >
+                      <Star className={cn('h-4 w-4', file.isFavorite && 'fill-current')} />
+                    </button>
+
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-[10px] text-white truncate">{file.filename}</p>
+                      {file.width && file.height && (
+                        <p className="text-[9px] text-white/70">{file.width}×{file.height}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Entsperrt: Pagination unten */}
+      {lockToken && totalFiles > 0 && (
+        <PaginationBar
+          page={page}
+          total={totalFiles}
+          pageSize={pageSize}
+          onPageChange={(p) => {
+            setPage(p);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            localStorage.setItem('lifehub-media-page-size', String(size));
+            setPage(1);
+          }}
+        />
+      )}
+
+      {/* Lightbox mit lockToken-URLs */}
+      {lightboxFile && (
+        <Lightbox
+          file={lightboxFile}
+          onClose={() => setLightboxIndex(-1)}
+          onPrev={() => setLightboxIndex((i) => Math.max(0, i - 1))}
+          onNext={() => setLightboxIndex((i) => Math.min(files.length - 1, i + 1))}
+          hasPrev={lightboxIndex > 0}
+          hasNext={lightboxIndex < files.length - 1}
+          onFavoriteToggle={() => favMut.mutate(lightboxFile.id)}
+          getUrl={(id, size) => getLockedStreamUrl(id, size)}
+        />
+      )}
+
+      {/* PIN einrichten/ändern */}
+      {showPinSetup && (
+        <PinDialog
+          mode={lockStatus?.hasPin ? 'change' : 'setup'}
+          onClose={() => setShowPinSetup(false)}
+          onSuccess={() => {
+            setShowPinSetup(false);
+            qc.invalidateQueries({ queryKey: ['media-lock-status'] });
+            setToast('PIN gespeichert');
+            setTimeout(() => setToast(null), 4000);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PIN-Gate + PIN-Dialog (gesperrte Medien)                           */
+/* ------------------------------------------------------------------ */
+
+function PinGate({
+  lockStatus,
+  unavailable,
+  toast,
+  onUnlock,
+  onSetup,
+}: {
+  lockStatus?: { hasPin: boolean };
+  unavailable: boolean;
+  toast: string | null;
+  onUnlock: (token: string) => void;
+  onSetup: () => void;
+}) {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (pin.length < 4 || pin.length > 12) {
+      setError('Die PIN muss 4–12 Zeichen lang sein.');
+      return;
+    }
+    setPending(true);
+    try {
+      const token = await unlockMedia(pin);
+      setPin('');
+      onUnlock(token);
+    } catch (err) {
+      if (isLockedFeatureUnavailable(err)) {
+        setError('Entsperren ist derzeit nicht verfügbar (Backend antwortet nicht).');
+      } else if (err instanceof ApiError && err.status === 403) {
+        setError('Falsche PIN. Bitte erneut versuchen.');
+      } else if (err instanceof ApiError && err.status === 409) {
+        setError('Noch keine PIN festgelegt.');
+      } else {
+        setError(`Entsperren fehlgeschlagen: ${(err as Error).message}`);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  if (unavailable) {
+    return (
+      <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-amber-600 dark:text-amber-400">
+        <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium">Gesperrte Medien derzeit nicht verfügbar</p>
+          <p className="text-sm mt-1 opacity-80">Das Backend antwortet nicht — deine Medien bleiben geschützt, sie werden hier nur nicht angezeigt.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-sm space-y-4 rounded-lg border border-border bg-bg-surface p-6 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-500">
+        <Lock className="h-6 w-6" />
+      </div>
+      <div>
+        <h2 className="text-lg font-semibold">Gesperrter Bereich</h2>
+        <p className="text-sm text-fg-muted mt-1">Gib deine PIN ein, um geschützte Medien anzusehen.</p>
+      </div>
+      <form onSubmit={handleUnlock} className="space-y-3">
+        <input
+          type="password"
+          inputMode="numeric"
+          autoComplete="off"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          placeholder="PIN (4–12 Zeichen)"
+          maxLength={12}
+          className="w-full rounded-md border border-border-strong bg-bg px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+        />
+        {error && <p className="text-sm text-danger">{error}</p>}
+        {toast && <p className="text-sm text-green-500">{toast}</p>}
+        <button
+          type="submit"
+          disabled={pending || pin.length === 0}
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-bg hover:bg-brand-400 disabled:opacity-50 transition-colors"
+        >
+          {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+          {pending ? 'Entsperre…' : 'Entsperren'}
+        </button>
+      </form>
+      <button
+        onClick={onSetup}
+        className="text-xs text-fg-muted hover:text-fg transition-colors"
+      >
+        {lockStatus?.hasPin ? 'PIN vergessen oder ändern?' : 'Noch keine PIN? Jetzt einrichten'}
+      </button>
+    </div>
+  );
+}
+
+function PinDialog({
+  mode,
+  hint,
+  onClose,
+  onSuccess,
+}: {
+  mode: 'setup' | 'change';
+  hint?: string | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [pin, setPin] = useState('');
+  const [repeat, setRepeat] = useState('');
+  const [oldPin, setOldPin] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (pin.length < 4 || pin.length > 12) {
+      setError('Die PIN muss 4–12 Zeichen lang sein.');
+      return;
+    }
+    if (pin !== repeat) {
+      setError('Die PINs stimmen nicht überein.');
+      return;
+    }
+    if (mode === 'change' && oldPin.length === 0) {
+      setError('Bitte gib deine bisherige PIN ein.');
+      return;
+    }
+    setPending(true);
+    try {
+      await setLockPin(pin, mode === 'change' ? oldPin : undefined);
+      onSuccess();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        setError('Die bisherige PIN ist falsch.');
+      } else if (isLockedFeatureUnavailable(err)) {
+        setError('PIN speichern ist derzeit nicht verfügbar (Backend antwortet nicht).');
+      } else {
+        setError(`Speichern fehlgeschlagen: ${(err as Error).message}`);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border border-border bg-bg-surface p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            {mode === 'setup' ? 'PIN einrichten' : 'PIN ändern'}
+          </h2>
+          <button type="button" onClick={onClose} className="text-fg-muted hover:text-fg"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="text-sm text-fg-muted">
+          {mode === 'setup'
+            ? 'Lege eine PIN (4–12 Zeichen) fest, um Medien zu sperren.'
+            : 'Gib deine bisherige und eine neue PIN (4–12 Zeichen) ein.'}
+        </p>
+        {mode === 'change' && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Bisherige PIN</label>
+            <input
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              value={oldPin}
+              onChange={(e) => setOldPin(e.target.value)}
+              maxLength={12}
+              className="w-full rounded-md border border-border-strong bg-bg px-3 py-2 text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            />
+          </div>
+        )}
+        <div>
+          <label className="block text-sm font-medium mb-1">{mode === 'setup' ? 'Neue PIN' : 'Neue PIN'}</label>
+          <input
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            maxLength={12}
+            className="w-full rounded-md border border-border-strong bg-bg px-3 py-2 text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">PIN wiederholen</label>
+          <input
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            value={repeat}
+            onChange={(e) => setRepeat(e.target.value)}
+            maxLength={12}
+            className="w-full rounded-md border border-border-strong bg-bg px-3 py-2 text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          />
+        </div>
+        {hint && <p className="text-sm text-amber-500">{hint}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <div className="flex gap-3 pt-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-fg hover:bg-bg transition-colors">Abbrechen</button>
+          <button type="submit" disabled={pending} className="flex flex-1 items-center justify-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-bg hover:bg-brand-400 disabled:opacity-50 transition-colors">
+            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {pending ? 'Speichert…' : 'Speichern'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

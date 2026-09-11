@@ -94,6 +94,12 @@ export async function setLockPin(pin: string, oldPin?: string): Promise<{ succes
   return api.put<{ success: boolean }>('/media/locked/pin', oldPin ? { pin, oldPin } : { pin });
 }
 
+/** PIN zurücksetzen (vergessene PIN): verifiziert das KONTO-Passwort (nicht die
+ * PIN). Der Server löscht die PIN und entsperrt alle gesperrten Dateien. */
+export async function resetLockPin(password: string): Promise<{ success: boolean; unlockedCount: number }> {
+  return api.delete<{ success: boolean; unlockedCount: number }>('/media/locked/pin', { password });
+}
+
 /** PIN prüfen → Lock-Token erhalten (in Memory + sessionStorage abgelegt). */
 export async function unlockMedia(pin: string): Promise<string> {
   const res = await api.post<{ lockToken: string }>('/media/locked/unlock', { pin });

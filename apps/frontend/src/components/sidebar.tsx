@@ -180,7 +180,10 @@ export function Sidebar() {
           'md:w-64 lg:static lg:inset-auto lg:translate-x-0',
           'flex flex-col',
           open ? 'translate-x-0' : '-translate-x-full',
-          desktopCollapsed ? 'w-[64px]' : 'w-64',
+          // Collapse-Breite MUSS lg-scoped sein: `md:w-64` gewinnt als
+          // spätere Media-Query sonst über `w-[64px]` — der Text verschwand,
+          // die Breite blieb aber stehen.
+          desktopCollapsed ? 'lg:w-[64px]' : 'lg:w-64',
         )}
       >
         {/* Brand + Desktop Toggle */}

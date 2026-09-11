@@ -12,6 +12,7 @@ import {
   getLockToken,
   isLockedFeatureUnavailable,
   lockFile,
+  resetLockPin,
   setLockPin,
   unlockFile,
   unlockMedia,
@@ -1535,7 +1536,8 @@ function LockedTab({ onLockedUnavailable }: { onLockedUnavailable: () => void })
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [lightboxIndex, setLightboxIndex] = useState(-1);
-  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [pinDialog, setPinDialog] = useState<'setup' | 'change' | null>(null);
+  const [showPinReset, setShowPinReset] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
 
@@ -1654,7 +1656,7 @@ function LockedTab({ onLockedUnavailable }: { onLockedUnavailable: () => void })
           {lockToken && (
             <>
               <button
-                onClick={() => setShowPinSetup(true)}
+                onClick={() => setPinDialog('change')}
                 className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-fg transition-colors"
               >
                 <KeyRound className="h-3.5 w-3.5" />
@@ -1684,7 +1686,8 @@ function LockedTab({ onLockedUnavailable }: { onLockedUnavailable: () => void })
             setToast('Entsperrt — viel Spaß beim Stöbern.');
             setTimeout(() => setToast(null), 4000);
           }}
-          onSetup={() => setShowPinSetup(true)}
+          onSetup={() => setPinDialog(lockStatus?.hasPin ? 'change' : 'setup')}
+          onForgot={() => setShowPinReset(true)}
         />
       )}
 
@@ -1895,15 +1898,34 @@ function LockedTab({ onLockedUnavailable }: { onLockedUnavailable: () => void })
       )}
 
       {/* PIN einrichten/ändern */}
-      {showPinSetup && (
+      {pinDialog && (
         <PinDialog
-          mode={lockStatus?.hasPin ? 'change' : 'setup'}
-          onClose={() => setShowPinSetup(false)}
+          mode={pinDialog}
+          onClose={() => setPinDialog(null)}
           onSuccess={() => {
-            setShowPinSetup(false);
+            setPinDialog(null);
             qc.invalidateQueries({ queryKey: ['media-lock-status'] });
             setToast('PIN gespeichert');
             setTimeout(() => setToast(null), 4000);
+          }}
+        />
+      )}
+
+      {/* PIN vergessen: Reset per Konto-Passwort. Der Server löscht die PIN und
+          entsperrt alle gesperrten Dateien → danach direkt frische PIN setzen. */}
+      {showPinReset && (
+        <PinResetDialog
+          onClose={() => setShowPinReset(false)}
+          onSuccess={(unlockedCount) => {
+            setShowPinReset(false);
+            relock();
+            qc.invalidateQueries({ queryKey: ['media-lock-status'] });
+            qc.invalidateQueries({ queryKey: ['media-files'] });
+            setToast(
+              `PIN zurückgesetzt — ${unlockedCount} ${unlockedCount === 1 ? 'Medium' : 'Medien'} entsperrt. Lege jetzt eine neue PIN fest.`,
+            );
+            setTimeout(() => setToast(null), 6000);
+            setPinDialog('setup');
           }}
         />
       )}
@@ -1921,12 +1943,14 @@ function PinGate({
   toast,
   onUnlock,
   onSetup,
+  onForgot,
 }: {
   lockStatus?: { hasPin: boolean };
   unavailable: boolean;
   toast: string | null;
   onUnlock: (token: string) => void;
   onSetup: () => void;
+  onForgot?: () => void;
 }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -2002,12 +2026,22 @@ function PinGate({
           {pending ? 'Entsperre…' : 'Entsperren'}
         </button>
       </form>
-      <button
-        onClick={onSetup}
-        className="text-xs text-fg-muted hover:text-fg transition-colors"
-      >
-        {lockStatus?.hasPin ? 'PIN vergessen oder ändern?' : 'Noch keine PIN? Jetzt einrichten'}
-      </button>
+      <div className="flex flex-col items-center gap-1">
+        <button
+          onClick={onSetup}
+          className="text-xs text-fg-muted hover:text-fg transition-colors"
+        >
+          {lockStatus?.hasPin ? 'PIN ändern' : 'Noch keine PIN? Jetzt einrichten'}
+        </button>
+        {lockStatus?.hasPin && onForgot && (
+          <button
+            onClick={onForgot}
+            className="text-xs text-fg-subtle hover:text-fg transition-colors"
+          >
+            PIN vergessen? Zurücksetzen
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -2120,6 +2154,79 @@ function PinDialog({
           <button type="submit" disabled={pending} className="flex flex-1 items-center justify-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-bg hover:bg-brand-400 disabled:opacity-50 transition-colors">
             {pending && <Loader2 className="h-4 w-4 animate-spin" />}
             {pending ? 'Speichert…' : 'Speichern'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PIN-Reset-Dialog (PIN vergessen → Konto-Passwort)                  */
+/* ------------------------------------------------------------------ */
+
+function PinResetDialog({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: (unlockedCount: number) => void;
+}) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length === 0) {
+      setError('Bitte gib dein Konto-Passwort ein.');
+      return;
+    }
+    setPending(true);
+    try {
+      const res = await resetLockPin(password);
+      onSuccess(res.unlockedCount ?? 0);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        setError('Falsches Passwort.');
+      } else if (isLockedFeatureUnavailable(err)) {
+        setError('Zurücksetzen ist derzeit nicht verfügbar (Backend antwortet nicht).');
+      } else {
+        setError(`Zurücksetzen fehlgeschlagen: ${(err as Error).message}`);
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border border-border bg-bg-surface p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">PIN zurücksetzen</h2>
+          <button type="button" onClick={onClose} className="text-fg-muted hover:text-fg"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="text-sm text-fg-muted">
+          Gib dein Konto-Passwort ein. Die Medien-PIN wird gelöscht und alle gesperrten Medien werden wieder in Galerie, Alben und Karte sichtbar. Danach kannst du eine neue PIN festlegen.
+        </p>
+        <div>
+          <label className="block text-sm font-medium mb-1">Konto-Passwort</label>
+          <input
+            type="password"
+            autoComplete="current-password"
+            autoFocus
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-md border border-border-strong bg-bg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          />
+        </div>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <div className="flex gap-3 pt-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-fg hover:bg-bg transition-colors">Abbrechen</button>
+          <button type="submit" disabled={pending} className="flex flex-1 items-center justify-center gap-2 rounded-md bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-colors">
+            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {pending ? 'Setze zurück…' : 'Zurücksetzen'}
           </button>
         </div>
       </form>

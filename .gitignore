@@ -9,3 +9,10 @@ after_click.png
 .designs/
 searxng_shot.png
 .pnpm-store/
+
+# lokale Tool-Ablagen (Mimosa-Scans, ZCode-Pläne) — gehören nicht ins Repo
+.mimosa/
+.zcode/
+
+# TS-Build-Info (Build-Nebenprodukt)
+*.tsbuildinfo

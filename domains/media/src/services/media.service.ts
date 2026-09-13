@@ -43,7 +43,7 @@ const EXTENSION_MIME: Record<string, string> = {
   pdf: 'application/pdf',
 };
 
-const MAX_SCAN_DEPTH = 3;
+const MAX_SCAN_DEPTH = 8;
 
 @Injectable()
 export class MediaService {
